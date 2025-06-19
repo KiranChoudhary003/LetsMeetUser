@@ -105,15 +105,40 @@ android {
             proguardFiles getDefaultProguardFile("proguard-android.txt"), "proguard-rules.pro"
         }
     }
+//  flavorDimensions "react-native-camera"
+//     productFlavors {
+//         general {
+//             dimension "react-native-camera"
+//         }
+//         // OR use mlkit if you are using ML Kit features
+//         // mlkit {
+//         //     dimension "react-native-camera"
+//         // }
+//     }
 }
 
 dependencies {
     // The version of react-native is set by the React Native Gradle Plugin
     implementation("com.facebook.react:react-android")
+    // implementation 'com.google.mlkit:barcode-scanning:17.2.0'
 
     if (hermesEnabled.toBoolean()) {
         implementation("com.facebook.react:hermes-android")
     } else {
         implementation jscFlavor
+    }
+}
+
+apply from: "../../node_modules/react-native-vector-icons/fonts.gradle"
+
+gradle.beforeProject { project ->
+    if (project.name == "react-native-camera") {
+        project.plugins.withId("com.android.library") {
+            project.extensions.findByType(com.android.build.gradle.LibraryExtension)?.variantFilter { variant ->
+                if (variant.name.toLowerCase().contains("mlkit")) {
+                    variant.ignore = true
+                }
+            }
+        }
     }
 }

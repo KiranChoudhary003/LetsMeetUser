@@ -1,10 +1,6 @@
 import React, { useEffect, useState } from 'react';
-import { StyleSheet, Text, TextInput, TouchableOpacity, View, Image } from 'react-native';
-import { Checkbox, IconButton, Menu, Modal, Provider } from 'react-native-paper';
-import ellipse from '../../assets/Ellipse.png'
-import ellipseTwo from '../../assets/EllipseTwo.png'
-import ellipseBottom from '../../assets/EllipseBottom.png'
-import ellipseBottomTwo from '../../assets/EllipseBottomTwo.png'
+import { StyleSheet, Text, TextInput, TouchableOpacity, View, Image, KeyboardAvoidingView, Alert } from 'react-native';
+import { ActivityIndicator, Checkbox, IconButton, Menu, Modal, Provider } from 'react-native-paper';
 import { ScrollView } from 'react-native-gesture-handler';
 import axios from 'axios';
 
@@ -20,6 +16,7 @@ const SignUp = ({ navigation }) => {
     const [password, setPassword] = useState('')
     const [roles, setRoles] = useState([])
     const [loadingRoles, setLoadingRoles] = useState(true)
+    const [loading, setLoading] = useState(false);
 
     const toggleRole = (role) => {
         setSelectedRoles((prevSelectedRoles) => {
@@ -32,8 +29,10 @@ const SignUp = ({ navigation }) => {
     }
 
     const handleSubmit = async () => {
+        setLoading(true)
+
         if (!firstName || !lastName || !email || !password || !linkedin || !jobRole || selectedRoles.length === 0) {
-            alert('All fields must be filled, including at least one preference.');
+            Alert.alert('All fields must be filled, including at least one preference.');
             return;
         }
 
@@ -64,23 +63,17 @@ const SignUp = ({ navigation }) => {
             const data = await response.json();
 
             if (response.status === 201) {
-                // Successful registration. Optionally, store data.userId if needed.
-                navigation.navigate('Profile', {
-                    firstName,
-                    lastName,
-                    email,
-                    password,
-                    linkedin,
-                    jobRole,
-                    preferences: selectedRoles,
-                    userId: data.userId, // Passing the returned userId from the API.
-                });
+                Alert.alert(`Successfully Sign Up`, `Redirected into Login Page`);
+                navigation.navigate('Login');
             } else {
-                alert(data.message || 'Registration failed, please try again.');
+                Alert.alert(data.message || 'Registration failed, please try again.');
             }
         } catch (error) {
             console.error('Registration error:', error);
-            alert("Error: Couldn't register. Please check your network connection.");
+            Alert.alert("Error", "Couldn't register. Please check your network connection.");
+        }
+        finally {
+            setLoading(false);
         }
     };
 
@@ -88,17 +81,6 @@ const SignUp = ({ navigation }) => {
     const removeRole = (role) => {
         setSelectedRoles(selectedRoles.filter((r) => r !== role));
     };
-
-    // const roles = [
-    //     'Developer',
-    //     'Data Scientist',
-    //     'Database Administrator',
-    //     'Computer Systems Analyst',
-    //     'Web Developer',
-    //     'DevOps Engineer',
-    //     'Network Engineer',
-    //     'IT Project Manager'
-    // ]
 
     useEffect(() => {
         const fetchRoles = async () => {
@@ -127,123 +109,130 @@ const SignUp = ({ navigation }) => {
     return (
         <Provider>
             <View style={styles.container}>
-                <Image source={ellipse} style={styles.ellipseTopOne} />
-                <Image source={ellipseTwo} style={styles.ellipseTopTwo} />
-                <Text style={styles.text}>Create Account</Text>
-                <TextInput style={styles.input} placeholder='First Name' value={firstName} onChangeText={setFirstName} />
-                <TextInput style={styles.input} placeholder='Last Name' value={lastName} onChangeText={setLastName} />
-                <TextInput style={styles.input} placeholder='E-mail' value={email} onChangeText={setEmail} />
-                <TextInput style={styles.input} placeholder='Create Password' value={password} onChangeText={setPassword} />
-                <TextInput style={styles.input} placeholder='LinkedIn URL' value={linkedin} onChangeText={setLinkedin} />
-                <Menu
-                    visible={visible}
-                    onDismiss={() => setVisible(false)}
-                    anchor={
-                        <TouchableOpacity
-                            onPress={() => setVisible(true)}
-                            style={styles.input}
+                <KeyboardAvoidingView
+                    behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
+                    style={{ flex: 1 }}
+                >
+                    <ScrollView
+                        contentContainerStyle={{ flexGrow: 1 }}
+                        keyboardShouldPersistTaps="handled"
+                    >
+                        {/* <View style={styles.inputContainer}> */}
+                        <Text style={styles.text}>Create Account</Text>
+                        <TextInput style={styles.input} placeholder='First Name' placeholderTextColor="#888" value={firstName} onChangeText={setFirstName} />
+                        <TextInput style={styles.input} placeholder='Last Name' placeholderTextColor="#888" value={lastName} onChangeText={setLastName} />
+                        <TextInput style={styles.input} placeholder='E-mail' placeholderTextColor="#888" value={email} onChangeText={setEmail} />
+                        <TextInput style={styles.input} placeholder='Create Password' placeholderTextColor="#888" value={password} onChangeText={setPassword} />
+                        <TextInput style={styles.input} placeholder='LinkedIn URL' placeholderTextColor="#888" value={linkedin} onChangeText={setLinkedin} />
+                        <Menu
+                            visible={visible}
+                            onDismiss={() => setVisible(false)}
+                            anchor={
+                                <TouchableOpacity
+                                    onPress={() => setVisible(true)}
+                                    style={styles.input}
+                                >
+                                    <Text style={styles.anchorText}>
+                                        {jobRole
+                                            ? typeof jobRole === 'string'
+                                                ? jobRole
+                                                : jobRole.label
+                                            : 'Role'}
+                                    </Text>
+                                </TouchableOpacity>
+                            }
                         >
-                            <Text style={styles.anchorText}>
-                                {jobRole
-                                    ? typeof jobRole === 'string'
-                                        ? jobRole
-                                        : jobRole.label
-                                    : 'Role'}
-                            </Text>
+                            {roles.map((role) => (
+                                <Menu.Item
+                                    key={role}
+                                    onPress={() => {
+                                        setJobRole(role);
+                                        setVisible(false);
+                                    }}
+                                    title={role}
+                                    titleStyle={styles.menuItemTitle} // customize title style if needed
+                                />
+                            ))}
+                        </Menu>
+
+                        <TouchableOpacity
+                            style={styles.input}
+                            onPress={() => setModalVisible(true)}
+                        >
+                            <Text style={styles.anchorText}>Preferences</Text>
                         </TouchableOpacity>
-                    }
-                >
-                    {roles.map((role) => (
-                        <Menu.Item
-                            key={role}
-                            onPress={() => {
-                                setJobRole(role);
-                                setVisible(false);
-                            }}
-                            title={role}
-                            titleStyle={styles.menuItemTitle} // customize title style if needed
-                        />
-                    ))}
-                </Menu>
 
-                <TouchableOpacity
-                    style={styles.input}
-                    onPress={() => setModalVisible(true)}
-                >
-                    <Text style={styles.anchorText}>Preferences</Text>
-                </TouchableOpacity>
+                        <Modal
+                            visible={modalVisible}
+                            transparent={true}
+                            animationType="slide"
+                            onRequestClose={() => setModalVisible(false)}
+                        >
+                            <View style={styles.modalOverlay}>
+                                <View style={styles.modalContainer}>
+                                    <ScrollView style={{ maxHeight: 250 }}>
+                                        {roles.map((role, index) => (
+                                            <View key={index} style={styles.checkboxRow}>
+                                                <Text style={styles.roleText}>{role}</Text>
+                                                <Checkbox.Android
+                                                    status={selectedRoles.includes(role) ? 'checked' : 'unchecked'}
+                                                    onPress={() => toggleRole(role)}
+                                                    color="#37795e"
+                                                />
+                                            </View>
+                                        ))}
+                                    </ScrollView>
 
-                <Modal
-                    visible={modalVisible}
-                    transparent={true}
-                    animationType="slide"
-                    onRequestClose={() => setModalVisible(false)}
-                >
-                    <View style={styles.modalOverlay}>
-                        <View style={styles.modalContainer}>
-                            <ScrollView style={{ maxHeight: 500 }}>
-                                {roles.map((role, index) => (
                                     <TouchableOpacity
-                                        key={index}
-                                        style={styles.checkboxRow}
-                                        onPress={() => toggleRole(role)}
+                                        style={styles.doneButton}
+                                        onPress={() => setModalVisible(false)}
                                     >
-                                        <Text style={styles.roleText}>{role}</Text>
-                                        <Checkbox.Android
-                                            status={selectedRoles.includes(role) ? 'checked' : 'unchecked'}
-                                            color="#7680DE"
-                                        />
+                                        <Text style={{ color: 'white' }}>Done</Text>
                                     </TouchableOpacity>
-                                ))}
-                            </ScrollView>
+                                </View>
+                            </View>
+                        </Modal>
 
-                            <TouchableOpacity
-                                style={styles.doneButton}
-                                onPress={() => setModalVisible(false)}
-                            >
-                                <Text style={{ color: 'white' }}>Done</Text>
+                        {/* Selected roles display */}
+                        <View style={styles.selectedWrapper}>
+                            {selectedRoles.map((role, index) => (
+                                <View key={index} style={styles.tag}>
+                                    <Text style={styles.tagText}>{role}</Text>
+                                    <IconButton
+                                        icon={() => (
+                                            <Text style={styles.crossIcon}>✕</Text>
+                                        )}
+                                        onPress={() => removeRole(role)}
+                                        style={styles.closeIcon}
+                                    />
+
+                                </View>
+                            ))}
+                        </View>
+                        {loading ? (
+                            <ActivityIndicator size="large" color="#7680DE" />
+                        ) : (
+                            <TouchableOpacity style={styles.button} onPress={handleSubmit}>
+                                <Text style={styles.buttonText}>Sign-in</Text>
+                            </TouchableOpacity>
+                        )}
+
+                        <View style={styles.condition}>
+                            <Text style={styles.agree}>By continuing you agree to all </Text>
+                            <Text style={styles.terms}>terms, condition </Text>
+                        </View>
+                        <View style={styles.privacy}>
+                            <Text style={styles.and}>& </Text>
+                            <Text style={styles.policy}>privacy policy</Text>
+                        </View>
+                        <View style={styles.account}>
+                            <Text style={styles.already}>Already have an account? </Text>
+                            <TouchableOpacity onPress={() => navigation.navigate('Login')}>
+                                <Text style={styles.login}>log-in</Text>
                             </TouchableOpacity>
                         </View>
-                    </View>
-                </Modal>
-
-                {/* Selected roles display */}
-                <View style={styles.selectedWrapper}>
-                    {selectedRoles.map((role, index) => (
-                        <View key={index} style={styles.tag}>
-                            <Text style={styles.tagText}>{role}</Text>
-                            <IconButton
-                                icon={() => (
-                                    <Text style={styles.crossIcon}>✕</Text>
-                                )}
-                                onPress={() => removeRole(role)}
-                                style={styles.closeIcon}
-                            />
-
-                        </View>
-                    ))}
-                </View>
-
-                <TouchableOpacity style={styles.button} onPress={handleSubmit}>
-                    <Text style={styles.buttonText}>Sign-in</Text>
-                </TouchableOpacity>
-                <View style={styles.condition}>
-                    <Text style={styles.agree}>By continuing you agree to all </Text>
-                    <Text style={styles.terms}>terms, condition </Text>
-                </View>
-                <View style={styles.privacy}>
-                    <Text style={styles.and}>& </Text>
-                    <Text style={styles.policy}>privacy policy</Text>
-                </View>
-                <View style={styles.account}>
-                    <Text style={styles.already}>Already have an account? </Text>
-                    <TouchableOpacity onPress={() => navigation.navigate('Login')}>
-                        <Text style={styles.login}>log-in</Text>
-                    </TouchableOpacity>
-                </View>
-                <Image source={ellipseBottom} style={styles.ellipseBottom} />
-                <Image source={ellipseBottomTwo} style={styles.ellipseBottomTwo} />
-                <Image />
+                    </ScrollView>
+                </KeyboardAvoidingView>
             </View>
         </Provider>
     );
@@ -252,141 +241,45 @@ const SignUp = ({ navigation }) => {
 const styles = StyleSheet.create({
     container: {
         flex: 1,
-        justifyContent: 'center',
-        alignItems: 'center'
+        backgroundColor: '#e8effc',
+    },
+    inputContainer: {
+        flexGrow: 1,
+        justifyContent: 'flex-start',
+        paddingHorizontal: 20,
+        paddingTop: 50,
     },
     text: {
-        fontSize: 25,
-        color: "#465BF3",
-        fontWeight: "bold",
-        marginBottom: 20,
+        fontSize: 24,
+        fontWeight: 'bold',
+        marginBottom: 50,
+        color: '#34495e',
+        textAlign: "center",
+        paddingTop: 50,
     },
     input: {
+        borderWidth: 1,
+        borderColor: '#ccc',
+        padding: 12,
+        borderRadius: 8,
+        marginBottom: 25,
+        marginLeft: 50,
         width: 313,
         height: 43,
-        margin: 10,
-        borderRadius: 5,
-        backgroundColor: "#7680DE4D",
-        paddingHorizontal: 10,
-        paddingVertical: 10,
-        color: "#000000",
-        justifyContent: 'center',
-    },
-    button: {
-        width: 194,
-        height: 39,
-        backgroundColor: '#7680DE',
-        borderRadius: 10,
-        display: 'flex',
-        justifyContent: 'center',
-        alignItems: 'center',
-        marginTop: 20,
-    },
-    buttonText: {
-        color: 'white',
-        fontWeight: 'bold',
-    },
-    ellipseTopOne: {
-        position: "absolute",
-        top: -70,
-        left: 0
-    },
-    ellipseTopTwo: {
-        position: "absolute",
-        top: -100,
-        left: 50
-    },
-    ellipseBottom: {
-        position: "absolute",
-        bottom: -80,
-        right: 0
-    },
-    ellipseBottomTwo: {
-        position: "absolute",
-        bottom: -80,
-        left: 0
+        backgroundColor: "#f7faff",
     },
     anchorText: {
-        fontSize: 15,
-        fontWeight: '16',
-        color: '#666',
-        textAlign: 'left',
-        paddingLeft: 5,
+        color: '#888',
     },
-
-    condition: {
-        display: 'flex',
-        flexDirection: 'row',
-        marginTop: 10
-    },
-    agree: {
-        fontSize: 12
-    },
-    terms: {
-        fontSize: 12,
-        color: "#7680DE"
-    },
-    privacy: {
-        display: 'flex',
-        flexDirection: 'row',
-        margin: 5
-    },
-    and: {
-        fontSize: 12
-    },
-    policy: {
-        fontSize: 12,
-        color: "#7680DE"
-    },
-    account: {
-        display: 'flex',
-        flexDirection: 'row',
-        position: 'relative',
-        bottom: -20,
-        left: 0
-    },
-    already: {
-        fontSize: 12
-    },
-    login: {
-        fontSize: 12,
-        color: '#777'
-    },
-    selectedWrapper: {
-        flexDirection: 'row',
-        flexWrap: 'wrap',
-    },
-
-    tag: {
-        backgroundColor: '#ddd',
-        paddingHorizontal: 5,
-        paddingVertical: 3,
-        borderRadius: 12,
-        marginRight: 5,
-        marginBottom: 5,
-        flexDirection: 'row',
-        alignItems: 'center',
-        alignSelf: 'flex-start',
-        maxWidth: '50%',
-        height: 20,
-    },
-
-    tagText: {
-        fontSize: 10,
-        color: '#000',
-        flexShrink: 1,
-        marginRight: -25,
-    },
-
-    crossIcon: {
-        fontSize: 10,
-        color: '#333',
-        marginRight: -30,
+    menuItemTitle: {
+        color: '#fff',
     },
     modalOverlay: {
+        backgroundColor: 'rgba(0, 0, 0, 0.3)',
         justifyContent: 'center',
         alignItems: 'center',
-        height: '100%'
+        height: '100%',
+        width: '100%',
     },
     modalContainer: {
         backgroundColor: '#fff',
@@ -410,7 +303,7 @@ const styles = StyleSheet.create({
         flex: 1,
     },
     doneButton: {
-        backgroundColor: '#7680DE',
+        backgroundColor: '#34495e',
         paddingVertical: 10,
         borderRadius: 8,
         alignItems: 'center',
@@ -420,7 +313,88 @@ const styles = StyleSheet.create({
         color: 'white',
         fontSize: 14,
     },
+    selectedWrapper: {
+        flexDirection: 'row',
+        flexWrap: 'wrap',
+        marginTop: 10,
+    },
+    tag: {
+        backgroundColor: '#ddd',
+        paddingHorizontal: 8,
+        borderRadius: 12,
+        marginRight: 5,
+        marginBottom: 5,
+        flexDirection: 'row',
+        alignItems: 'center',
+        alignSelf: 'flex-start',
+        maxWidth: '30%',
+        height: 20,
+    },
+    tagText: {
+        marginRight: 8,
+    },
+    crossIcon: {
+        fontSize: 12,
+        color: '#888',
+    },
 
+    button: {
+        backgroundColor: '#34495e',
+        paddingVertical: 8,
+        borderRadius: 8,
+        alignItems: 'center',
+        marginTop: 20,
+        marginLeft: 110,
+        width: 194,
+        height: 39
+    },
+    buttonText: {
+        color: '#fff',
+        fontSize: 16,
+    },
+    condition: {
+        flexDirection: 'row',
+        justifyContent: 'center',
+        marginTop: 12,
+    },
+    agree: {
+        fontSize: 13,
+        color: '#7f8c8d',
+    },
+    terms: {
+        fontSize: 13,
+        color: '#7680DE',
+        fontWeight: '500',
+    },
+    privacy: {
+        flexDirection: 'row',
+        justifyContent: 'center',
+        marginTop: 4,
+    },
+    and: {
+        fontSize: 13,
+        color: '#7f8c8d',
+    },
+    policy: {
+        fontSize: 13,
+        color: '#7680DE',
+        fontWeight: '500',
+    },
+    account: {
+        flexDirection: 'row',
+        justifyContent: 'center',
+        marginTop: 16,
+    },
+    already: {
+        fontSize: 14,
+        color: '#7f8c8d',
+    },
+    login: {
+        fontSize: 14,
+        color: '#34495e',
+        fontWeight: '700',
+        marginLeft: 4,
+    },
 });
 
 export default SignUp;

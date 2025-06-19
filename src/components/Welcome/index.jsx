@@ -11,10 +11,6 @@ import {
   Platform
 } from 'react-native';
 import logo from '../../assets/logo.png';
-import ellipse from '../../assets/Ellipse.png';
-import ellipseBottom from '../../assets/EllipseBottom.png';
-import ellipseTwo from '../../assets/EllipseTwo.png';
-
 import { PERMISSIONS, check, request, RESULTS, openSettings } from 'react-native-permissions';
 import Geolocation from 'react-native-geolocation-service';
 import { LocationContext } from '../../components/LocationContext/LocationContext'; // ✅ Import the context
@@ -125,15 +121,11 @@ const Welcome = ({ navigation }) => {
           {
             backgroundColor: colorAnim.interpolate({
               inputRange: [0, 1],
-              outputRange: ['rgba(255, 255, 255, 1)', '#7680DE4D'],
+              outputRange: ['rgba(255, 255, 255, 1)', '#34495e'],
             }),
           },
         ]}
       />
-
-      <Image source={ellipse} style={styles.ellipseTop} />
-      <Image source={ellipseTwo} style={styles.ellipseTop} />
-      <Image source={ellipseBottom} style={styles.ellipseBottom} />
 
       <View style={styles.logoContainer}>
         <Image source={logo} style={styles.logo} />
@@ -151,7 +143,7 @@ const styles = StyleSheet.create({
     flex: 1,
     alignItems: 'center',
     justifyContent: 'center',
-    backgroundColor: 'white',
+    backgroundColor: 'e8effc',
     position: 'relative',
   },
   animatedBg: {

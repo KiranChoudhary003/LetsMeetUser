@@ -6,6 +6,7 @@ buildscript {
         targetSdkVersion = 35
         ndkVersion = "27.1.12297006"
         kotlinVersion = "2.0.21"
+        // VisionCamera_enableCodeScanner = true
     }
     repositories {
         google()
@@ -19,3 +20,22 @@ buildscript {
 }
 
 apply plugin: "com.facebook.react.rootproject"
+project.ext.vectoricons = [
+    AntDesign              : "AntDesign.ttf",
+    Entypo                 : "Entypo.ttf",
+    EvilIcons              : "EvilIcons.ttf",
+    Feather                : "Feather.ttf",
+    FontAwesome            : "FontAwesome.ttf",
+    FontAwesome5_Brands    : "FontAwesome5_Brands.ttf",
+    FontAwesome5_Regular   : "FontAwesome5_Regular.ttf",
+    FontAwesome5_Solid     : "FontAwesome5_Solid.ttf",
+    Foundation             : "Foundation.ttf",
+    Ionicons               : "Ionicons.ttf",
+    MaterialCommunityIcons : "MaterialCommunityIcons.ttf",
+    MaterialIcons          : "MaterialIcons.ttf",
+    Octicons               : "Octicons.ttf",
+    SimpleLineIcons        : "SimpleLineIcons.ttf",
+    Zocial                 : "Zocial.ttf"
+]
+
+// apply from: "../node_modules/react-native-vector-icons/fonts.gradle"

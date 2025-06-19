@@ -1,11 +1,6 @@
 import React, { useEffect, useState } from 'react';
 import { View, Text, StyleSheet, TouchableOpacity, Share, Image } from 'react-native';
 import QRCode from 'react-native-qrcode-svg';
-// import { useNavigation } from '@react-navigation/native';
-import ellipse from '../../assets/qrcodeFirst.png'
-import ellipseTwo from '../../assets/qrcodetwo.png'
-import ellipseBottom from '../../assets/qrcodethree.png'
-import ellipseBottomTwo from '../../assets/qrcodefour.png'
 import axios from 'axios';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import scanner from '../../assets/vector.png'
@@ -34,6 +29,7 @@ const QRCodeScreen = ({ navigation }) => {
         const user = response.data.user
 
         setUserData({
+          // id : user.id,
           firstName: user.first_name,
           lastName: user.last_name,
           email: user.email,
@@ -62,19 +58,15 @@ const QRCodeScreen = ({ navigation }) => {
 
   return (
     <View style={styles.container}>
-      <Image source={ellipse} style={styles.ellipseTopOne} />
-      <Image source={ellipseTwo} style={styles.ellipseTopTwo} />
-      <Image source={ellipseBottom} style={styles.ellipseBottomTwo} />
-      <Image source={ellipseBottomTwo} style={styles.ellipseBottom} />
       {/* Top Navigation */}
       <View style={styles.header}>
         <TouchableOpacity onPress={() => navigation.goBack()}>
           <Text style={styles.headerBackText}>←</Text>
         </TouchableOpacity>
-        <TouchableOpacity onPress={() => navigation.navigate('Scanner')} style={styles.headerTitle}>
+        {/* <TouchableOpacity style={styles.headerTitle} onPress={() => navigation.navigate("Scanner")}> */}
           <Image source={scanner} />
           <Text style={{ fontSize: 20, paddingLeft: 10 }}>Scan</Text>
-        </TouchableOpacity>
+        {/* </TouchableOpacity> */}
         <View style={{ width: 24 }} /> {/* Placeholder to center title */}
       </View>
 
@@ -108,7 +100,7 @@ export default QRCodeScreen;
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: '#ECEEFF',
+    backgroundColor: '#e8effc',
     padding: 20,
     alignItems: 'center'
   },
@@ -123,12 +115,12 @@ const styles = StyleSheet.create({
     fontWeight: 'bold',
     display: "flex",
     flexDirection: "row",
-    backgroundColor: 'rgba(0, 0, 0, 0.2)',
+    backgroundColor: 'rgba(0, 0, 0, 0.3)',
     padding: 10,
     borderRadius: 10,
     alignItems: "center",
     position: "fixed",
-    top: -10,
+    top: -40,
     right: -140,
   },
   headerBackText: {
@@ -136,12 +128,12 @@ const styles = StyleSheet.create({
     fontWeight: "bold",
     color: '#000',
     position: "fixed",
-    top: -35,
-    left: -130,
+    top: -45,
+    left: -120,
   },
   card: {
     marginTop: 100,
-    backgroundColor: 'rgba(0, 0, 0, 0.6)',
+    backgroundColor: 'rgba(0, 0, 0, 0.7)',
     borderRadius: 20,
     padding: 20,
     alignItems: 'center',
@@ -185,25 +177,4 @@ const styles = StyleSheet.create({
     color: '#000',
     fontWeight: '600',
   },
-  ellipseTopOne: {
-    position: "absolute",
-    top: -70,
-    left: 0
-  },
-  ellipseTopTwo: {
-    position: "absolute",
-    top: -100,
-    left: 50
-  },
-  ellipseBottom: {
-    position: "absolute",
-    bottom: -80,
-    right: 0
-  },
-  ellipseBottomTwo: {
-    position: "absolute",
-    bottom: -80,
-    left: 0
-  },
-
 });

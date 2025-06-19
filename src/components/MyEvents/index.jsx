@@ -1,4 +1,4 @@
-import React, { useRef, useEffect, useState } from "react";
+import React, { useRef, useEffect, useState, useContext } from "react";
 import { Easing, Image } from "react-native";
 
 import {
@@ -18,6 +18,9 @@ import profile from '../../assets/profile.png'
 import scanner from '../../assets/scanner.png'
 import connection from '../../assets/connection.png'
 import chat from '../../assets/chat.png'
+import { LocationContext } from "../LocationContext/LocationContext";
+import AsyncStorage from "@react-native-async-storage/async-storage";
+import axios from "axios";
 
 const backgroundImage = require("../../assets/bgg.png");
 
@@ -45,10 +48,24 @@ const Button = ({ children, onPress, variant }) => {
     </TouchableOpacity>
   );
 };
-const EventCard = ({ name, organizer, date, lat, lon, onPress }) => {
+
+const EventCard = ({
+  id,
+  name,
+  organizer,
+  start_date,
+  end_date,
+  lat,
+  lon,
+  already_checked_in,
+  userLat,
+  userLon,
+  onCheckIn,
+  onPress
+}) => {
   const scale = useRef(new Animated.Value(1)).current;
   const [withinRange, setWithinRange] = useState(false);
-  const [checkedIn, setCheckedIn] = useState(false);
+  const [isFutureEvent, setIsFutureEvent] = useState(true);
 
   const handlePressIn = () => {
     Animated.spring(scale, {
@@ -56,7 +73,6 @@ const EventCard = ({ name, organizer, date, lat, lon, onPress }) => {
       useNativeDriver: true,
     }).start();
   };
-
 
   const handlePressOut = () => {
     Animated.spring(scale, {
@@ -67,7 +83,7 @@ const EventCard = ({ name, organizer, date, lat, lon, onPress }) => {
   };
 
   const calculateDistance = (lat1, lon1, lat2, lon2) => {
-    const R = 6371; // Earth's radius in km
+    const R = 6371;
     const dLat = (lat2 - lat1) * Math.PI / 180;
     const dLon = (lon2 - lon1) * Math.PI / 180;
     const a =
@@ -79,60 +95,75 @@ const EventCard = ({ name, organizer, date, lat, lon, onPress }) => {
     return R * c; // distance in KM
   };
 
-  const checkProximity = () => {
-    const userLat = 26.9124;  // Static latitude
-    const userLon = 75.7873;  // Static longitude
-    const distance = calculateDistance(userLat, userLon, lat, lon);
-    setWithinRange(false);//////--------->>>>>>>
+  const checkProximityAndDate = () => {
+    const eventDate = new Date(end_date);
+    const today = new Date();
+    setIsFutureEvent(eventDate > today);
+
+    if (userLat != null && userLon != null && lat != null && lon != null) {
+      const distance = calculateDistance(userLat, userLon, lat, lon);
+      setWithinRange(distance <= 0.5); // Within 500 meters
+    } else {
+      setWithinRange(false);
+    }
   };
 
   useEffect(() => {
-    checkProximity();
-  }, []);
+    checkProximityAndDate();
+  }, [userLat, userLon, lat, lon, end_date]);
 
   return (
-    <Pressable onPressIn={handlePressIn} onPressOut={handlePressOut} onPress={onPress}>
-      <Animated.View style={[styles.card, { transform: [{ scale }], flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center' }]}>
+    <Pressable onPress={onPress} onPressIn={handlePressIn} onPressOut={handlePressOut}>
+      <Animated.View
+        style={[
+          styles.card,
+          {
+            transform: [{ scale }],
+            flexDirection: 'row',
+            justifyContent: 'space-between',
+            alignItems: 'center'
+          }
+        ]}
+      >
         <View style={{ flex: 1 }}>
           <Text style={styles.eventName}>{name}</Text>
           <Text style={styles.eventOrganizer}>{organizer}</Text>
-          <Text style={styles.eventDate}>{new Date(date).toLocaleDateString()}</Text>
+          <Text style={styles.eventDate}>{new Date(start_date).toLocaleDateString()}</Text>
         </View>
 
         <View>
-          {checkedIn ? (
+          {already_checked_in ? (
             <View style={{
               backgroundColor: '#4CAF50',
-              paddingHorizontal: 18,
-              paddingVertical: 10,
-              borderRadius: 8,
+              paddingHorizontal: 12,
+              paddingVertical: 4,
+              borderRadius: 20,
               alignItems: 'center',
               justifyContent: 'center',
             }}>
-              <Text style={{ color: '#fff', fontWeight: 'bold', fontSize: 12 }}>✔ Checked</Text>
+              <Text style={{ color: '#fff', fontWeight: 'bold', fontSize: 12 }}>✔ Checked In</Text>
             </View>
-          ) : (
+          ) : isFutureEvent ? (
             <TouchableOpacity
               onPress={() => {
                 if (withinRange) {
-                  setCheckedIn(true);
-                  ToastAndroid.show("Checked-In Successfully!", ToastAndroid.SHORT);
+                  onCheckIn();
                 } else {
-                  ToastAndroid.show("You are unable to check in", ToastAndroid.SHORT);
+                  ToastAndroid.show("You are outside the check-in range", ToastAndroid.SHORT);
                 }
               }}
               style={{
-                backgroundColor: withinRange ? '#4CAF50' : '#aaa',
-                paddingHorizontal: 18,
-                paddingVertical: 10,
-                borderRadius: 8,
+                backgroundColor: withinRange ? '#4CAF50' : '#bbb',
+                paddingHorizontal: 12,
+                paddingVertical: 4,
+                borderRadius: 20,
                 alignItems: 'center',
                 justifyContent: 'center',
               }}
             >
               <Text style={{ color: '#fff', fontWeight: 'bold', fontSize: 12 }}>Check-In</Text>
             </TouchableOpacity>
-          )}
+          ) : null}
         </View>
       </Animated.View>
     </Pressable>
@@ -141,7 +172,7 @@ const EventCard = ({ name, organizer, date, lat, lon, onPress }) => {
 
 const groupEventsByMonth = (events) => {
   const grouped = events.reduce((acc, event) => {
-    const eventDate = new Date(event.date);
+    const eventDate = new Date(event.start_date);
     const year = eventDate.getFullYear();
     const monthNumber = eventDate.getMonth();
     const monthName = eventDate.toLocaleString("default", { month: "long" });
@@ -185,26 +216,21 @@ const groupEventsByMonth = (events) => {
 };
 
 const EventsScreen = ({ navigation }) => {
-  const eventData = [
-    { name: "Tech Fest", organizer: "GIT,jaipur", date: "2024-05-13", lat: 50.9124, lon: 75.7873 },
-    { name: "AI Summit", organizer: "codefiesta", date: "2024-04-12", lat: 26.9124, lon: 75.7873 },
 
-    { name: "Tech Fest", organizer: "GIT,jaipur", date: "2024-05-13", lat: 26.9124, lon: 75.7873 },
-    { name: "AI Summit", organizer: "codefiesta", date: "2024-04-12", lat: 26.9124, lon: 75.7873 },
-    // and so on...
-  ];
+  const [eventData, setEventData] = useState([])
+
+  const { location } = useContext(LocationContext);
 
   const events = groupEventsByMonth(eventData);
   const animatedPosition = useRef(new Animated.Value(0)).current;
 
-  const moveToLeft = () => {
-    Animated.timing(animatedPosition, {
-      toValue: -120,
-      duration: 500,
-      easing: Easing.out(Easing.exp),
-      useNativeDriver: true,
-    }).start();
-  };
+  const handleQRCode = () => {
+    navigation.navigate("QRCode")
+  }
+
+  const handleProfile = () => {
+    navigation.navigate("UserProfile")
+  }
 
   const moveToRight = () => {
     Animated.timing(animatedPosition, {
@@ -215,30 +241,84 @@ const EventsScreen = ({ navigation }) => {
     }).start();
   };
 
+  const handleCheckIn = async (eventId) => {
+    try {
+      const token = await AsyncStorage.getItem('token');
+      await axios.post(
+        'https://letsmeet-backend-47lv.onrender.com/api/user-events/check-in',
+        { event_id: eventId },
+        {
+          headers: {
+            Authorization: `Bearer ${token}`,
+            'Content-Type': 'application/json',
+          },
+        }
+      );
+      ToastAndroid.show("Checked-In Successfully!", ToastAndroid.SHORT);
+
+      // Optionally refetch events to update UI
+      fetchUpcomingEvents();
+    } catch (error) {
+      console.error("Check-in error:", error.response?.data || error.message || error);
+      ToastAndroid.show(error.response?.data?.message || "Check-In failed!", ToastAndroid.SHORT);
+    }
+  };
+
+  const fetchUpcomingEvents = async () => {
+    console.log(" Try to Api is fetching")
+    try {
+      const token = await AsyncStorage.getItem('token'); // replace with your auth method
+      console.log("Api is fetching")
+      const response = await axios.post(
+        'https://letsmeet-backend-47lv.onrender.com/api/user-events/registered-events',
+        {
+          latitude: location.latitude,
+          longitude: location.longitude
+        },
+        {
+          headers: {
+            Authorization: `Bearer ${token}`,
+            'Content-Type': 'application/json',
+          },
+        }
+      );
+      console.log("Api is fetched")
+
+      const rawEvents = response.data.events;
+
+      // 🔁 Map the response to your expected format
+      const formattedEvents = rawEvents.map(event => ({
+        id: event.id,
+        name: event.name,
+        organizer: event.venue || 'Unknown',
+        webUrl: event.web_page_url,
+        banner: event.banner,
+        description: event.description,
+        check_in_available: event.check_in_available,
+        start_date: event.start_date_time,
+        end_date: event.end_date_time,
+        lat: parseFloat(event.latitude),
+        lon: parseFloat(event.longitude),
+        isRegistered: event.is_registered,
+        totalConnections: event.total_connections,
+        approvedRequests: event.approved_requests,
+        pendingRequests: event.pending_requests,
+        already_checked_in: event.already_checked_in
+      }))
+
+      setEventData(formattedEvents);
+    } catch (error) {
+      console.error('Error fetching events:', error.message || error);
+    }
+  };
+
+  useEffect(() => {
+    fetchUpcomingEvents();
+  }, []);
+
   return (
     <View source={backgroundImage} style={styles.background} resizeMode="cover">
       <SafeAreaView style={styles.container}>
-        <View style={styles.customHeader}>
-          <View style={{ flexDirection: "row", gap: 10 }}>
-            <TouchableOpacity onPress={() => { handleProfile() }}>
-              <Image source={profile} style={styles.profile} />
-            </TouchableOpacity>
-            <TouchableOpacity onPress={() => { handleQRCode() }}>
-              <Image source={scanner} style={styles.headerstyle} />
-            </TouchableOpacity>
-          </View>
-
-
-          <View style={styles.headerRight}>
-            <TouchableOpacity onPress={() => { navigation.navigate('Connection') }}>
-              <Image source={connection} style={styles.headerstyle} />
-            </TouchableOpacity>
-
-            <TouchableOpacity onPress={() => console.log("d pressed")}>
-              <Image source={chat} style={styles.headerstyle} />
-            </TouchableOpacity>
-          </View>
-        </View>
 
         <StatusBar barStyle="dark-content" />
 
@@ -253,19 +333,40 @@ const EventsScreen = ({ navigation }) => {
             <View key={month} style={styles.monthSection}>
               <Text style={styles.monthTitle}>{`${data.monthName} ${data.year}`}</Text>
 
-              {data.events.map((event, index) => (
+              {data.events.map((event) => (
                 <EventCard
-                  key={`${month}-${index}`}
+                  key={event.id}
+                  id={event.id}
                   name={event.name}
                   organizer={event.organizer}
-                  date={event.date} // 👈 Pass raw date, let EventCard format it
+                  start_date={event.start_date}
+                  end_date={event.end_date}
+                  lat={event.lat}
+                  lon={event.lon}
+                  already_checked_in={event.already_checked_in}
+                  userLat={location?.latitude}
+                  userLon={location?.longitude}
+                  onCheckIn={() => handleCheckIn(event.id)}
                   onPress={() =>
-                    navigation.navigate("CheckInDescription", {
+                    navigation.navigate("MyEventsDescription", {
+                      id: event.id,
                       name: event.name,
                       organizer: event.organizer,
-                      date: new Date(event.date).toLocaleDateString(), // 👈 format here for display
-                    })
-                  }
+                      description: event.description,
+                      start_date: event.start_date,
+                      end_date: event.end_date,
+                      lat: event.lat,
+                      lon: event.lon,
+                      webUrl: event.webUrl,
+                      banner: event.banner,
+                      isRegistered: event.is_registered,
+                      checkInAvailable: event.check_in_available,
+                      already_checked_in: event.already_checked_in,
+                      totalConnections: event.total_connections,
+                      approvedRequests: event.approved_requests,
+                      pendingRequests: event.pending_requests,
+                      fetchUpcomingEvents,
+                    })}
                 />
               ))}
             </View>
@@ -274,15 +375,6 @@ const EventsScreen = ({ navigation }) => {
         </ScrollView>
       </SafeAreaView>
 
-      <View style={styles.bottomBarContainer}>
-        <TouchableOpacity onPress={() => { navigation.goBack() }}>
-          <Text style={styles.bottomIconleft}>📅</Text>
-        </TouchableOpacity>
-
-        <TouchableOpacity onPress={moveToRight}>
-          <Text style={styles.bottomIconright}>👤</Text>
-        </TouchableOpacity>
-      </View>
     </View>
   );
 };
@@ -303,11 +395,9 @@ const styles = StyleSheet.create({
     flexDirection: "row",
     justifyContent: "space-between",
     alignItems: "center",
-    backgroundColor: "#6C7C7C",
+    backgroundColor: "#34495e",
     paddingHorizontal: 16,
     paddingVertical: 8,
-    borderTopLeftRadius: 10,
-    borderTopRightRadius: 10,
   },
   profile: {
     width: 35,
@@ -339,7 +429,7 @@ const styles = StyleSheet.create({
     borderWidth: 1,
     borderColor: "#888",
     borderRadius: 20,
-    backgroundColor: "rgb(201, 194, 241)",
+    backgroundColor: "#34495e",
     alignSelf: "center",
     shadowColor: "#000",
     shadowOffset: { width: 0, height: 2 },
@@ -352,7 +442,7 @@ const styles = StyleSheet.create({
     fontSize: 18,
     marginLeft: 20,
     fontWeight: "bold",
-    color: "#000",
+    color: "#fff",
   },
   header: {
     flexDirection: "row",
@@ -364,6 +454,13 @@ const styles = StyleSheet.create({
     paddingHorizontal: 12,
     paddingVertical: 6,
     borderRadius: 20,
+  },
+  monthTitle: {
+    fontSize: 25,
+    fontWeight: "bold",
+    // fontStyle: "italic",
+    color: "#333",
+    marginBottom: 8,
   },
   filledButton: {
     backgroundColor: "#4F46E5S",
@@ -384,17 +481,12 @@ const styles = StyleSheet.create({
     marginBottom: 24,
   },
   card: {
-    backgroundColor: "rgb(201, 194, 241)",
     padding: 16,
     width: 370,
     height: 90,
     marginVertical: 6,
-    borderRadius: 16,
-    elevation: 6,
-    shadowColor: "#000",
-    shadowOffset: { width: 0, height: 4 },
-    shadowOpacity: 0.25,
-    shadowRadius: 8,
+    borderBottomWidth: 0.5
+
   },
   eventName: {
     fontSize: 18,
@@ -419,13 +511,13 @@ const styles = StyleSheet.create({
     left: 0,
     right: 0,
     height: 80,
-    backgroundColor: "#465E5D",
+    backgroundColor: "#34495e",
     flexDirection: "row",
     justifyContent: "space-around",
     alignItems: "center",
     paddingHorizontal: 20,
-    borderTopLeftRadius: 20,
-    borderTopRightRadius: 20,
+    // borderTopLeftRadius: 20,
+    // borderTopRightRadius: 20,
     overflow: "visible",
   },
   centerCircle: {
