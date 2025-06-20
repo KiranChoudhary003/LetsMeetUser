@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from 'react';
+import React, { useEffect, useState, useCallback } from 'react';
 import {
     View, Text, FlatList, TouchableOpacity, StyleSheet,
     TextInput, ActivityIndicator, Image, Platform,
@@ -7,6 +7,9 @@ import AsyncStorage from '@react-native-async-storage/async-storage';
 import { useNavigation } from '@react-navigation/native';
 import Ionicons from 'react-native-vector-icons/Ionicons';
 import profile from '../../assets/profile.png';
+import { io } from 'socket.io-client';
+import { jwtDecode } from 'jwt-decode';
+import { useFocusEffect } from '@react-navigation/native';
 
 const API_URL = 'https://letsmeet-backend-47lv.onrender.com/api';
 
@@ -20,16 +23,24 @@ export default function UserListScreen() {
         fetchConnections();
     }, []);
 
+    useFocusEffect(
+        useCallback(() => {
+            fetchConnections();
+        }, [])
+    );
+
+
     const fetchConnections = async () => {
         try {
             const token = await AsyncStorage.getItem('token');
             const response = await fetch(`${API_URL}/user-chat/chat-connections`, {
-                headers: {
-                    Authorization: `Bearer ${token}`,
-                },
+                headers: { Authorization: `Bearer ${token}` },
             });
             const data = await response.json();
-            setUsers(data.connections || []);
+            const filtered = (data.connections || [])
+                .filter(user => user.chat_id && user.last_message)
+                .sort((a, b) => new Date(b.last_message_time) - new Date(a.last_message_time));
+            setUsers(filtered);
         } catch (error) {
             console.error('Error fetching connections:', error);
         } finally {
@@ -37,43 +48,141 @@ export default function UserListScreen() {
         }
     };
 
+
+    useEffect(() => {
+        let socket;
+        const setupSocket = async () => {
+            const token = await AsyncStorage.getItem('token');
+            if (!token) return;
+
+            const decoded = jwtDecode(token);
+            const currentUserId = decoded.id || decoded.user_id;
+
+            socket = io('https://letsmeet-backend-47lv.onrender.com/', {
+                auth: { token },
+                transports: ['websocket'],
+            });
+
+            socket.on('receive_message', (msg) => {
+                setUsers(prevUsers => {
+                    const updatedUsers = prevUsers.map(user => {
+                        if (user.id === msg.sender_id) {
+                            return {
+                                ...user,
+                                last_message: msg.content,
+                                last_message_time: msg.sent_at, // Make sure this is a valid date string
+                                unread_count: (user.unread_count || 0) + 1,
+                            };
+                        }
+                        return user;
+                    });
+                    return updatedUsers.sort((a, b) => new Date(b.last_message_time) - new Date(a.last_message_time));
+                });
+            });
+
+
+            socket.on('messages_marked_read', ({ chat_id }) => {
+                setUsers(prevUsers =>
+                    prevUsers.map(user =>
+                        user.chat_id === chat_id ? { ...user, unread_count: 0 } : user
+                    )
+                        .sort((a, b) => new Date(b.last_message_time) - new Date(a.last_message_time)) // ✅ Keep sorted
+                );
+            });
+
+        };
+
+        setupSocket();
+        return () => {
+            if (socket) socket.disconnect();
+        };
+    }, []);
+
     const filteredUsers = users.filter(user =>
         user.first_name.toLowerCase().includes(searchQuery.toLowerCase()) ||
         user.last_name.toLowerCase().includes(searchQuery.toLowerCase())
     );
 
-    const renderItem = ({ item }) => (
-        <TouchableOpacity
-            style={styles.userCard}
-            onPress={() => navigation.navigate('ChatPage', { peer: item })}
-        >
-            <View style={styles.row}>
-                <Image
-                    source={
-                        item.photo
-                            ? {
-                                uri:
-                                    item.photo.startsWith('data:image') || item.photo.startsWith('http')
-                                        ? item.photo
-                                        : `data:image/jpeg;base64,${item.photo}`,
-                            }
-                            : profile
-                    }
-                    style={styles.avatar}
-                />
-                <View style={styles.info}>
-                    <Text style={styles.name}>{`${item.first_name} ${item.last_name}`}</Text>
-                    <Text style={styles.lastMessage} numberOfLines={1}>
-                        {item.last_message || 'No message yet'}
-                    </Text>
+    const renderItem = ({ item }) => {
+        const unreadCount = item.unread_count || 0;
+
+        const handleDeleteChat = async () => {
+            try {
+                const token = await AsyncStorage.getItem('token');
+                const res = await fetch(`${API_URL}/user-chat/delete/${item.id}`, {
+                    method: 'DELETE',
+                    headers: { Authorization: `Bearer ${token}` },
+                });
+                const result = await res.json();
+                if (res.ok) {
+                    setUsers(prev => prev.filter(user => user.id !== item.id));
+                    alert('Chat deleted successfully');
+                } else {
+                    alert(result.message || 'Failed to delete chat');
+                }
+            } catch (err) {
+                console.error('Delete error:', err);
+                alert('Error deleting chat');
+            }
+        };
+
+        const confirmDelete = () => {
+            if (Platform.OS === 'web') {
+                if (window.confirm(`Delete chat with ${item.first_name}?`)) handleDeleteChat();
+            } else {
+                import('react-native').then(({ Alert }) =>
+                    Alert.alert(
+                        'Delete Chat',
+                        `Are you sure you want to delete chat with ${item.first_name}?`,
+                        [
+                            { text: 'Cancel', style: 'cancel' },
+                            { text: 'Delete', onPress: handleDeleteChat, style: 'destructive' },
+                        ]
+                    )
+                );
+            }
+        };
+
+        return (
+            <TouchableOpacity
+                style={styles.userCard}
+                onPress={() => navigation.navigate('ChatPage', { peer: item })}
+                onLongPress={confirmDelete}
+            >
+                <View style={styles.row}>
+                    <Image
+                        source={
+                            item.photo
+                                ? {
+                                    uri:
+                                        item.photo.startsWith('data:image') || item.photo.startsWith('http')
+                                            ? item.photo
+                                            : `data:image/jpeg;base64,${item.photo}`,
+                                }
+                                : profile
+                        }
+                        style={styles.avatar}
+                    />
+                    <View style={styles.info}>
+                        <View style={styles.nameRow}>
+                            <Text style={styles.name}>{`${item.first_name} ${item.last_name}`}</Text>
+                            {unreadCount > 0 && (
+                                <View style={styles.unreadBadge}>
+                                    <Text style={styles.unreadText}>{unreadCount}</Text>
+                                </View>
+                            )}
+                        </View>
+                        <Text style={styles.lastMessage} numberOfLines={1}>
+                            {item.last_message}
+                        </Text>
+                    </View>
                 </View>
-            </View>
-        </TouchableOpacity>
-    );
+            </TouchableOpacity>
+        );
+    };
 
     return (
         <View style={styles.container}>
-            {/* Header */}
             <View style={styles.header}>
                 <TouchableOpacity onPress={() => navigation.goBack()}>
                     <Ionicons name="arrow-back" size={24} color="#2c3e50" />
@@ -82,7 +191,6 @@ export default function UserListScreen() {
                 <View style={{ width: 24 }} />
             </View>
 
-            {/* Search Bar */}
             <TextInput
                 style={styles.searchInput}
                 placeholder="Search users..."
@@ -91,7 +199,6 @@ export default function UserListScreen() {
                 placeholderTextColor="#888"
             />
 
-            {/* User List */}
             {loading ? (
                 <ActivityIndicator size="large" color="#007AFF" style={{ marginTop: 30 }} />
             ) : filteredUsers.length === 0 ? (
@@ -104,6 +211,13 @@ export default function UserListScreen() {
                     contentContainerStyle={{ paddingBottom: 20 }}
                 />
             )}
+
+            <TouchableOpacity
+                style={styles.floatingButton}
+                onPress={() => navigation.navigate('UserFriendList')}
+            >
+                <Ionicons name="add" size={30} color="#fff" />
+            </TouchableOpacity>
         </View>
     );
 }
@@ -161,10 +275,30 @@ const styles = StyleSheet.create({
     info: {
         flex: 1,
     },
+    nameRow: {
+        flexDirection: 'row',
+        alignItems: 'center',
+        justifyContent: 'space-between',
+    },
     name: {
         fontSize: 17,
         fontWeight: '600',
         color: '#2c3e50',
+    },
+    unreadBadge: {
+        backgroundColor: '#ff3b30',
+        borderRadius: 12,
+        paddingHorizontal: 8,
+        paddingVertical: 2,
+        marginLeft: 8,
+        minWidth: 24,
+        alignItems: 'center',
+        justifyContent: 'center',
+    },
+    unreadText: {
+        color: '#fff',
+        fontSize: 12,
+        fontWeight: 'bold',
     },
     lastMessage: {
         fontSize: 14,
@@ -177,4 +311,21 @@ const styles = StyleSheet.create({
         fontSize: 16,
         color: '#999',
     },
+    floatingButton: {
+        position: 'absolute',
+        bottom: 30,
+        right: 20,
+        backgroundColor: '#007AFF',
+        width: 60,
+        height: 60,
+        borderRadius: 30,
+        justifyContent: 'center',
+        alignItems: 'center',
+        shadowColor: '#000',
+        shadowOffset: { width: 0, height: 4 },
+        shadowOpacity: 0.3,
+        shadowRadius: 5,
+        elevation: 6,
+    },
+
 });

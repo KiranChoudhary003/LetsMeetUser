@@ -18,6 +18,7 @@ import { LocationProvider } from './src/components/LocationContext/LocationConte
 import Scanner from './src/components/Scanner';
 import UserListScreen from './src/components/Chatting/UserListScreen';
 import ChatPage from './src/components/Chatting/ChatPage';
+import UserFriendList from './src/components/Chatting/UserFriendList';
 
 
 enableScreens();
@@ -35,6 +36,7 @@ const App = () => {
           <Stack.Screen name="Profile" component={Profile} />
           <Stack.Screen name="Edit" component={Edit} />
           <Stack.Screen name="UserListScreen" component={UserListScreen} />
+          <Stack.Screen name="UserFriendList" component={UserFriendList} />
           <Stack.Screen name="ChatPage" component={ChatPage} />
           <Stack.Screen name="Scanner" component={Scanner} />
           <Stack.Screen name="QRCode" component={QRCodeScreen} />

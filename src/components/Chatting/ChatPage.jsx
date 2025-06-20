@@ -1,4 +1,4 @@
-// ✅ Enhanced ChatPage with Read Receipt Support + Date Grouping + Auto Scroll + Focus-aware Read
+""// ✅ Enhanced ChatPage with Read Receipt Support + Date Grouping + Auto Scroll + Focus-aware Read
 
 import React, { useEffect, useState, useRef } from 'react';
 import {
@@ -13,6 +13,7 @@ import {
     Platform,
     Image,
     Modal,
+    ActivityIndicator,
 } from 'react-native';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { io } from 'socket.io-client';
@@ -21,8 +22,7 @@ import Ionicons from 'react-native-vector-icons/Ionicons';
 import { useNavigation, useIsFocused } from '@react-navigation/native';
 import { BlurView } from '@react-native-community/blur';
 import moment from 'moment';
-
-const DEFAULT_AVATAR = 'https://i.pravatar.cc/300';
+import profile from '../../assets/profile.png';
 
 const ChatPage = ({ route }) => {
     const { peer } = route.params;
@@ -37,6 +37,7 @@ const ChatPage = ({ route }) => {
     const [isTyping, setIsTyping] = useState(false);
     const [isModalVisible, setModalVisible] = useState(false);
     const [chatId, setChatId] = useState(null);
+    const [loading, setLoading] = useState(true);
 
     const socketRef = useRef(null);
     const flatListRef = useRef(null);
@@ -73,7 +74,11 @@ const ChatPage = ({ route }) => {
             const decoded = jwtDecode(token);
             const userId = decoded.id || decoded.user_id;
             setCurrentUserId(userId);
-            if (decoded.avatarUrl) setCurrentUserAvatar(decoded.avatarUrl);
+
+            const storedAvatar = await AsyncStorage.getItem('user_photo');
+            if (storedAvatar) {
+                setCurrentUserAvatar(storedAvatar);
+            }
 
             const socket = io('https://letsmeet-backend-47lv.onrender.com/', {
                 auth: { token },
@@ -102,6 +107,7 @@ const ChatPage = ({ route }) => {
                 if (isFocused) {
                     socket.emit('mark_read', { chat_id });
                 }
+                setLoading(false);
             });
 
             socket.on('receive_message', (msg) => {
@@ -122,7 +128,6 @@ const ChatPage = ({ route }) => {
                     return updated;
                 });
 
-                // 🔥 Emit mark_read if user is on screen
                 if (isFocused && chatId && msg.sender_id === peer_id) {
                     socket.emit('mark_read', { chat_id: chatId });
                 }
@@ -164,13 +169,35 @@ const ChatPage = ({ route }) => {
     }, [peer_id]);
 
     useEffect(() => {
+        if (flatListRef.current && groupedMessages.length > 0) {
+            setTimeout(() => {
+                flatListRef.current.scrollToOffset({ offset: 0, animated: false });
+            }, 100);
+        }
+    }, [groupedMessages]);
+
+    useEffect(() => {
         if (isFocused && chatId && socketRef.current) {
             socketRef.current.emit('mark_read', { chat_id: chatId });
         }
-    }, [isFocused]);
+    }, [isFocused, chatId]);
+
+    useEffect(() => {
+        if (!isFocused || !chatId || !socketRef.current) return;
+
+        const hasUnread = messages.some(
+            (msg) => msg.from === peer_id && !msg.isRead
+        );
+
+        if (hasUnread) {
+            socketRef.current.emit('mark_read', { chat_id: chatId });
+        }
+    }, [messages, isFocused, chatId, peer_id]);
 
     const scrollToBottom = () => {
-        setTimeout(() => flatListRef.current?.scrollToEnd({ animated: true }), 100);
+        requestAnimationFrame(() => {
+            flatListRef.current?.scrollToEnd({ animated: false });
+        });
     };
 
     const sendMessage = () => {
@@ -224,14 +251,17 @@ const ChatPage = ({ route }) => {
     const renderItem = ({ item }) => {
         if (item.type === 'date') {
             return (
-                <View style={{ alignItems: 'center', marginVertical: 10 }}>
-                    <Text style={{ color: '#555', fontSize: 13 }}>{item.label}</Text>
+                <View style={styles.dateSeparator}>
+                    <Text style={styles.dateText}>{item.label}</Text>
                 </View>
             );
         }
 
         const isMe = item.from === currentUserId;
-        const avatarUrl = isMe ? currentUserAvatar : peerAvatar;
+        const avatarUrl = isMe
+            ? currentUserAvatar || Image.resolveAssetSource(profile).uri
+            : peerAvatar || Image.resolveAssetSource(profile).uri;
+
         let tickIcon = null;
         let tickColor = '#000';
 
@@ -242,7 +272,7 @@ const ChatPage = ({ route }) => {
 
         return (
             <View style={[styles.messageRow, isMe ? styles.rightRow : styles.leftRow]}>
-                {!isMe && <Image source={{ uri: avatarUrl || DEFAULT_AVATAR }} style={styles.avatar} />}
+                {!isMe && <Image source={{ uri: avatarUrl }} style={styles.avatar} />}
                 <View style={[styles.messageBubble, isMe ? styles.messageRight : styles.messageLeft]}>
                     <Text style={[styles.messageText, { color: '#fff' }]}>{item.text}</Text>
                     <View style={{ flexDirection: 'row', alignItems: 'center', justifyContent: 'flex-end' }}>
@@ -252,57 +282,69 @@ const ChatPage = ({ route }) => {
                         {tickIcon && <Ionicons name={tickIcon} size={16} color={tickColor} style={{ marginLeft: 6 }} />}
                     </View>
                 </View>
-                {isMe && <Image source={{ uri: avatarUrl || DEFAULT_AVATAR }} style={styles.avatar} />}
+                {isMe && <Image source={{ uri: avatarUrl }} style={styles.avatar} />}
             </View>
         );
     };
 
     return (
         <SafeAreaView style={styles.container}>
-            {/* Header */}
-            <View style={styles.chatHeader}>
-                <TouchableOpacity onPress={() => navigation.goBack()} style={styles.backButton}>
-                    <Ionicons name="arrow-back" size={24} color="#ffffff" />
-                </TouchableOpacity>
-                <TouchableOpacity onPress={() => setModalVisible(true)}>
-                    <Image
-                        source={peerAvatar ? { uri: peerAvatar } : { uri: DEFAULT_AVATAR }}
-                        style={styles.headerAvatar}
-                    />
-                </TouchableOpacity>
-                <Text style={styles.headerName}>{`${peer.first_name} ${peer.last_name}`}</Text>
-            </View>
-
-            <FlatList
-                ref={flatListRef}
-                data={groupedMessages}
-                renderItem={renderItem}
-                keyExtractor={(item, index) => item.id ? item.id.toString() : `date-${index}`}
-                contentContainerStyle={styles.messagesContainer}
-            />
-
-            {isTyping && <Text style={styles.typingText}>Typing...</Text>}
-
-            <KeyboardAvoidingView
-                behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
-                keyboardVerticalOffset={80}
-                style={styles.inputContainer}
-            >
-                <View style={{ flexDirection: 'row', alignItems: 'center' }}>
-                    <View style={styles.inputWrapper}>
-                        <TextInput
-                            style={styles.input}
-                            value={inputText}
-                            onChangeText={handleTyping}
-                            placeholder="Type a message..."
-                            placeholderTextColor="#888"
-                        />
-                    </View>
-                    <TouchableOpacity onPress={sendMessage} style={styles.sendButton}>
-                        <Text style={styles.sendButtonText}>Send</Text>
-                    </TouchableOpacity>
+            {loading ? (
+                <View style={{ flex: 1, justifyContent: 'center', alignItems: 'center' }}>
+                    <ActivityIndicator size="large" color="#007aff" />
+                    <Text style={{ color: '#555', fontSize: 16, marginTop: 10 }}>
+                        Loading chat messages...
+                    </Text>
                 </View>
-            </KeyboardAvoidingView>
+            ) : (
+                <>
+                    <View style={styles.chatHeader}>
+                        <TouchableOpacity onPress={() => navigation.goBack()} style={styles.backButton}>
+                            <Ionicons name="arrow-back" size={24} color="#ffffff" />
+                        </TouchableOpacity>
+                        <TouchableOpacity onPress={() => setModalVisible(true)}>
+                            <Image
+                                source={peerAvatar ? { uri: peerAvatar } : profile}
+                                style={styles.headerAvatar}
+                            />
+                        </TouchableOpacity>
+                        <Text style={styles.headerName}>{`${peer.first_name} ${peer.last_name}`}</Text>
+                    </View>
+                    <FlatList
+                        ref={flatListRef}
+                        data={[...groupedMessages].reverse()}
+                        renderItem={renderItem}
+                        keyExtractor={(item, index) =>
+                            item.id ? item.id.toString() : `date-${index}`
+                        }
+                        contentContainerStyle={styles.messagesContainer}
+                        inverted={true}
+                    />
+
+                    {isTyping && <Text style={styles.typingText}>Typing...</Text>}
+
+                    <KeyboardAvoidingView
+                        behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
+                        keyboardVerticalOffset={80}
+                        style={styles.inputContainer}
+                    >
+                        <View style={{ flexDirection: 'row', alignItems: 'center' }}>
+                            <View style={styles.inputWrapper}>
+                                <TextInput
+                                    style={styles.input}
+                                    value={inputText}
+                                    onChangeText={handleTyping}
+                                    placeholder="Type a message..."
+                                    placeholderTextColor="#888"
+                                />
+                            </View>
+                            <TouchableOpacity onPress={sendMessage} style={styles.sendButton}>
+                                <Text style={styles.sendButtonText}>Send</Text>
+                            </TouchableOpacity>
+                        </View>
+                    </KeyboardAvoidingView>
+                </>
+            )}
 
             <Modal
                 transparent
@@ -319,7 +361,7 @@ const ChatPage = ({ route }) => {
                     />
                     <TouchableOpacity onPress={() => setModalVisible(false)} style={styles.modalContent}>
                         <Image
-                            source={peerAvatar ? { uri: peerAvatar } : { uri: DEFAULT_AVATAR }}
+                            source={peerAvatar ? { uri: peerAvatar } : profile}
                             style={styles.zoomedImage}
                             resizeMode="contain"
                         />
@@ -356,7 +398,29 @@ const styles = StyleSheet.create({
         fontWeight: '600',
         color: '#ffffff',
     },
-    messagesContainer: { flexGrow: 1, paddingHorizontal: 12, paddingVertical: 8 },
+    messagesContainer: {
+        flexGrow: 1,
+        justifyContent: 'flex-end',
+        paddingHorizontal: 12,
+        paddingTop: 8,
+        paddingBottom: 0,
+    },
+    dateSeparator: {
+        alignSelf: 'center',
+        borderWidth: 1,
+        borderColor: '#34495e',
+        borderRadius: 8,
+        paddingHorizontal: 12,
+        paddingVertical: 4,
+        marginVertical: 10,
+        backgroundColor: '#f0f0f0',
+    },
+
+    dateText: {
+        fontSize: 13,
+        fontWeight: 'bold',
+        color: '#555',
+    },
     messageRow: { flexDirection: 'row', marginVertical: 6, alignItems: 'flex-end' },
     leftRow: { justifyContent: 'flex-start' },
     rightRow: { justifyContent: 'flex-end' },

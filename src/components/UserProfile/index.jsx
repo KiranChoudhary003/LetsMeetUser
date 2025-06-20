@@ -27,7 +27,16 @@ const UserProfile = ({ navigation, route }) => {
                     Authorization: `Bearer ${token}`,
                 },
             });
-            setUserProfile(response.data.user);
+            const user = response.data.user;
+            setUserProfile(user);
+
+            // Cache the photo URL of logged-in user
+            if (user.photo) {
+                const photoUri = user.photo.startsWith('data:image') || user.photo.startsWith('http')
+                    ? user.photo
+                    : `https://letsmeet-backend-47lv.onrender.com/${user.photo}`;
+                await AsyncStorage.setItem('user_photo', photoUri);
+            }
         } catch (err) {
             console.error('Error fetching profile:', err);
         }
@@ -108,6 +117,7 @@ const UserProfile = ({ navigation, route }) => {
     const handleLogout = async () => {
         try {
             await AsyncStorage.removeItem('token');
+            await AsyncStorage.removeItem('user_photo'); // Clear cached photo
             navigation.replace('Login');
         } catch (err) {
             console.log('Logout error:', err);
@@ -135,12 +145,13 @@ const UserProfile = ({ navigation, route }) => {
         return {
             uri: userProfile.photo.startsWith('data:image') || userProfile.photo.startsWith('http')
                 ? userProfile.photo
-                : `https://letsmeet-backend-47lv.onrender.com/${userProfile.photo}`
+                : `https://letsmeet-backend-47lv.onrender.com/${userProfile.photo}`,
         };
     };
 
     return (
         <View style={styles.container}>
+            {/* Header */}
             <View style={styles.headerContainer}>
                 <View style={styles.header}>
                     <TouchableOpacity onPress={() => navigation.goBack()}>
@@ -162,10 +173,12 @@ const UserProfile = ({ navigation, route }) => {
                 </View>
             </View>
 
+            {/* Profile Picture */}
             <TouchableOpacity onPress={() => setProfileView(true)}>
                 <Image source={getProfileImageSource()} style={styles.profile} />
             </TouchableOpacity>
 
+            {/* Modal */}
             <Modal visible={profileView} transparent animationType="fade">
                 <BlurView
                     style={styles.blur}
@@ -189,6 +202,7 @@ const UserProfile = ({ navigation, route }) => {
                 </TouchableOpacity>
             </Modal>
 
+            {/* User Details */}
             <View style={styles.user}>
                 <View style={styles.userDetails}>
                     <Text style={styles.data}>E-mail: </Text>
