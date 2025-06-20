@@ -39,7 +39,7 @@ const highlightText = (text, highlight) => {
   );
 };
 
-const Connection = ({ navigation }) => {
+const Connections = ({ navigation }) => {
   const roleInputRef = useRef(null);
   const [selectedTab, setSelectedTab] = useState('Requests');
   const [search, setSearch] = useState('');
@@ -718,7 +718,7 @@ const Connection = ({ navigation }) => {
   );
 };
 
-export default Connection;
+export default Connections;
 
 
 const styles = StyleSheet.create({

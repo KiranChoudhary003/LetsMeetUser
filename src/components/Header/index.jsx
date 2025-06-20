@@ -1,11 +1,10 @@
+import { useNavigation } from '@react-navigation/native'
 import React from 'react'
-import { Image, StyleSheet } from 'react-native'
-import { TouchableOpacity } from 'react-native'
-import { View } from 'react-native'
+import { Image, StyleSheet, TouchableOpacity, View } from 'react-native'
+import connection from '../../assets/connection.png'
 import profile from '../../assets/profile.png'
 import scanner from '../../assets/scanner.png'
-import connection from '../../assets/connection.png'
-import { useNavigation } from '@react-navigation/native'
+import Ionicons from 'react-native-vector-icons/Ionicons';
 
 const Header = () => {
 
@@ -35,6 +34,9 @@ const Header = () => {
                 <TouchableOpacity onPress={() => { navigation.navigate('Connection') }}>
                     <Image source={connection} style={styles.headerstyle} />
                 </TouchableOpacity>
+                <TouchableOpacity onPress={() => {  navigation.navigate('UserListScreen') }}>
+                    <Ionicons name="chatbubbles-outline" size={30} color="#f9efef" style={styles.Chatstyle}/>
+                </TouchableOpacity>
             </View>
         </View>
     )
@@ -60,4 +62,12 @@ const styles = StyleSheet.create({
         width: 45,
         height: 45
     },
+    headerRight: {
+        flexDirection: "row",
+    },
+    Chatstyle:{
+        justifyContent : 'center',
+        marginVertical : 'auto',
+    },
+
 })

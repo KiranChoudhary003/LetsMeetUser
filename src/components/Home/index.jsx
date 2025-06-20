@@ -9,7 +9,6 @@ import {
     StatusBar,
     TouchableOpacity,
     StyleSheet,
-    ImageBackground,
     Animated,
     Pressable,
 } from "react-native";
@@ -33,12 +32,6 @@ const EventCard = ({
     onCheckIn
 }) => {
     const scale = useRef(new Animated.Value(1)).current;
-    const [showWelcome, setShowWelcome] = useState(true);
-
-    useEffect(() => {
-        const timer = setTimeout(() => setShowWelcome(false), 2800);
-        return () => clearTimeout(timer);
-    }, []);
 
     const handlePressIn = () => {
         Animated.spring(scale, { toValue: 0.96, useNativeDriver: true }).start();

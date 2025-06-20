@@ -10,13 +10,15 @@ import Profile from './src/components/Profile';
 import Edit from './src/components/Edit';
 import QRCodeScreen from './src/components/QRCodeScreen';
 import Description from './src/components/Description';
-import EventAttend from './src/components/EventAttend';
 import Connection from './src/components/Connection';
 import UserProfile from './src/components/UserProfile';
 import MyEventsDesciption from './src/components/MyEventsDesciption';
 import Layout from './src/components/Layout';
 import { LocationProvider } from './src/components/LocationContext/LocationContext';
 import Scanner from './src/components/Scanner';
+import UserListScreen from './src/components/Chatting/UserListScreen';
+import ChatPage from './src/components/Chatting/ChatPage';
+
 
 enableScreens();
 const Stack = createStackNavigator();
@@ -32,10 +34,11 @@ const App = () => {
           <Stack.Screen name="Layout" component={Layout} />
           <Stack.Screen name="Profile" component={Profile} />
           <Stack.Screen name="Edit" component={Edit} />
+          <Stack.Screen name="UserListScreen" component={UserListScreen} />
+          <Stack.Screen name="ChatPage" component={ChatPage} />
           <Stack.Screen name="Scanner" component={Scanner} />
           <Stack.Screen name="QRCode" component={QRCodeScreen} />
           <Stack.Screen name="Description" component={Description} />
-          <Stack.Screen name="EventAttend" component={EventAttend} />
           <Stack.Screen name="Connection" component={Connection} />
           <Stack.Screen name="UserProfile" component={UserProfile} />
           <Stack.Screen name="MyEventsDescription" component={MyEventsDesciption} />

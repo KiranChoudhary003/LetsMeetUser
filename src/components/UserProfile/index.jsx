@@ -11,15 +11,13 @@ import { BlurView } from '@react-native-community/blur';
 import { launchImageLibrary } from 'react-native-image-picker';
 import { useFocusEffect } from '@react-navigation/native';
 
-
-const Profile = ({ navigation, route }) => {
+const UserProfile = ({ navigation, route }) => {
     const [userProfile, setUserProfile] = useState({});
     const [profileView, setProfileView] = useState(false);
 
     const passedUser = route?.params?.user;
     const isViewingOwnProfile = !passedUser;
 
-    // useEffect(() => {
     const fetchProfileData = async () => {
         try {
             const token = await AsyncStorage.getItem('token');
@@ -35,34 +33,33 @@ const Profile = ({ navigation, route }) => {
         }
     };
 
-    if (passedUser) {
-        setUserProfile(passedUser);
-    } else {
-        fetchProfileData();
-    }
-
+    useEffect(() => {
+        if (passedUser) {
+            setUserProfile(passedUser);
+        } else {
+            fetchProfileData();
+        }
+    }, []);
 
     useFocusEffect(
         useCallback(() => {
-            fetchProfileData(); // 👈 re-fetch when screen comes into focus
+            if (!passedUser) fetchProfileData();
         }, [])
     );
 
     const requestGalleryPermission = async () => {
         if (Platform.OS === 'android') {
-            if (Platform.Version >= 33) {
-                const granted = await PermissionsAndroid.request(
-                    PermissionsAndroid.PERMISSIONS.READ_MEDIA_IMAGES,
-                    { title: 'Permission', message: 'Allow access to gallery', buttonPositive: 'OK' }
-                );
-                return granted === PermissionsAndroid.RESULTS.GRANTED;
-            } else {
-                const granted = await PermissionsAndroid.request(
-                    PermissionsAndroid.PERMISSIONS.READ_EXTERNAL_STORAGE,
-                    { title: 'Permission', message: 'Allow access to storage', buttonPositive: 'OK' }
-                );
-                return granted === PermissionsAndroid.RESULTS.GRANTED;
-            }
+            const permissionType = Platform.Version >= 33
+                ? PermissionsAndroid.PERMISSIONS.READ_MEDIA_IMAGES
+                : PermissionsAndroid.PERMISSIONS.READ_EXTERNAL_STORAGE;
+
+            const granted = await PermissionsAndroid.request(permissionType, {
+                title: 'Permission',
+                message: 'Allow access to gallery',
+                buttonPositive: 'OK',
+            });
+
+            return granted === PermissionsAndroid.RESULTS.GRANTED;
         }
         return true;
     };
@@ -75,12 +72,10 @@ const Profile = ({ navigation, route }) => {
         }
 
         launchImageLibrary({ mediaType: 'photo', quality: 0.8 }, async (response) => {
-            if (response.didCancel || response.errorCode) {
-                return;
-            }
+            if (response.didCancel || response.errorCode) return;
 
             const asset = response.assets?.[0];
-            if (!asset?.uri) { return; }
+            if (!asset?.uri) return;
 
             const formData = new FormData();
             formData.append('photo', {
@@ -103,10 +98,7 @@ const Profile = ({ navigation, route }) => {
                 );
                 Alert.alert('Success', 'Photo updated');
                 setProfileView(false);
-                const updated = await axios.get('https://letsmeet-backend-47lv.onrender.com/api/user-profile', {
-                    headers: { Authorization: `Bearer ${token}` },
-                });
-                setUserProfile(updated.data.user);
+                fetchProfileData();
             } catch (err) {
                 Alert.alert('Error', 'Upload failed');
             }
@@ -123,9 +115,6 @@ const Profile = ({ navigation, route }) => {
     };
 
     const handleProfileEdit = () => {
-        console.log("userProfile.preference (raw):", userProfile.preference);
-        // console.log("Parsed preference:", preferenc/e);
-
         navigation.navigate("Edit", {
             first_name: userProfile.first_name,
             last_name: userProfile.last_name,
@@ -137,9 +126,18 @@ const Profile = ({ navigation, route }) => {
                     ? userProfile.preference
                     : typeof userProfile.preference === 'string'
                         ? JSON.parse(userProfile.preference)
-                        : []
-        })
-    }
+                        : [],
+        });
+    };
+
+    const getProfileImageSource = () => {
+        if (!userProfile.photo) return profile;
+        return {
+            uri: userProfile.photo.startsWith('data:image') || userProfile.photo.startsWith('http')
+                ? userProfile.photo
+                : `https://letsmeet-backend-47lv.onrender.com/${userProfile.photo}`
+        };
+    };
 
     return (
         <View style={styles.container}>
@@ -165,18 +163,7 @@ const Profile = ({ navigation, route }) => {
             </View>
 
             <TouchableOpacity onPress={() => setProfileView(true)}>
-                <Image
-                    source={
-                        userProfile.photo
-                            ? {
-                                uri: userProfile.photo.startsWith('data:image') || userProfile.photo.startsWith('http')
-                                    ? userProfile.photo
-                                    : `https://letsmeet-backend-47lv.onrender.com/${userProfile.photo}`
-                            }
-                            : profile
-                    }
-                    style={styles.profile}
-                />
+                <Image source={getProfileImageSource()} style={styles.profile} />
             </TouchableOpacity>
 
             <Modal visible={profileView} transparent animationType="fade">
@@ -189,15 +176,7 @@ const Profile = ({ navigation, route }) => {
                 <TouchableOpacity style={styles.modalOverlay} onPressOut={() => setProfileView(false)}>
                     <View style={styles.modalContent}>
                         <Image
-                            source={
-                                userProfile.photo && userProfile.photo.length > 100
-                                    ? {
-                                        uri: userProfile.photo.startsWith('data:image') || userProfile.photo.startsWith('http')
-                                            ? userProfile.photo
-                                            : `https://letsmeet-backend-47lv.onrender.com/${userProfile.photo}`
-                                    }
-                                    : profile
-                            }
+                            source={getProfileImageSource()}
                             style={styles.fullImage}
                             resizeMode="contain"
                         />
@@ -212,11 +191,11 @@ const Profile = ({ navigation, route }) => {
 
             <View style={styles.user}>
                 <View style={styles.userDetails}>
-                    <Text style={styles.data}>E-mail : </Text>
+                    <Text style={styles.data}>E-mail: </Text>
                     <Text style={styles.details}>{userProfile.email}</Text>
                 </View>
                 <View style={styles.userDetails}>
-                    <Text style={styles.data}>LinkedIn : </Text>
+                    <Text style={styles.data}>LinkedIn: </Text>
                     {userProfile.linkedin_url ? (
                         <TouchableOpacity onPress={() => Linking.openURL(userProfile.linkedin_url)}>
                             <Text style={styles.linkText}>{userProfile.linkedin_url}</Text>
@@ -226,7 +205,7 @@ const Profile = ({ navigation, route }) => {
                     )}
                 </View>
                 <View style={styles.userDetails}>
-                    <Text style={styles.data}>Preferences : </Text>
+                    <Text style={styles.data}>Preferences: </Text>
                     <Text style={styles.details}>
                         {userProfile.preference?.length > 0 ? userProfile.preference.join(', ') : 'None'}
                     </Text>
@@ -267,7 +246,7 @@ const styles = StyleSheet.create({
     },
     modalOverlay: {
         flex: 1,
-        backgroundColor: 'rgba(0,0,0,0.2)', // Semi-transparent black background
+        backgroundColor: 'rgba(0,0,0,0.2)',
         justifyContent: 'center',
         alignItems: 'center',
     },
@@ -279,11 +258,10 @@ const styles = StyleSheet.create({
         right: 0,
     },
     modalContent: {
-        backgroundColor: '#f7faff', // Slight transparency
+        backgroundColor: '#f7faff',
         padding: 24,
         alignItems: 'center',
         justifyContent: 'center',
-        // minWidth: '50%',
         shadowColor: '#000',
         shadowOpacity: 0.3,
         shadowRadius: 10,
@@ -299,7 +277,6 @@ const styles = StyleSheet.create({
         borderBottomRightRadius: 20,
     },
     userName: {
-        display: 'flex',
         flexDirection: 'row',
         justifyContent: 'center',
         paddingTop: 80,
@@ -310,6 +287,9 @@ const styles = StyleSheet.create({
         marginTop: 10,
         fontSize: 18,
     },
+    userRole: {
+        alignItems: 'center',
+    },
     profile: {
         width: 150,
         height: 150,
@@ -319,7 +299,6 @@ const styles = StyleSheet.create({
         right: 130,
     },
     userDetails: {
-        display: 'flex',
         flexDirection: 'row',
         paddingLeft: 30,
         paddingTop: 20,
@@ -328,9 +307,6 @@ const styles = StyleSheet.create({
         color: '#333',
         fontSize: 15,
         width: 280,
-    },
-    url: {
-        color: '#465BF3',
     },
     data: {
         fontWeight: 'bold',
@@ -342,44 +318,31 @@ const styles = StyleSheet.create({
         backgroundColor: '#34495e',
         borderRadius: 10,
         color: 'white',
-        display: 'flex',
         textAlign: 'center',
         fontSize: 17,
         marginLeft: 155,
         marginTop: 50,
         paddingVertical: 5,
     },
-    botton: {
-        flex: 1,
-        flexDirection: 'row',
-    },
     user: {
-        position: 'relative',
-        left: 0,
         top: 100,
     },
-    backArrow: {
-        color: 'white',
-        fontSize: 50,
-    },
     header: {
-        display: 'flex',
         flexDirection: 'row',
         alignItems: 'center',
         marginTop: 20,
-
     },
     linkText: {
         color: '#007BFF',
         textDecorationLine: 'underline',
         fontSize: 14,
-        width : 280
+        width: 280,
     },
-
     profileHeader: {
         color: 'white',
         fontSize: 25,
         margin: 15,
     },
 });
-export default Profile;
+
+export default UserProfile;
