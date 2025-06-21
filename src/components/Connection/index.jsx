@@ -10,7 +10,7 @@ import {
   Text,
   TextInput, TouchableOpacity, TouchableWithoutFeedback,
   View,
-  ActivityIndicator
+  ActivityIndicator,
 } from 'react-native';
 import Entypo from 'react-native-vector-icons/Entypo';
 import Ionicons from 'react-native-vector-icons/Ionicons';
@@ -80,7 +80,7 @@ const Connections = ({ navigation }) => {
       setLoading(true);
       await Promise.all([
         fetchPendingRequests(),
-        fetchAllUsers()
+        fetchAllUsers(),
       ]);
       setLoading(false);
     };

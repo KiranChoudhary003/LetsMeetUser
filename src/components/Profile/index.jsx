@@ -165,7 +165,7 @@ const Profile = ({ navigation, route }) => {
               ? {
                 uri: userProfile.photo.startsWith('data:image') || userProfile.photo.startsWith('http')
                   ? userProfile.photo
-                  : `https://letsmeet-backend-47lv.onrender.com/${userProfile.photo}`
+                  : `https://letsmeet-backend-47lv.onrender.com/${userProfile.photo}`,
               }
               : profile
           }
@@ -188,7 +188,7 @@ const Profile = ({ navigation, route }) => {
                   ? {
                     uri: userProfile.photo.startsWith('data:image') || userProfile.photo.startsWith('http')
                       ? userProfile.photo
-                      : `https://letsmeet-backend-47lv.onrender.com/${userProfile.photo}`
+                      : `https://letsmeet-backend-47lv.onrender.com/${userProfile.photo}`,
                   }
                   : profile
               }

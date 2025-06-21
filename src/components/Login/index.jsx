@@ -1,8 +1,8 @@
-import React, { useEffect, useState } from 'react'
-import { ActivityIndicator, Alert, Button, Image, StyleSheet, Text, TextInput, TouchableOpacity, View } from 'react-native'
-import logo from '../../assets/logo.png'
-import axios from 'axios'
-import AsyncStorage from '@react-native-async-storage/async-storage'
+import React, { useEffect, useState } from 'react';
+import { ActivityIndicator, Alert, Button, Image, StyleSheet, Text, TextInput, TouchableOpacity, View } from 'react-native';
+import logo from '../../assets/logo.png';
+import axios from 'axios';
+import AsyncStorage from '@react-native-async-storage/async-storage';
 
 const Login = ({ navigation }) => {
 
@@ -23,10 +23,10 @@ const Login = ({ navigation }) => {
     }, []);
 
     const handleSubmit = async () => {
-        setLoading(true)
-        console.log("Login attempt with:", login); // 🔍 Debug
+        setLoading(true);
+        console.log('Login attempt with:', login); // 🔍 Debug
         try {
-            console.log("Sending request to login API...");
+            console.log('Sending request to login API...');
             const response = await axios.post(
                 'https://letsmeet-backend-47lv.onrender.com/api/user-profile/login',
                 login,
@@ -38,32 +38,32 @@ const Login = ({ navigation }) => {
                 }
             );
 
-            console.log("Login successful, token received:", response.data.token); // ✅ Debug
+            console.log('Login successful, token received:', response.data.token); // ✅ Debug
 
             // Store token if needed
             await AsyncStorage.setItem('token', response.data.token);
-            console.log("Token saved to AsyncStorage"); // ✅ Debug
+            console.log('Token saved to AsyncStorage'); // ✅ Debug
 
             // Redirect to dashboard
             navigation.navigate('Layout', { screen: 'Home' });
         } catch (error) {
             if (error.response) {
-                console.log("Server responded with status:", error.response.status);
-                console.log("Response data:", error.response.data);
+                console.log('Server responded with status:', error.response.status);
+                console.log('Response data:', error.response.data);
             } else if (error.request) {
-                console.log("Request made but no response received:", error.request);
+                console.log('Request made but no response received:', error.request);
             } else {
-                console.log("Something else went wrong:", error.message);
+                console.log('Something else went wrong:', error.message);
             }
-            console.log("Full error:", error);
+            console.log('Full error:', error);
 
             setError('Login failed. Check email or password.');
-            Alert.alert(`Error`, `Login failed. Check email or password`)
+            Alert.alert('Error', 'Login failed. Check email or password');
         }
         finally {
             setLoading(false);
         }
-    }
+    };
 
     return (
         <View style={styles.container}>
@@ -116,8 +116,8 @@ const Login = ({ navigation }) => {
                 </TouchableOpacity>
             </View>
         </View>
-    )
-}
+    );
+};
 
 const styles = StyleSheet.create({
     container: {
@@ -132,22 +132,22 @@ const styles = StyleSheet.create({
         resizeMode: 'contain',
         borderRadius: 105,
         marginTop: 100,
-        marginBottom: 30
+        marginBottom: 30,
     },
     text: {
         fontSize: 35,
-        fontWeight: "bold",
-        color: "#34495e",
-        marginBottom: 30
+        fontWeight: 'bold',
+        color: '#34495e',
+        marginBottom: 30,
     },
     input: {
         width: 313,
         height: 43,
-        backgroundColor: "#f7faff",
+        backgroundColor: '#f7faff',
         margin: 10,
         borderRadius: 5,
         paddingHorizontal: 10,
-        color: "#000",
+        color: '#000',
         borderColor: '#ccc',
         borderWidth: 1,
     },
@@ -155,7 +155,7 @@ const styles = StyleSheet.create({
         flexDirection: 'row',
         justifyContent: 'space-between',
         width: '75%',
-        alignItems: 'center'
+        alignItems: 'center',
     },
     checkContainer: {
         flexDirection: 'row',
@@ -170,7 +170,7 @@ const styles = StyleSheet.create({
     },
     forgotPassword: {
         fontSize: 13,
-        color: '#000'
+        color: '#000',
     },
     button: {
         width: 194,
@@ -189,16 +189,16 @@ const styles = StyleSheet.create({
     },
     signUpSection: {
         marginTop: 10,
-        display: "flex",
-        flexDirection: "row"
+        display: 'flex',
+        flexDirection: 'row',
     },
     signUp: {
         color: '#777',
-        fontSize: 13
+        fontSize: 13,
     },
     account: {
         fontSize: 13,
-    }
-})
+    },
+});
 
-export default Login    
+export default Login;

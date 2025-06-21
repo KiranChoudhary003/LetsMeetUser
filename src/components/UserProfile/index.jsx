@@ -52,7 +52,7 @@ const UserProfile = ({ navigation, route }) => {
 
     useFocusEffect(
         useCallback(() => {
-            if (!passedUser) fetchProfileData();
+            if (!passedUser) {fetchProfileData();}
         }, [])
     );
 
@@ -81,10 +81,10 @@ const UserProfile = ({ navigation, route }) => {
         }
 
         launchImageLibrary({ mediaType: 'photo', quality: 0.8 }, async (response) => {
-            if (response.didCancel || response.errorCode) return;
+            if (response.didCancel || response.errorCode) {return;}
 
             const asset = response.assets?.[0];
-            if (!asset?.uri) return;
+            if (!asset?.uri) {return;}
 
             const formData = new FormData();
             formData.append('photo', {
@@ -125,7 +125,7 @@ const UserProfile = ({ navigation, route }) => {
     };
 
     const handleProfileEdit = () => {
-        navigation.navigate("Edit", {
+        navigation.navigate('Edit', {
             first_name: userProfile.first_name,
             last_name: userProfile.last_name,
             email: userProfile.email,
@@ -141,7 +141,7 @@ const UserProfile = ({ navigation, route }) => {
     };
 
     const getProfileImageSource = () => {
-        if (!userProfile.photo) return profile;
+        if (!userProfile.photo) {return profile;}
         return {
             uri: userProfile.photo.startsWith('data:image') || userProfile.photo.startsWith('http')
                 ? userProfile.photo

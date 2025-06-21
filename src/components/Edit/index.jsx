@@ -37,7 +37,7 @@ const Edit = ({ route, navigation }) => {
         const fetchRoles = async () => {
             try {
                 const response = await axios.get('https://letsmeet-backend-47lv.onrender.com/api/user-profile/roles', {
-                    headers: { 'Content-Type': 'application/json' }
+                    headers: { 'Content-Type': 'application/json' },
                 });
 
                 console.log('Roles response:', response.data); // Add this
@@ -56,7 +56,7 @@ const Edit = ({ route, navigation }) => {
     }, []);
 
     const handleEdit = async () => {
-        if (isSaving) return; // Prevent duplicate taps
+        if (isSaving) {return;} // Prevent duplicate taps
         setIsSaving(true);
 
         try {
@@ -69,13 +69,13 @@ const Edit = ({ route, navigation }) => {
                     email: newEmail,
                     linkedin_url: newLinkedin,
                     jobRole: newJobRole,
-                    preference: selectedRoles
+                    preference: selectedRoles,
                 },
                 {
                     headers: {
                         'Content-Type': 'application/json',
-                        Authorization: `Bearer ${token}`
-                    }
+                        Authorization: `Bearer ${token}`,
+                    },
                 }
             );
 
@@ -93,7 +93,7 @@ const Edit = ({ route, navigation }) => {
 
 
     useEffect(() => {
-        console.log("Initial selected preferences:", preference);
+        console.log('Initial selected preferences:', preference);
     }, []);
 
     return (
@@ -103,10 +103,10 @@ const Edit = ({ route, navigation }) => {
                     <Text style={styles.backArrow}><MaterialIcons name="arrow-back" size={24} color="#000" /></Text>
                 </TouchableOpacity>
                 <Text style={styles.text}>Edit Account</Text>
-                <TextInput style={styles.input} placeholder='First Name' value={newFirstName} onChangeText={setNewFirstName} />
-                <TextInput style={styles.input} placeholder='Last Name' value={newLastName} onChangeText={setNewLastName} />
-                <TextInput style={styles.input} placeholder='E-mail' value={newEmail} onChangeText={setNewEmail} />
-                <TextInput style={styles.input} placeholder='LinkedIn URL' value={newLinkedin} onChangeText={setNewLinkedin} />
+                <TextInput style={styles.input} placeholder="First Name" value={newFirstName} onChangeText={setNewFirstName} />
+                <TextInput style={styles.input} placeholder="Last Name" value={newLastName} onChangeText={setNewLastName} />
+                <TextInput style={styles.input} placeholder="E-mail" value={newEmail} onChangeText={setNewEmail} />
+                <TextInput style={styles.input} placeholder="LinkedIn URL" value={newLinkedin} onChangeText={setNewLinkedin} />
 
                 <Menu
                     visible={visible}
@@ -182,7 +182,7 @@ const Edit = ({ route, navigation }) => {
     );
 };
 
-export default Edit
+export default Edit;
 
 const styles = StyleSheet.create({
     container: {
@@ -200,7 +200,7 @@ const styles = StyleSheet.create({
         fontWeight: 'bold',
         marginBottom: 50,
         color: '#34495e',
-        textAlign: "center",
+        textAlign: 'center',
         paddingTop: 50,
     },
     input: {
@@ -212,7 +212,7 @@ const styles = StyleSheet.create({
         marginLeft: 50,
         width: 313,
         height: 43,
-        backgroundColor: "#f7faff",
+        backgroundColor: '#f7faff',
     },
     anchorText: {
         color: '#555',
@@ -291,7 +291,7 @@ const styles = StyleSheet.create({
         marginTop: 50,
         marginLeft: 120,
         width: 194,
-        height: 39
+        height: 39,
     },
     buttonText: {
         color: '#fff',
@@ -299,6 +299,6 @@ const styles = StyleSheet.create({
     },
     backArrow: {
         marginTop: 20,
-        marginLeft: 10
-    }
-})
+        marginLeft: 10,
+    },
+});

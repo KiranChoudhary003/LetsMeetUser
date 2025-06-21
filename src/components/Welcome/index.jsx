@@ -8,7 +8,7 @@ import {
   Dimensions,
   Alert,
   TouchableOpacity,
-  Platform
+  Platform,
 } from 'react-native';
 import logo from '../../assets/logo.png';
 import { PERMISSIONS, check, request, RESULTS, openSettings } from 'react-native-permissions';
@@ -30,9 +30,9 @@ const Welcome = ({ navigation }) => {
         getCurrentLocation();
       } else {
         Alert.alert(
-          "Location Permission Required",
-          "This app needs access to your location. Please allow it to continue.",
-          [{ text: "OK" }]
+          'Location Permission Required',
+          'This app needs access to your location. Please allow it to continue.',
+          [{ text: 'OK' }]
         );
       }
     };

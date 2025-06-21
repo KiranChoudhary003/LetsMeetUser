@@ -53,7 +53,7 @@ export default function UserListScreen() {
         let socket;
         const setupSocket = async () => {
             const token = await AsyncStorage.getItem('token');
-            if (!token) return;
+            if (!token) {return;}
 
             const decoded = jwtDecode(token);
             const currentUserId = decoded.id || decoded.user_id;
@@ -94,7 +94,7 @@ export default function UserListScreen() {
 
         setupSocket();
         return () => {
-            if (socket) socket.disconnect();
+            if (socket) {socket.disconnect();}
         };
     }, []);
 
@@ -128,7 +128,7 @@ export default function UserListScreen() {
 
         const confirmDelete = () => {
             if (Platform.OS === 'web') {
-                if (window.confirm(`Delete chat with ${item.first_name}?`)) handleDeleteChat();
+                if (window.confirm(`Delete chat with ${item.first_name}?`)) {handleDeleteChat();}
             } else {
                 import('react-native').then(({ Alert }) =>
                     Alert.alert(

@@ -1,11 +1,11 @@
-import { useNavigation } from '@react-navigation/native'
-import React from 'react'
+import { useNavigation } from '@react-navigation/native';
+import React from 'react';
 import {
     Image, StyleSheet, TouchableOpacity, View, Alert,
-} from 'react-native'
-import connection from '../../assets/connection.png'
-import profile from '../../assets/profile.png'
-import scanner from '../../assets/scanner.png'
+} from 'react-native';
+import connection from '../../assets/connection.png';
+import profile from '../../assets/profile.png';
+import scanner from '../../assets/scanner.png';
 import Ionicons from 'react-native-vector-icons/Ionicons';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import axios from 'axios';
@@ -14,18 +14,18 @@ const Header = () => {
     const navigation = useNavigation();
 
     const handleQRCode = () => {
-        navigation.navigate("QRCode");
+        navigation.navigate('QRCode');
     };
 
     const handleProfile = () => {
-        navigation.navigate("UserProfile");
+        navigation.navigate('UserProfile');
     };
 
     // 🔄 Fetch user profile and store in AsyncStorage
     const fetchUserProfile = async () => {
         try {
             const token = await AsyncStorage.getItem('token');
-            if (!token) return;
+            if (!token) {return;}
 
             const response = await axios.get('https://letsmeet-backend-47lv.onrender.com/api/user-profile', {
                 headers: {
@@ -49,7 +49,7 @@ const Header = () => {
 
     return (
         <View style={styles.customHeader}>
-            <View style={{ flexDirection: "row", gap: 10 }}>
+            <View style={{ flexDirection: 'row', gap: 10 }}>
                 <TouchableOpacity onPress={handleProfile}>
                     <Image source={profile} style={styles.profile} />
                 </TouchableOpacity>
@@ -71,32 +71,32 @@ const Header = () => {
 };
 
 
-export default Header
+export default Header;
 const styles = StyleSheet.create({
     customHeader: {
-        flexDirection: "row",
-        justifyContent: "space-between",
-        alignItems: "center",
-        backgroundColor: "#34495e",
+        flexDirection: 'row',
+        justifyContent: 'space-between',
+        alignItems: 'center',
+        backgroundColor: '#34495e',
         paddingHorizontal: 16,
         paddingVertical: 8,
-        width: "100%",
+        width: '100%',
     },
 
     profile: {
         width: 35,
-        height: 35
+        height: 35,
     },
     headerstyle: {
         width: 45,
-        height: 45
+        height: 45,
     },
     headerRight: {
-        flexDirection: "row",
+        flexDirection: 'row',
     },
     Chatstyle: {
         justifyContent: 'center',
         marginVertical: 'auto',
     },
 
-})
+});

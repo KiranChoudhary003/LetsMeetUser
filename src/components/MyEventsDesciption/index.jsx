@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React, { useState } from 'react';
 import {
     View,
     Text,
@@ -9,9 +9,9 @@ import {
     ScrollView,
     SafeAreaView,
     ToastAndroid,
-} from "react-native";
+} from 'react-native';
 
-const backgroundImage = require("../../assets/bgg.png");
+const backgroundImage = require('../../assets/bgg.png');
 
 const MyEventsDesciption = ({ navigation, route }) => {
     const {
@@ -31,41 +31,41 @@ const MyEventsDesciption = ({ navigation, route }) => {
         totalConnections,
         approvedRequests,
         pendingRequests,
-        fetchUpcomingEvents
+        fetchUpcomingEvents,
     } = route.params;
 
-    console.log("Route params:", route.params);
+    console.log('Route params:', route.params);
 
     const [buttonState, setButtonState] = useState(() => {
         if (already_checked_in) {
-            return "checkedin";
+            return 'checkedin';
         }
 
         const eventEndDate = new Date(end_date);
         const now = new Date();
 
         if (eventEndDate < now) {
-            return "missed";
+            return 'missed';
         }
 
-        return "checkin";
+        return 'checkin';
     });
 
     const [isLoading, setIsLoading] = useState(false);
 
     const handlePress = async () => {
-        if (isLoading) return;
+        if (isLoading) {return;}
 
-        if (buttonState === "checkin") {
+        if (buttonState === 'checkin') {
             if (!checkInAvailable) {
-                ToastAndroid.show("Check-in not available!", ToastAndroid.SHORT);
+                ToastAndroid.show('Check-in not available!', ToastAndroid.SHORT);
                 return;
             }
 
             setIsLoading(true);
             try {
                 await handleCheckIn(id);
-                setButtonState("checkedin");
+                setButtonState('checkedin');
             } catch (error) {
 
             }
@@ -86,13 +86,13 @@ const MyEventsDesciption = ({ navigation, route }) => {
                     },
                 }
             );
-            ToastAndroid.show("Checked-In Successfully!", ToastAndroid.SHORT);
+            ToastAndroid.show('Checked-In Successfully!', ToastAndroid.SHORT);
 
             // Optionally refetch events to update UI
             fetchUpcomingEvents();
         } catch (error) {
-            console.error("Check-in error:", error.response?.data || error.message || error);
-            ToastAndroid.show(error.response?.data?.message || "Check-In failed!", ToastAndroid.SHORT);
+            console.error('Check-in error:', error.response?.data || error.message || error);
+            ToastAndroid.show(error.response?.data?.message || 'Check-In failed!', ToastAndroid.SHORT);
         }
     };
 
@@ -119,21 +119,21 @@ const MyEventsDesciption = ({ navigation, route }) => {
 
                     {/* Attendance Banner */}
 
-                    {buttonState === "checkedin" ? (
+                    {buttonState === 'checkedin' ? (
                         <View style={styles.tickWrapper}>
                             <Text style={styles.tickText}>You have Attended the Event</Text>
                         </View>
-                    ) : buttonState === "missed" ? (
+                    ) : buttonState === 'missed' ? (
                         <View style={styles.tickWrapper}>
-                            <Text style={[styles.tickText, { color: "red" }]}>You didn't attend the event</Text>
+                            <Text style={[styles.tickText, { color: 'red' }]}>You didn't attend the event</Text>
                         </View>
-                    ) : buttonState === "checkin" ? (
+                    ) : buttonState === 'checkin' ? (
                         <TouchableOpacity
                             style={[
                                 styles.attendButton,
                                 {
-                                    backgroundColor: checkInAvailable ? "#4CAF50" : "#aaa",
-                                    borderColor: "#000000",
+                                    backgroundColor: checkInAvailable ? '#4CAF50' : '#aaa',
+                                    borderColor: '#000000',
                                 },
                             ]}
                             onPress={handlePress}
@@ -142,7 +142,7 @@ const MyEventsDesciption = ({ navigation, route }) => {
                             {isLoading ? (
                                 <ActivityIndicator size="small" color="#ffffff" />
                             ) : (
-                                <Text style={[styles.attendButtonText, { color: "white" }]}>
+                                <Text style={[styles.attendButtonText, { color: 'white' }]}>
                                     Check In
                                 </Text>
                             )}
@@ -174,58 +174,58 @@ const MyEventsDesciption = ({ navigation, route }) => {
 const styles = StyleSheet.create({
     container: {
         flex: 1,
-        backgroundColor: "#e8effc",
+        backgroundColor: '#e8effc',
     },
     tickWrapper: {
         padding: 12,
         borderRadius: 10,
-        backgroundColor: "#f0f0f0",
-        alignItems: "center",
+        backgroundColor: '#f0f0f0',
+        alignItems: 'center',
         marginTop: 10,
     },
     tickText: {
-        fontWeight: "bold",
+        fontWeight: 'bold',
         fontSize: 14,
-        color: "#4CAF50", // default green, override in red case
+        color: '#4CAF50', // default green, override in red case
     },
     background: {
         flex: 1,
-        resizeMode: "cover",
+        resizeMode: 'cover',
     },
     attendButton: {
-        alignSelf: "center",
+        alignSelf: 'center',
         paddingHorizontal: 100,
         paddingVertical: 10,
         borderRadius: 20,
         borderWidth: 1,
     },
     attendButtonText: {
-        fontWeight: "bold",
+        fontWeight: 'bold',
         fontSize: 16,
-        color: "#000000",
+        color: '#000000',
     },
     header: {
-        flexDirection: "row",
-        alignItems: "center",
+        flexDirection: 'row',
+        alignItems: 'center',
         padding: 15,
-        backgroundColor: "#34495e",
+        backgroundColor: '#34495e',
     },
     backArrow: {
-        color: "white",
+        color: 'white',
         fontSize: 24,
         marginRight: 15,
     },
     headerTitle: {
-        color: "white",
+        color: 'white',
         fontSize: 18,
-        fontWeight: "bold",
+        fontWeight: 'bold',
     },
     scrollContainer: {
         padding: 16,
         paddingBottom: 40,
     },
     poster: {
-        width: "100%",
+        width: '100%',
         height: 400,
         borderRadius: 10,
         marginBottom: 20,
@@ -233,38 +233,38 @@ const styles = StyleSheet.create({
     locationLabel: {
         fontSize: 16,
         marginBottom: 16,
-        color: "#000",
+        color: '#000',
     },
     descriptionHeading: {
-        fontWeight: "bold",
+        fontWeight: 'bold',
         fontSize: 20,
         marginBottom: 8,
-        color: "#333",
+        color: '#333',
     },
     descriptionText: {
         fontSize: 14,
         lineHeight: 22,
-        color: "#333",
+        color: '#333',
         marginBottom: 20,
     },
     checkedInBanner: {
-        backgroundColor: "#E6FFE6",
+        backgroundColor: '#E6FFE6',
         paddingVertical: 10,
         paddingHorizontal: 20,
         borderRadius: 20,
-        alignSelf: "center",
+        alignSelf: 'center',
         marginBottom: 20,
         borderWidth: 1,
-        borderColor: "#4CAF50",
+        borderColor: '#4CAF50',
     },
     checkedInBannerText: {
-        color: "#2E7D32",
-        fontWeight: "bold",
+        color: '#2E7D32',
+        fontWeight: 'bold',
         fontSize: 14,
     },
     statsContainer: {
-        flexDirection: "row",
-        justifyContent: "space-between",
+        flexDirection: 'row',
+        justifyContent: 'space-between',
         marginTop: 30,
         paddingHorizontal: 5,
     },
@@ -275,24 +275,24 @@ const styles = StyleSheet.create({
         paddingVertical: 14,
         paddingHorizontal: 8,
         borderWidth: 1.5,
-        borderColor: "#3A5BFF",  // Changed to a stronger blue
+        borderColor: '#3A5BFF',  // Changed to a stronger blue
         borderRadius: 12,
-        backgroundColor: "transparent",
-        alignItems: "center",
+        backgroundColor: 'transparent',
+        alignItems: 'center',
     },
 
     statLabel: {
         fontSize: 12,
-        fontWeight: "500",
-        color: "#000",
-        textAlign: "center",
+        fontWeight: '500',
+        color: '#000',
+        textAlign: 'center',
         marginBottom: 4,
     },
 
     statNumber: {
         fontSize: 18,
-        fontWeight: "bold",
-        color: "#000",
+        fontWeight: 'bold',
+        color: '#000',
     },
 
 });

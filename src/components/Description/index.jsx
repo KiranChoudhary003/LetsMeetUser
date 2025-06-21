@@ -1,6 +1,6 @@
-import AsyncStorage from "@react-native-async-storage/async-storage";
-import axios from "axios";
-import React, { useState } from "react";
+import AsyncStorage from '@react-native-async-storage/async-storage';
+import axios from 'axios';
+import React, { useState } from 'react';
 import {
     View,
     Text,
@@ -12,9 +12,9 @@ import {
     SafeAreaView,
     ActivityIndicator,
     ToastAndroid,
-} from "react-native";
+} from 'react-native';
 
-const backgroundImage = require("../../assets/bgg.png");
+const backgroundImage = require('../../assets/bgg.png');
 
 const Description = ({ navigation, route }) => {
     const {
@@ -31,15 +31,15 @@ const Description = ({ navigation, route }) => {
         isRegistered,
         checkInAvailable,
         already_checked_in,
-        fetchUpcomingEvents
+        fetchUpcomingEvents,
     } = route.params;
 
-    console.log("Route params:", route.params);
+    console.log('Route params:', route.params);
 
     const [buttonState, setButtonState] = useState(() => {
-        if (!isRegistered) return "register";
-        if (already_checked_in) return "checkedin";
-        return "checkin";
+        if (!isRegistered) {return 'register';}
+        if (already_checked_in) {return 'checkedin';}
+        return 'checkin';
     });
     // const [isInRange, setIsInRange] = useState(false); // false = out of range, true = within 500m
     const [isLoading, setIsLoading] = useState(false); // Loading spinner state
@@ -51,33 +51,33 @@ const Description = ({ navigation, route }) => {
     // }, []);
 
     const handlePress = async () => {
-        if (isLoading) return;
+        if (isLoading) {return;}
 
-        if (buttonState === "register") {
+        if (buttonState === 'register') {
             if (!id) {
-                console.warn("Missing event ID!");
+                console.warn('Missing event ID!');
                 return;
             }
 
             setIsLoading(true);
             try {
                 await handleRegister(id);
-                setButtonState("checkin");
+                setButtonState('checkin');
                 // ToastAndroid.show("Registered successfully!", ToastAndroid.SHORT);
             } catch (error) {
                 // handleRegister already shows toast
             }
             setIsLoading(false);
-        } else if (buttonState === "checkin") {
+        } else if (buttonState === 'checkin') {
             if (!checkInAvailable) {
-                ToastAndroid.show("Check-in not available!", ToastAndroid.SHORT);
+                ToastAndroid.show('Check-in not available!', ToastAndroid.SHORT);
                 return;
             }
 
             setIsLoading(true);
             try {
                 await handleCheckIn(id);
-                setButtonState("checkedin");
+                setButtonState('checkedin');
                 // ToastAndroid.show("You are successfully checked in", ToastAndroid.SHORT);
             } catch (error) {
                 // handleCheckIn already shows toast
@@ -91,11 +91,11 @@ const Description = ({ navigation, route }) => {
             const token = await AsyncStorage.getItem('token');
 
             if (!eventId) {
-                console.warn("Event ID is missing!");
+                console.warn('Event ID is missing!');
                 return;
             }
 
-            console.log("Registering for event ID:", eventId); // ✅ debug
+            console.log('Registering for event ID:', eventId); // ✅ debug
 
             await axios.post(
                 'https://letsmeet-backend-47lv.onrender.com/api/user-events/register-event',
@@ -108,13 +108,13 @@ const Description = ({ navigation, route }) => {
                 }
             );
 
-            ToastAndroid.show("Registered Successfully!", ToastAndroid.SHORT);
+            ToastAndroid.show('Registered Successfully!', ToastAndroid.SHORT);
             fetchUpcomingEvents();
         } catch (error) {
-            console.error("Registration error:", error.response?.data || error.message);
-            ToastAndroid.show("Registration failed!", ToastAndroid.SHORT);
+            console.error('Registration error:', error.response?.data || error.message);
+            ToastAndroid.show('Registration failed!', ToastAndroid.SHORT);
         }
-    }
+    };
 
     const handleCheckIn = async (eventId) => {
         try {
@@ -129,13 +129,13 @@ const Description = ({ navigation, route }) => {
                     },
                 }
             );
-            ToastAndroid.show("Checked-In Successfully!", ToastAndroid.SHORT);
+            ToastAndroid.show('Checked-In Successfully!', ToastAndroid.SHORT);
 
             // Optionally refetch events to update UI
             fetchUpcomingEvents();
         } catch (error) {
-            console.error("Check-in error:", error.response?.data || error.message || error);
-            ToastAndroid.show(error.response?.data?.message || "Check-In failed!", ToastAndroid.SHORT);
+            console.error('Check-in error:', error.response?.data || error.message || error);
+            ToastAndroid.show(error.response?.data?.message || 'Check-In failed!', ToastAndroid.SHORT);
         }
     };
 
@@ -166,25 +166,25 @@ const Description = ({ navigation, route }) => {
                             styles.attendButton,
                             {
                                 backgroundColor:
-                                    buttonState === "checkedin"
-                                        ? "transparent"
-                                        : buttonState === "checkin"
+                                    buttonState === 'checkedin'
+                                        ? 'transparent'
+                                        : buttonState === 'checkin'
                                             ? checkInAvailable
-                                                ? "#4CAF50"
-                                                : "grey"
-                                            : "white",
-                                borderColor: buttonState === "checkedin" ? "transparent" : "#000000",
+                                                ? '#4CAF50'
+                                                : 'grey'
+                                            : 'white',
+                                borderColor: buttonState === 'checkedin' ? 'transparent' : '#000000',
                             },
                         ]}
                         onPress={handlePress}
                         disabled={
                             isLoading ||
-                            (buttonState === "checkin" && !checkInAvailable)
+                            (buttonState === 'checkin' && !checkInAvailable)
                         }
                     >
                         {isLoading ? (
                             <ActivityIndicator size="small" color="#0000ff" />
-                        ) : buttonState === "checkedin" ? (
+                        ) : buttonState === 'checkedin' ? (
                             <View style={styles.tickWrapper}>
                                 <Text style={styles.tickText}>✔ Checked In</Text>
                             </View>
@@ -194,19 +194,19 @@ const Description = ({ navigation, route }) => {
                                     styles.attendButtonText,
                                     {
                                         color:
-                                            buttonState === "checkin" && !checkInAvailable
-                                                ? "white"
-                                                : buttonState === "checkin"
-                                                    ? "white"
-                                                    : "black",
+                                            buttonState === 'checkin' && !checkInAvailable
+                                                ? 'white'
+                                                : buttonState === 'checkin'
+                                                    ? 'white'
+                                                    : 'black',
                                     },
                                 ]}
                             >
-                                {buttonState === "register"
-                                    ? "Register"
-                                    : buttonState === "checkin"
-                                        ? "Check-In"
-                                        : ""}
+                                {buttonState === 'register'
+                                    ? 'Register'
+                                    : buttonState === 'checkin'
+                                        ? 'Check-In'
+                                        : ''}
                             </Text>
                         )}
                     </TouchableOpacity>
@@ -219,45 +219,45 @@ const Description = ({ navigation, route }) => {
 const styles = StyleSheet.create({
     container: {
         flex: 1,
-        backgroundColor: "#e9effc",
+        backgroundColor: '#e9effc',
     },
     background: {
         flex: 1,
-        resizeMode: "cover",
+        resizeMode: 'cover',
     },
     header: {
-        flexDirection: "row",
-        alignItems: "center",
+        flexDirection: 'row',
+        alignItems: 'center',
         padding: 15,
-        backgroundColor: "#34495e",
+        backgroundColor: '#34495e',
     },
-    backArrow: { color: "white", fontSize: 24, marginRight: 15 },
-    headerTitle: { color: "white", fontSize: 18, fontWeight: "bold" },
+    backArrow: { color: 'white', fontSize: 24, marginRight: 15 },
+    headerTitle: { color: 'white', fontSize: 18, fontWeight: 'bold' },
     scrollContainer: { padding: 16 },
-    poster: { width: "100%", height: 400, borderRadius: 10, marginBottom: 20 },
-    locationLabel: { fontSize: 16, marginBottom: 10, color: "#000000" },
-    descriptionHeading: { fontWeight: "bold", fontSize: 20, marginBottom: 8, color: "#333" },
+    poster: { width: '100%', height: 400, borderRadius: 10, marginBottom: 20 },
+    locationLabel: { fontSize: 16, marginBottom: 10, color: '#000000' },
+    descriptionHeading: { fontWeight: 'bold', fontSize: 20, marginBottom: 8, color: '#333' },
     descriptionText: {
         fontSize: 14,
         lineHeight: 22,
-        color: "#333",
+        color: '#333',
         marginBottom: 20,
     },
     attendButton: {
-        alignSelf: "center",
+        alignSelf: 'center',
         paddingHorizontal: 30,
         paddingVertical: 10,
         borderRadius: 20,
         borderWidth: 1,
     },
     attendButtonText: {
-        fontWeight: "bold",
+        fontWeight: 'bold',
         fontSize: 16,
-        color: "#000000",
+        color: '#000000',
     },
     tickWrapper: {
-        justifyContent: "center",
-        alignItems: "center",
+        justifyContent: 'center',
+        alignItems: 'center',
         paddingVertical: 5,
     },
     tickText: {
@@ -266,7 +266,7 @@ const styles = StyleSheet.create({
         paddingVertical: 10,
         borderRadius: 50,
         alignItems: 'center',
-        justifyContent: 'center'
+        justifyContent: 'center',
     },
 
 });

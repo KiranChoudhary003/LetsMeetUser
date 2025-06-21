@@ -1,4 +1,4 @@
-""// ✅ Enhanced ChatPage with Read Receipt Support + Date Grouping + Auto Scroll + Focus-aware Read
+'';// ✅ Enhanced ChatPage with Read Receipt Support + Date Grouping + Auto Scroll + Focus-aware Read
 
 import React, { useEffect, useState, useRef } from 'react';
 import {
@@ -69,7 +69,7 @@ const ChatPage = ({ route }) => {
         let isMounted = true;
         async function initialize() {
             const token = await AsyncStorage.getItem('token');
-            if (!token) return;
+            if (!token) {return;}
 
             const decoded = jwtDecode(token);
             const userId = decoded.id || decoded.user_id;
@@ -111,7 +111,7 @@ const ChatPage = ({ route }) => {
             });
 
             socket.on('receive_message', (msg) => {
-                if (!isMounted) return;
+                if (!isMounted) {return;}
 
                 const newMsg = {
                     id: msg.id,
@@ -164,7 +164,7 @@ const ChatPage = ({ route }) => {
         initialize();
         return () => {
             isMounted = false;
-            if (socketRef.current) socketRef.current.disconnect();
+            if (socketRef.current) {socketRef.current.disconnect();}
         };
     }, [peer_id]);
 
@@ -183,7 +183,7 @@ const ChatPage = ({ route }) => {
     }, [isFocused, chatId]);
 
     useEffect(() => {
-        if (!isFocused || !chatId || !socketRef.current) return;
+        if (!isFocused || !chatId || !socketRef.current) {return;}
 
         const hasUnread = messages.some(
             (msg) => msg.from === peer_id && !msg.isRead

@@ -1,7 +1,7 @@
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import axios from 'axios';
-import React, { useEffect, useState } from 'react'
-import { Alert, Animated, Modal, Pressable, SafeAreaView, ScrollView, StyleSheet, Text, TouchableOpacity, TouchableWithoutFeedback, View, ActivityIndicator } from 'react-native'
+import React, { useEffect, useState } from 'react';
+import { Alert, Animated, Modal, Pressable, SafeAreaView, ScrollView, StyleSheet, Text, TouchableOpacity, TouchableWithoutFeedback, View, ActivityIndicator } from 'react-native';
 import MaterialIcons from 'react-native-vector-icons/MaterialIcons';
 import Ionicons from 'react-native-vector-icons/Ionicons';
 import { TextInput } from 'react-native-gesture-handler';
@@ -14,7 +14,7 @@ const ComplainCard = ({ description, status, updatedAt }) => {
     if (status === 'pending') {
         backgroundColor = 'rgba(157, 9, 11, 0.96 )';
     } else if (status === 'in_progress') {
-        statusColor = '#333'
+        statusColor = '#333';
         backgroundColor = 'rgba(221, 177, 31)';
     } else if (status === 'complete') {
         backgroundColor = ' #28a745';
@@ -32,22 +32,22 @@ const ComplainCard = ({ description, status, updatedAt }) => {
                     </Text>
 
                     <View style={[styles.complainStatus, { backgroundColor: backgroundColor }]}>
-                        <Text style={[styles.updateStatus, { color: statusColor, fontWeight: "bold" }]}>
+                        <Text style={[styles.updateStatus, { color: statusColor, fontWeight: 'bold' }]}>
                             {status.toUpperCase()}
                         </Text>
                     </View>
                 </View>
             </View>
         </View>
-    )
-}
+    );
+};
 
 const Complain = ({ navigation }) => {
 
     const [showModal, setShowModal] = useState(false);
     const [complains, setComplains] = useState([]);
     const [newComplain, setNewComplain] = useState('');
-    const [filter, setFilter] = useState(false)
+    const [filter, setFilter] = useState(false);
     const [selectedFilter, setSelectedFilter] = useState(null);
     const [allComplains, setAllComplains] = useState([]);
     const [loading, setLoading] = useState(true);
@@ -60,7 +60,7 @@ const Complain = ({ navigation }) => {
             try {
                 const token = await AsyncStorage.getItem('token');
                 const response = await axios.get(
-                    `https://letsmeet-backend-47lv.onrender.com/api/user-profile/reports`,
+                    'https://letsmeet-backend-47lv.onrender.com/api/user-profile/reports',
                     {
                         headers: {
                             Authorization: `Bearer ${token}`,
@@ -92,7 +92,7 @@ const Complain = ({ navigation }) => {
 
             const token = await AsyncStorage.getItem('token');
             await axios.post(
-                `https://letsmeet-backend-47lv.onrender.com/api/user-profile/submit-report`,
+                'https://letsmeet-backend-47lv.onrender.com/api/user-profile/submit-report',
                 { Description: newComplain },
                 {
                     headers: {
@@ -107,7 +107,7 @@ const Complain = ({ navigation }) => {
             setShowModal(false);
 
             const response = await axios.get(
-                `https://letsmeet-backend-47lv.onrender.com/api/user-profile/reports`,
+                'https://letsmeet-backend-47lv.onrender.com/api/user-profile/reports',
                 {
                     headers: {
                         Authorization: `Bearer ${token}`,
@@ -242,15 +242,15 @@ const Complain = ({ navigation }) => {
         </View>
     );
 
-}
+};
 
-export default Complain
+export default Complain;
 
 const styles = StyleSheet.create({
     background: {
         flex: 1,
-        resizeMode: "cover",
-        backgroundColor: "#e8effc",
+        resizeMode: 'cover',
+        backgroundColor: '#e8effc',
     },
     container: {
         flex: 1,
@@ -259,50 +259,50 @@ const styles = StyleSheet.create({
         padding: 16,
     },
     header: {
-        display: "flex",
-        alignItems: "center",
+        display: 'flex',
+        alignItems: 'center',
         marginVertical: 20,
     },
     desk: {
         fontSize: 25,
-        fontWeight: "bold",
+        fontWeight: 'bold',
     },
     complain: {
-        display: "flex",
+        display: 'flex',
         flexDirection: 'row',
-        justifyContent: "space-between",
+        justifyContent: 'space-between',
         marginVertical: 10,
     },
     myComplain: {
         fontSize: 20,
-        fontWeight: "bold",
-        color: "#888"
+        fontWeight: 'bold',
+        color: '#888',
     },
     heading: {
-        display: "flex",
+        display: 'flex',
         flexDirection: 'row',
-        justifyContent: "space-between",
-        marginTop: 10
+        justifyContent: 'space-between',
+        marginTop: 10,
     },
     status: {
         fontSize: 20,
-        fontWeight: "bold",
-        marginRight: 55
+        fontWeight: 'bold',
+        marginRight: 55,
     },
     complainDescription: {
         fontSize: 20,
-        fontWeight: "bold",
-        marginLeft: 10.
+        fontWeight: 'bold',
+        marginLeft: 10.0,
     },
     description: {
         fontSize: 18,
-        fontWeight: "bold",
+        fontWeight: 'bold',
         marginBottom: 4,
-        color: "#111",
+        color: '#111',
     },
     updateStatus: {
         fontSize: 12,
-        color: "#555",
+        color: '#555',
         marginBottom: 4,
     },
     card: {
@@ -310,21 +310,21 @@ const styles = StyleSheet.create({
         width: 370,
         minHeight: 90,
         marginVertical: 3,
-        borderBottomWidth: 0.5
+        borderBottomWidth: 0.5,
     },
     plus: {
         width: 60,
         height: 60,
-        backgroundColor: "#34495e",
+        backgroundColor: '#34495e',
         borderRadius: 30,
-        display: "flex",
-        justifyContent: "center",
-        alignItems: "center",
-        position: "absolute",
+        display: 'flex',
+        justifyContent: 'center',
+        alignItems: 'center',
+        position: 'absolute',
         bottom: 50,
         right: 30,
         zIndex: 999,
-        elevation: 5
+        elevation: 5,
     },
     modalOverlay: {
         flex: 1,
@@ -334,7 +334,7 @@ const styles = StyleSheet.create({
     },
     modalContent: {
         backgroundColor: '#fff',
-        width: "80%",
+        width: '80%',
         marginHorizontal: 20,
         borderRadius: 10,
         padding: 20,
@@ -366,10 +366,10 @@ const styles = StyleSheet.create({
     },
     complainData: {
         flex: 1,
-        display: "flex",
-        flexDirection: "column",
-        justifyContent: "space-between",
-        alignItems: 'center'
+        display: 'flex',
+        flexDirection: 'column',
+        justifyContent: 'space-between',
+        alignItems: 'center',
 
     },
     complainStatus: {
@@ -378,16 +378,16 @@ const styles = StyleSheet.create({
         borderRadius: 50,
         alignItems: 'center',
         justifyContent: 'center',
-        borderColor: "#888",
+        borderColor: '#888',
         marginLeft: 160,
-        paddingVertical: 3
+        paddingVertical: 3,
     },
     complainDetails: {
-        width: "100%",
+        width: '100%',
     },
     date: {
-        flexDirection: "row",
-        justifyContent: "center",
+        flexDirection: 'row',
+        justifyContent: 'center',
     },
     filterOptionsContainer: {
         flex: 1,
@@ -412,7 +412,7 @@ const styles = StyleSheet.create({
         backgroundColor: 'rgba(255,255,255,.29)',
         width: 100,
         paddingVertical: 10,
-        borderRadius: 5
+        borderRadius: 5,
     },
     filterText: { fontSize: 14, color: '#fff' },
 
@@ -430,4 +430,4 @@ const styles = StyleSheet.create({
         marginTop: 50,
     },
 
-})
+});

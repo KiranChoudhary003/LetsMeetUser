@@ -64,7 +64,7 @@ useEffect(() => {
 
   const onSuccess = async (e) => {
     Vibration.vibrate(150);
-    if (scanCompleted) return;
+    if (scanCompleted) {return;}
 
     try {
       setLoading(true);

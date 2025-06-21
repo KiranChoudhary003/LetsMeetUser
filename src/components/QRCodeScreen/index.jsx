@@ -3,30 +3,30 @@ import { View, Text, StyleSheet, TouchableOpacity, Share, Image } from 'react-na
 import QRCode from 'react-native-qrcode-svg';
 import axios from 'axios';
 import AsyncStorage from '@react-native-async-storage/async-storage';
-import scanner from '../../assets/vector.png'
+import scanner from '../../assets/vector.png';
 
 const QRCodeScreen = ({ navigation }) => {
 
-  const [userData, setUserData] = useState({})
+  const [userData, setUserData] = useState({});
 
   useEffect(() => {
     const fetchUserData = async () => {
-      console.log("User Data:", userData);
+      console.log('User Data:', userData);
 
       try {
-        console.log("Sending request to login API...");
-        const token = await AsyncStorage.getItem('token')
-        console.log("Token from AsyncStorage:", token);
-        const response = await axios.get(`https://letsmeet-backend-47lv.onrender.com/api/user-profile`, {
+        console.log('Sending request to login API...');
+        const token = await AsyncStorage.getItem('token');
+        console.log('Token from AsyncStorage:', token);
+        const response = await axios.get('https://letsmeet-backend-47lv.onrender.com/api/user-profile', {
           headers: {
-            'Content-Type': "application/json",
-            'Authorization': `Bearer ${token}`
-          }
+            'Content-Type': 'application/json',
+            'Authorization': `Bearer ${token}`,
+          },
         }
-        )
-        console.log("Login successful, token received:", response.data.token); // ✅ Debug
+        );
+        console.log('Login successful, token received:', response.data.token); // ✅ Debug
 
-        const user = response.data.user
+        const user = response.data.user;
 
         setUserData({
           // id : user.id,
@@ -36,13 +36,13 @@ const QRCodeScreen = ({ navigation }) => {
           linkedin: user.linkedin_url,
           jobRole: user.attendees_role,
           preferences: Array.isArray(user.preference) ? user.preference.join(', ') : 'None',
-        })
+        });
       } catch (error) {
-        console.log(`Error fetching the user data ${error}`)
+        console.log(`Error fetching the user data ${error}`);
       }
-    }
-    fetchUserData()
-  }, [])
+    };
+    fetchUserData();
+  }, []);
 
   const qrValue = userData ? JSON.stringify(userData) : '';
 
@@ -102,7 +102,7 @@ const styles = StyleSheet.create({
     flex: 1,
     backgroundColor: '#e8effc',
     padding: 20,
-    alignItems: 'center'
+    alignItems: 'center',
   },
   header: {
     marginTop: 40,
@@ -113,21 +113,21 @@ const styles = StyleSheet.create({
   headerTitle: {
     fontSize: 18,
     fontWeight: 'bold',
-    display: "flex",
-    flexDirection: "row",
+    display: 'flex',
+    flexDirection: 'row',
     backgroundColor: 'rgba(0, 0, 0, 0.3)',
     padding: 10,
     borderRadius: 10,
-    alignItems: "center",
-    position: "fixed",
+    alignItems: 'center',
+    position: 'fixed',
     top: -40,
     right: -140,
   },
   headerBackText: {
     fontSize: 35,
-    fontWeight: "bold",
+    fontWeight: 'bold',
     color: '#000',
-    position: "fixed",
+    position: 'fixed',
     top: -45,
     left: -120,
   },
@@ -138,14 +138,14 @@ const styles = StyleSheet.create({
     padding: 20,
     alignItems: 'center',
     width: 295,
-    height: 485
+    height: 485,
   },
   cardTitle: {
     color: '#fff',
     fontSize: 20,
     fontWeight: '600',
     marginBottom: 30,
-    marginTop: 15
+    marginTop: 15,
   },
   qrBox: {
     backgroundColor: '#fff',

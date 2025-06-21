@@ -1,5 +1,5 @@
-import React, { useRef, useState, useEffect, useContext } from "react";
-import { Easing, ToastAndroid, Modal, Image, TouchableWithoutFeedback, ActivityIndicator } from "react-native";
+import React, { useRef, useState, useEffect, useContext } from 'react';
+import { Easing, ToastAndroid, Modal, Image, TouchableWithoutFeedback, ActivityIndicator } from 'react-native';
 
 import {
     ScrollView,
@@ -11,10 +11,10 @@ import {
     StyleSheet,
     Animated,
     Pressable,
-} from "react-native";
-import { LocationContext } from "../LocationContext/LocationContext";
-import AsyncStorage from "@react-native-async-storage/async-storage";
-import axios from "axios";
+} from 'react-native';
+import { LocationContext } from '../LocationContext/LocationContext';
+import AsyncStorage from '@react-native-async-storage/async-storage';
+import axios from 'axios';
 import Ionicons from 'react-native-vector-icons/Ionicons';
 import { Calendar } from 'react-native-calendars';
 
@@ -29,7 +29,7 @@ const EventCard = ({
     checkInAvailable,
     already_checked_in, // ✅ NEW PROP
     onRegister,
-    onCheckIn
+    onCheckIn,
 }) => {
     const scale = useRef(new Animated.Value(1)).current;
 
@@ -51,8 +51,8 @@ const EventCard = ({
                             transform: [{ scale }],
                             flexDirection: 'row',
                             justifyContent: 'space-between',
-                            alignItems: 'center'
-                        }
+                            alignItems: 'center',
+                        },
                     ]}
                 >
                     <View style={{ flex: 1 }}>
@@ -73,7 +73,7 @@ const EventCard = ({
                                     paddingVertical: 4,
                                     borderRadius: 20,
                                     alignItems: 'center',
-                                    justifyContent: 'center'
+                                    justifyContent: 'center',
                                 }}
                             >
                                 <Text style={{ color: 'black', fontWeight: 'bold', fontSize: 12 }}>
@@ -88,7 +88,7 @@ const EventCard = ({
                                     paddingVertical: 4,
                                     borderRadius: 20,
                                     alignItems: 'center',
-                                    justifyContent: 'center'
+                                    justifyContent: 'center',
                                 }}
                             >
                                 <Text style={{ color: '#fff', fontWeight: 'bold', fontSize: 12 }}>
@@ -104,7 +104,7 @@ const EventCard = ({
                                     paddingVertical: 4,
                                     borderRadius: 20,
                                     alignItems: 'center',
-                                    justifyContent: 'center'
+                                    justifyContent: 'center',
                                 }}
                             >
                                 <Text style={{ color: '#fff', fontWeight: 'bold', fontSize: 12 }}>
@@ -119,7 +119,7 @@ const EventCard = ({
                                     paddingVertical: 4,
                                     borderRadius: 20,
                                     alignItems: 'center',
-                                    justifyContent: 'center'
+                                    justifyContent: 'center',
                                 }}
                             >
                                 <Text style={{ color: '#fff', fontWeight: 'bold', fontSize: 12 }}>
@@ -147,7 +147,7 @@ const groupEventsByMonth = (events) => {
         const eventDate = new Date(event.date); // change if needed
         const year = eventDate.getFullYear();
         const monthNumber = eventDate.getMonth(); // 0 = Jan
-        const monthName = eventDate.toLocaleString("default", { month: "long" });
+        const monthName = eventDate.toLocaleString('default', { month: 'long' });
 
         const key = `${year}-${monthNumber}`;
         if (!acc[key]) {
@@ -155,7 +155,7 @@ const groupEventsByMonth = (events) => {
                 monthName,
                 year,
                 monthNumber,
-                events: []
+                events: [],
             };
         }
 
@@ -165,8 +165,8 @@ const groupEventsByMonth = (events) => {
 
     // Sort month keys
     const sortedKeys = Object.keys(grouped).sort((a, b) => {
-        const [yearA, monthA] = a.split("-").map(Number);
-        const [yearB, monthB] = b.split("-").map(Number);
+        const [yearA, monthA] = a.split('-').map(Number);
+        const [yearB, monthB] = b.split('-').map(Number);
         return yearA === yearB ? monthA - monthB : yearA - yearB;
     });
 
@@ -182,9 +182,9 @@ const groupEventsByMonth = (events) => {
 
 const Home = ({ navigation }) => {
 
-    const [eventData, setEventData] = useState([])
+    const [eventData, setEventData] = useState([]);
     const [selectedFilter, setSelectedFilter] = useState('Global');
-    const [customDate, setCustomDate] = useState(null)
+    const [customDate, setCustomDate] = useState(null);
     const [showFilters, setShowFilters] = useState(false);
     const [previousFilter, setPreviousFilter] = useState(selectedFilter);
     const [filteredEvents, setFilteredEvents] = useState([]);
@@ -194,7 +194,7 @@ const Home = ({ navigation }) => {
 
 
     const formatDate = (date) => {
-        if (!(date instanceof Date)) return '';
+        if (!(date instanceof Date)) {return '';}
 
         const day = date.getDate().toString().padStart(2, '0');
         const month = (date.getMonth() + 1).toString().padStart(2, '0'); // Months are 0-based
@@ -224,13 +224,13 @@ const Home = ({ navigation }) => {
                 );
 
             case 'Choose from Calendar':
-                if (!customDate) return [];
+                if (!customDate) {return [];}
                 return events.filter(event =>
                     new Date(event.date).toDateString() === customDate.toDateString()
                 );
 
             case 'Near Me':
-                if (!location?.latitude || !location?.longitude) return [];
+                if (!location?.latitude || !location?.longitude) {return [];}
                 return events.filter(event => {
                     const distance = calculateDistance(
                         location.latitude,
@@ -269,11 +269,11 @@ const Home = ({ navigation }) => {
             const token = await AsyncStorage.getItem('token');
 
             if (!eventId) {
-                console.warn("Event ID is missing!");
+                console.warn('Event ID is missing!');
                 return;
             }
 
-            console.log("Registering for event ID:", eventId); // ✅ debug
+            console.log('Registering for event ID:', eventId); // ✅ debug
 
             await axios.post(
                 'https://letsmeet-backend-47lv.onrender.com/api/user-events/register-event',
@@ -286,13 +286,13 @@ const Home = ({ navigation }) => {
                 }
             );
 
-            ToastAndroid.show("Registered Successfully!", ToastAndroid.SHORT);
+            ToastAndroid.show('Registered Successfully!', ToastAndroid.SHORT);
             fetchUpcomingEvents();
         } catch (error) {
-            console.error("Registration error:", error.response?.data || error.message);
-            ToastAndroid.show("Registration failed!", ToastAndroid.SHORT);
+            console.error('Registration error:', error.response?.data || error.message);
+            ToastAndroid.show('Registration failed!', ToastAndroid.SHORT);
         }
-    }
+    };
 
     const handleCheckIn = async (eventId) => {
         try {
@@ -307,13 +307,13 @@ const Home = ({ navigation }) => {
                     },
                 }
             );
-            ToastAndroid.show("Checked-In Successfully!", ToastAndroid.SHORT);
+            ToastAndroid.show('Checked-In Successfully!', ToastAndroid.SHORT);
 
             // Optionally refetch events to update UI
             fetchUpcomingEvents();
         } catch (error) {
-            console.error("Check-in error:", error.response?.data || error.message || error);
-            ToastAndroid.show(error.response?.data?.message || "Check-In failed!", ToastAndroid.SHORT);
+            console.error('Check-in error:', error.response?.data || error.message || error);
+            ToastAndroid.show(error.response?.data?.message || 'Check-In failed!', ToastAndroid.SHORT);
         }
     };
 
@@ -322,7 +322,7 @@ const Home = ({ navigation }) => {
             setLoading(true); // Start loading
             const token = await AsyncStorage.getItem('token');
             if (!location?.latitude || !location?.longitude) {
-                console.warn("Location not available yet");
+                console.warn('Location not available yet');
                 return;
             }
 
@@ -330,7 +330,7 @@ const Home = ({ navigation }) => {
                 'https://letsmeet-backend-47lv.onrender.com/api/user-events/upcoming-events',
                 {
                     latitude: location.latitude,
-                    longitude: location.longitude
+                    longitude: location.longitude,
                 },
                 {
                     headers: {
@@ -354,7 +354,7 @@ const Home = ({ navigation }) => {
                 banner: event.banner,
                 is_registered: event.is_registered,
                 check_in_available: event.check_in_available,
-                already_checked_in: event.already_checked_in
+                already_checked_in: event.already_checked_in,
             }));
 
             setEventData(formattedEvents);
@@ -374,12 +374,12 @@ const Home = ({ navigation }) => {
     }, [location]);
 
     const handleQRCode = () => {
-        navigation.navigate("QRCode")
-    }
+        navigation.navigate('QRCode');
+    };
 
     const handleProfile = () => {
-        navigation.navigate("UserProfile")
-    }
+        navigation.navigate('UserProfile');
+    };
 
     const events = groupEventsByMonth(filteredEvents);
     const animatedPosition = useRef(new Animated.Value(0)).current;
@@ -567,7 +567,7 @@ const Home = ({ navigation }) => {
                                         onRegister={() => handleRegister(event.id)}
                                         onCheckIn={() => handleCheckIn(event.id)}
                                         onPress={() =>
-                                            navigation.navigate("Description", {
+                                            navigation.navigate('Description', {
                                                 id: event.id,
                                                 name: event.name,
                                                 organizer: event.organizer,
@@ -593,7 +593,7 @@ const Home = ({ navigation }) => {
                 </ScrollView>
             </SafeAreaView>
         </View>
-    )
+    );
 };
 
 const styles = StyleSheet.create({
@@ -604,17 +604,17 @@ const styles = StyleSheet.create({
         fontSize: 14,
         fontWeight: '500',
         color: '#34495e',
-        backgroundColor: "#e8effc"
+        backgroundColor: '#e8effc',
     },
 
     filterContainer: {
         flexDirection: 'row',
-        marginTop: -20
+        marginTop: -20,
     },
     selectedFilterContainer: {
         flexDirection: 'row',
         alignItems: 'center',
-        marginLeft: 110
+        marginLeft: 110,
     },
     filterIcon: {
         marginHorizontal: 4,
@@ -626,8 +626,8 @@ const styles = StyleSheet.create({
         color: '#000',
     },
     headerfilter: {
-        display: "flex",
-        alignItems: "center"
+        display: 'flex',
+        alignItems: 'center',
     },
 
     filterOptionsContainer: {
@@ -663,8 +663,8 @@ const styles = StyleSheet.create({
     },
     background: {
         flex: 1,
-        resizeMode: "cover",
-        backgroundColor: "#e8effc",
+        resizeMode: 'cover',
+        backgroundColor: '#e8effc',
     },
     scrollView: {
         padding: 16,
@@ -703,7 +703,7 @@ const styles = StyleSheet.create({
     },
 
     letsMeet: {
-        color: "#4E5FF9",
+        color: '#4E5FF9',
         fontSize: 20,
     },
     modalSubText: {
@@ -712,7 +712,7 @@ const styles = StyleSheet.create({
         marginTop: 10,
         textAlign: 'center',
         borderTopWidth: 0.8,
-        borderTopColor: "#ccc"
+        borderTopColor: '#ccc',
     },
 
     modalText: {
@@ -721,26 +721,26 @@ const styles = StyleSheet.create({
         color: '#333',
     },
     customHeader: {
-        flexDirection: "row",
-        justifyContent: "space-between",
-        alignItems: "center",
-        backgroundColor: "#34495e",
+        flexDirection: 'row',
+        justifyContent: 'space-between',
+        alignItems: 'center',
+        backgroundColor: '#34495e',
         paddingHorizontal: 16,
         paddingVertical: 8,
     },
 
     headerRight: {
-        flexDirection: "row",
+        flexDirection: 'row',
         gap: 20,
     },
 
     profile: {
         width: 35,
-        height: 35
+        height: 35,
     },
     headerstyle: {
         width: 45,
-        height: 45
+        height: 45,
     },
     eventsLabel: {
         paddingHorizontal: 16,
@@ -749,11 +749,11 @@ const styles = StyleSheet.create({
         height: 41,
         marginLeft: 100,
         borderWidth: 1,
-        borderColor: "#888",
+        borderColor: '#888',
         borderRadius: 20,
-        backgroundColor: "#34495e",
-        alignSelf: "center",
-        shadowColor: "#000",
+        backgroundColor: '#34495e',
+        alignSelf: 'center',
+        shadowColor: '#000',
         shadowOffset: { width: 0, height: 2 },
         shadowOpacity: 0.1,
         shadowRadius: 4,
@@ -762,19 +762,19 @@ const styles = StyleSheet.create({
     },
     eventsLabelText: {
         fontSize: 18,
-        fontWeight: "bold",
-        color: "#fff",
+        fontWeight: 'bold',
+        color: '#fff',
     },
     header: {
-        flexDirection: "row",
-        justifyContent: "space-between",
-        alignItems: "center",
+        flexDirection: 'row',
+        justifyContent: 'space-between',
+        alignItems: 'center',
         marginBottom: 16,
     },
     title: {
         fontSize: 20,
-        fontWeight: "bold",
-        color: "#333",
+        fontWeight: 'bold',
+        color: '#333',
     },
     button: {
         paddingHorizontal: 12,
@@ -782,27 +782,27 @@ const styles = StyleSheet.create({
         borderRadius: 20,
     },
     filledButton: {
-        backgroundColor: "#4F46E5S",
+        backgroundColor: '#4F46E5S',
     },
     ghostButton: {
-        backgroundColor: "transparent",
+        backgroundColor: 'transparent',
     },
     buttonText: {
         fontSize: 14,
     },
     filledText: {
-        color: "#fff",
+        color: '#fff',
     },
     ghostText: {
-        color: "#000",
+        color: '#000',
     },
     monthSection: {
         marginBottom: 24,
     },
     monthTitle: {
         fontSize: 25,
-        fontWeight: "bold",
-        color: "#333",
+        fontWeight: 'bold',
+        color: '#333',
         marginBottom: 8,
     },
     card: {
@@ -810,56 +810,56 @@ const styles = StyleSheet.create({
         width: 370,
         height: 90,
         marginVertical: 6,
-        borderBottomWidth: 0.5
+        borderBottomWidth: 0.5,
     },
     eventName: {
         fontSize: 18,
-        fontWeight: "bold",
+        fontWeight: 'bold',
         marginBottom: 4,
-        color: "#111",
+        color: '#111',
     },
     eventOrganizer: {
         fontSize: 12,
-        color: "#555",
+        color: '#555',
         marginBottom: 4,
     },
     eventDate: {
         fontSize: 12,
 
-        color: "#555",
+        color: '#555',
         alignSelf: 'flex-start',
         marginTop: 3,
     },
     bottomBarContainer: {
-        position: "absolute",
+        position: 'absolute',
         bottom: 0,
         left: 0,
         right: 0,
         height: 80,
-        backgroundColor: "#34495e",
-        flexDirection: "row",
-        justifyContent: "space-around",
-        alignItems: "center",
+        backgroundColor: '#34495e',
+        flexDirection: 'row',
+        justifyContent: 'space-around',
+        alignItems: 'center',
         paddingHorizontal: 20,
         // borderTopLeftRadius: 20,
         // borderTopRightRadius: 20,
-        overflow: "visible",
+        overflow: 'visible',
     },
 
     centerCircle: {
-        position: "absolute",
+        position: 'absolute',
         top: -25,
-        left: "50%",
-        right: "100%",
+        left: '50%',
+        right: '100%',
         marginLeft: -3, // half of width to center properly
         width: 60,
         height: 60,
         borderRadius: 30,
-        backgroundColor: "#465E5D",
-        alignItems: "center",
-        justifyContent: "center",
+        backgroundColor: '#465E5D',
+        alignItems: 'center',
+        justifyContent: 'center',
         elevation: 8,
-        shadowColor: "#000",
+        shadowColor: '#000',
         shadowOffset: { width: 0, height: 4 },
         shadowOpacity: 0.3,
         shadowRadius: 6,
@@ -868,19 +868,19 @@ const styles = StyleSheet.create({
     bottomIcon: {
         fontSize: 24,
 
-        color: "white",
+        color: 'white',
     },
     bottomIconleft:
     {
         fontSize: 24,
         left: -20,
-        color: "white",
+        color: 'white',
     },
     bottomIconright:
     {
         fontSize: 24,
         right: -25,
-        color: "white",
+        color: 'white',
     },
     checkInNote: {
         fontSize: 10,

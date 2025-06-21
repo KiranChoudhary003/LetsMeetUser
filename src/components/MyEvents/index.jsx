@@ -1,5 +1,5 @@
-import React, { useRef, useEffect, useState, useContext } from "react";
-import { Easing, Image } from "react-native";
+import React, { useRef, useEffect, useState, useContext } from 'react';
+import { Easing, Image } from 'react-native';
 
 import {
   ScrollView,
@@ -14,16 +14,16 @@ import {
   ToastAndroid,
   Pressable,
   ActivityIndicator,
-} from "react-native";
-import profile from '../../assets/profile.png'
-import scanner from '../../assets/scanner.png'
-import connection from '../../assets/connection.png'
-import chat from '../../assets/chat.png'
-import { LocationContext } from "../LocationContext/LocationContext";
-import AsyncStorage from "@react-native-async-storage/async-storage";
-import axios from "axios";
+} from 'react-native';
+import profile from '../../assets/profile.png';
+import scanner from '../../assets/scanner.png';
+import connection from '../../assets/connection.png';
+import chat from '../../assets/chat.png';
+import { LocationContext } from '../LocationContext/LocationContext';
+import AsyncStorage from '@react-native-async-storage/async-storage';
+import axios from 'axios';
 
-const backgroundImage = require("../../assets/bgg.png");
+const backgroundImage = require('../../assets/bgg.png');
 
 const Card = ({ children, style }) => (
   <View style={[styles.card, style]}>{children}</View>
@@ -35,13 +35,13 @@ const Button = ({ children, onPress, variant }) => {
       onPress={onPress}
       style={[
         styles.button,
-        variant === "ghost" ? styles.ghostButton : styles.filledButton,
+        variant === 'ghost' ? styles.ghostButton : styles.filledButton,
       ]}
     >
       <Text
         style={[
           styles.buttonText,
-          variant === "ghost" ? styles.ghostText : styles.filledText,
+          variant === 'ghost' ? styles.ghostText : styles.filledText,
         ]}
       >
         {children}
@@ -62,7 +62,7 @@ const EventCard = ({
   userLat,
   userLon,
   onCheckIn,
-  onPress
+  onPress,
 }) => {
   const scale = useRef(new Animated.Value(1)).current;
   const [withinRange, setWithinRange] = useState(false);
@@ -123,8 +123,8 @@ const EventCard = ({
             transform: [{ scale }],
             flexDirection: 'row',
             justifyContent: 'space-between',
-            alignItems: 'center'
-          }
+            alignItems: 'center',
+          },
         ]}
       >
         <View style={{ flex: 1 }}>
@@ -151,7 +151,7 @@ const EventCard = ({
                 if (withinRange) {
                   onCheckIn();
                 } else {
-                  ToastAndroid.show("You are outside the check-in range", ToastAndroid.SHORT);
+                  ToastAndroid.show('You are outside the check-in range', ToastAndroid.SHORT);
                 }
               }}
               style={{
@@ -177,7 +177,7 @@ const groupEventsByMonth = (events) => {
     const eventDate = new Date(event.start_date);
     const year = eventDate.getFullYear();
     const monthNumber = eventDate.getMonth();
-    const monthName = eventDate.toLocaleString("default", { month: "long" });
+    const monthName = eventDate.toLocaleString('default', { month: 'long' });
     const key = `${year}-${monthNumber}`;
 
     if (!acc[key]) {
@@ -185,7 +185,7 @@ const groupEventsByMonth = (events) => {
         monthName,
         year,
         events: [],
-        monthNumber
+        monthNumber,
       };
     }
     acc[key].events.push(event);
@@ -197,9 +197,9 @@ const groupEventsByMonth = (events) => {
 
 
   const sortedKeys = Object.keys(grouped).sort((a, b) => {
-    const [yearA, monthA] = a.split("-").map(Number);
-    const [yearB, monthB] = b.split("-").map(Number);
-    if (yearA === yearB) return monthB - monthA;
+    const [yearA, monthA] = a.split('-').map(Number);
+    const [yearB, monthB] = b.split('-').map(Number);
+    if (yearA === yearB) {return monthB - monthA;}
     return yearB - yearA;
   });
 
@@ -219,7 +219,7 @@ const groupEventsByMonth = (events) => {
 
 const EventsScreen = ({ navigation }) => {
 
-  const [eventData, setEventData] = useState([])
+  const [eventData, setEventData] = useState([]);
   const [loading, setLoading] = useState(true);
 
   const { location } = useContext(LocationContext);
@@ -228,12 +228,12 @@ const EventsScreen = ({ navigation }) => {
   const animatedPosition = useRef(new Animated.Value(0)).current;
 
   const handleQRCode = () => {
-    navigation.navigate("QRCode")
-  }
+    navigation.navigate('QRCode');
+  };
 
   const handleProfile = () => {
-    navigation.navigate("UserProfile")
-  }
+    navigation.navigate('UserProfile');
+  };
 
   const moveToRight = () => {
     Animated.timing(animatedPosition, {
@@ -257,13 +257,13 @@ const EventsScreen = ({ navigation }) => {
           },
         }
       );
-      ToastAndroid.show("Checked-In Successfully!", ToastAndroid.SHORT);
+      ToastAndroid.show('Checked-In Successfully!', ToastAndroid.SHORT);
 
       // Optionally refetch events to update UI
       fetchUpcomingEvents();
     } catch (error) {
-      console.error("Check-in error:", error.response?.data || error.message || error);
-      ToastAndroid.show(error.response?.data?.message || "Check-In failed!", ToastAndroid.SHORT);
+      console.error('Check-in error:', error.response?.data || error.message || error);
+      ToastAndroid.show(error.response?.data?.message || 'Check-In failed!', ToastAndroid.SHORT);
     }
   };
 
@@ -275,7 +275,7 @@ const EventsScreen = ({ navigation }) => {
         'https://letsmeet-backend-47lv.onrender.com/api/user-events/registered-events',
         {
           latitude: location.latitude,
-          longitude: location.longitude
+          longitude: location.longitude,
         },
         {
           headers: {
@@ -303,7 +303,7 @@ const EventsScreen = ({ navigation }) => {
         totalConnections: event.total_connections,
         approvedRequests: event.approved_requests,
         pendingRequests: event.pending_requests,
-        already_checked_in: event.already_checked_in
+        already_checked_in: event.already_checked_in,
       }));
 
       setEventData(formattedEvents);
@@ -356,7 +356,7 @@ const EventsScreen = ({ navigation }) => {
                     userLon={location?.longitude}
                     onCheckIn={() => handleCheckIn(event.id)}
                     onPress={() =>
-                      navigation.navigate("MyEventsDescription", {
+                      navigation.navigate('MyEventsDescription', {
                         id: event.id,
                         name: event.name,
                         organizer: event.organizer,
@@ -394,40 +394,40 @@ const styles = StyleSheet.create({
   },
   background: {
     flex: 1,
-    resizeMode: "cover",
-    backgroundColor: "rgb(227, 235, 250)",
+    resizeMode: 'cover',
+    backgroundColor: 'rgb(227, 235, 250)',
   },
   scrollView: {
     padding: 16,
   },
   customHeader: {
-    flexDirection: "row",
-    justifyContent: "space-between",
-    alignItems: "center",
-    backgroundColor: "#34495e",
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    backgroundColor: '#34495e',
     paddingHorizontal: 16,
     paddingVertical: 8,
   },
   profile: {
     width: 35,
-    height: 35
+    height: 35,
   },
   headerstyle: {
     width: 45,
-    height: 45
+    height: 45,
   },
   headerRight: {
-    flexDirection: "row",
+    flexDirection: 'row',
     gap: 20,
   },
   headerItem: {
-    color: "white",
+    color: 'white',
     fontSize: 18,
-    fontWeight: "bold",
+    fontWeight: 'bold',
     paddingHorizontal: 12,
     paddingVertical: 6,
     borderRadius: 8,
-    backgroundColor: "#889999",
+    backgroundColor: '#889999',
   },
   eventsLabel: {
     paddingHorizontal: 16,
@@ -436,11 +436,11 @@ const styles = StyleSheet.create({
     height: 41,
     marginLeft: 100,
     borderWidth: 1,
-    borderColor: "#888",
+    borderColor: '#888',
     borderRadius: 20,
-    backgroundColor: "#34495e",
-    alignSelf: "center",
-    shadowColor: "#000",
+    backgroundColor: '#34495e',
+    alignSelf: 'center',
+    shadowColor: '#000',
     shadowOffset: { width: 0, height: 2 },
     shadowOpacity: 0.1,
     shadowRadius: 4,
@@ -450,13 +450,13 @@ const styles = StyleSheet.create({
   eventsLabelText: {
     fontSize: 18,
     marginLeft: 20,
-    fontWeight: "bold",
-    color: "#fff",
+    fontWeight: 'bold',
+    color: '#fff',
   },
   header: {
-    flexDirection: "row",
-    justifyContent: "space-between",
-    alignItems: "center",
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
     marginBottom: 16,
   },
   button: {
@@ -466,25 +466,25 @@ const styles = StyleSheet.create({
   },
   monthTitle: {
     fontSize: 25,
-    fontWeight: "bold",
+    fontWeight: 'bold',
     // fontStyle: "italic",
-    color: "#333",
+    color: '#333',
     marginBottom: 8,
   },
   filledButton: {
-    backgroundColor: "#4F46E5S",
+    backgroundColor: '#4F46E5S',
   },
   ghostButton: {
-    backgroundColor: "transparent",
+    backgroundColor: 'transparent',
   },
   buttonText: {
     fontSize: 14,
   },
   filledText: {
-    color: "#fff",
+    color: '#fff',
   },
   ghostText: {
-    color: "#000",
+    color: '#000',
   },
   monthSection: {
     marginBottom: 24,
@@ -494,72 +494,72 @@ const styles = StyleSheet.create({
     width: 370,
     height: 90,
     marginVertical: 6,
-    borderBottomWidth: 0.5
+    borderBottomWidth: 0.5,
 
   },
   eventName: {
     fontSize: 18,
-    fontWeight: "bold",
+    fontWeight: 'bold',
     marginBottom: 4,
-    color: "#111",
+    color: '#111',
   },
   eventOrganizer: {
     fontSize: 12,
-    color: "#555",
+    color: '#555',
     marginBottom: 4,
   },
   eventDate: {
     fontSize: 12,
-    color: "#555",
+    color: '#555',
     alignSelf: 'flex-start',
     marginTop: 3,
   },
   bottomBarContainer: {
-    position: "absolute",
+    position: 'absolute',
     bottom: 0,
     left: 0,
     right: 0,
     height: 80,
-    backgroundColor: "#34495e",
-    flexDirection: "row",
-    justifyContent: "space-around",
-    alignItems: "center",
+    backgroundColor: '#34495e',
+    flexDirection: 'row',
+    justifyContent: 'space-around',
+    alignItems: 'center',
     paddingHorizontal: 20,
     // borderTopLeftRadius: 20,
     // borderTopRightRadius: 20,
-    overflow: "visible",
+    overflow: 'visible',
   },
   centerCircle: {
-    position: "absolute",
+    position: 'absolute',
     top: -25,
-    left: "50%",
-    right: "100%",
+    left: '50%',
+    right: '100%',
     marginLeft: -3,
     width: 60,
     height: 60,
     borderRadius: 30,
-    backgroundColor: "#465E5D",
-    alignItems: "center",
-    justifyContent: "center",
+    backgroundColor: '#465E5D',
+    alignItems: 'center',
+    justifyContent: 'center',
     elevation: 8,
-    shadowColor: "#000",
+    shadowColor: '#000',
     shadowOffset: { width: 0, height: 4 },
     shadowOpacity: 0.3,
     shadowRadius: 6,
   },
   bottomIcon: {
     fontSize: 24,
-    color: "white",
+    color: 'white',
   },
   bottomIconleft: {
     fontSize: 24,
     left: -20,
-    color: "white",
+    color: 'white',
   },
   bottomIconright: {
     fontSize: 24,
     right: -25,
-    color: "white",
+    color: 'white',
   },
 });
 

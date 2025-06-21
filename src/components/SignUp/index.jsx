@@ -5,17 +5,17 @@ import { ScrollView } from 'react-native-gesture-handler';
 import axios from 'axios';
 
 const SignUp = ({ navigation }) => {
-    const [jobRole, setJobRole] = useState('')
-    const [visible, setVisible] = useState(false)
-    const [modalVisible, setModalVisible] = useState(false)
-    const [selectedRoles, setSelectedRoles] = useState([])
-    const [firstName, setFirstName] = useState('')
-    const [lastName, setLastName] = useState('')
-    const [email, setEmail] = useState('')
-    const [linkedin, setLinkedin] = useState('')
-    const [password, setPassword] = useState('')
-    const [roles, setRoles] = useState([])
-    const [loadingRoles, setLoadingRoles] = useState(true)
+    const [jobRole, setJobRole] = useState('');
+    const [visible, setVisible] = useState(false);
+    const [modalVisible, setModalVisible] = useState(false);
+    const [selectedRoles, setSelectedRoles] = useState([]);
+    const [firstName, setFirstName] = useState('');
+    const [lastName, setLastName] = useState('');
+    const [email, setEmail] = useState('');
+    const [linkedin, setLinkedin] = useState('');
+    const [password, setPassword] = useState('');
+    const [roles, setRoles] = useState([]);
+    const [loadingRoles, setLoadingRoles] = useState(true);
     const [loading, setLoading] = useState(false);
 
     const toggleRole = (role) => {
@@ -26,10 +26,10 @@ const SignUp = ({ navigation }) => {
                 return [...prevSelectedRoles, role];
             }
         });
-    }
+    };
 
     const handleSubmit = async () => {
-        setLoading(true)
+        setLoading(true);
 
         if (!firstName || !lastName || !email || !password || !linkedin || !jobRole || selectedRoles.length === 0) {
             Alert.alert('All fields must be filled, including at least one preference.');
@@ -49,28 +49,28 @@ const SignUp = ({ navigation }) => {
                 attendees_role: typeof jobRole === 'object' ? jobRole.label : jobRole,
                 preference: selectedRoles, // Array of preferences
             };
-            console.log(`Api is fetchinng`)
+            console.log('Api is fetchinng');
             // Perform the API call using fetch.
             const response = await fetch('https://letsmeet-backend-47lv.onrender.com/api/user-profile/register', {
                 method: 'POST',
                 headers: {
-                    'Content-Type': 'application/json'
+                    'Content-Type': 'application/json',
                 },
                 body: JSON.stringify(payload),
             });
-            console.log(`API successfully fetch`)
+            console.log('API successfully fetch');
 
             const data = await response.json();
 
             if (response.status === 201) {
-                Alert.alert(`Successfully Sign Up`, `Redirected into Login Page`);
+                Alert.alert('Successfully Sign Up', 'Redirected into Login Page');
                 navigation.navigate('Login');
             } else {
                 Alert.alert(data.message || 'Registration failed, please try again.');
             }
         } catch (error) {
             console.error('Registration error:', error);
-            Alert.alert("Error", "Couldn't register. Please check your network connection.");
+            Alert.alert('Error', "Couldn't register. Please check your network connection.");
         }
         finally {
             setLoading(false);
@@ -85,14 +85,14 @@ const SignUp = ({ navigation }) => {
     useEffect(() => {
         const fetchRoles = async () => {
             try {
-                console.log(`Api is fetching`)
+                console.log('Api is fetching');
                 const response = await axios.get('https://letsmeet-backend-47lv.onrender.com/api/user-profile/roles', {
                     headers: {
-                        'Content-Type': 'application/json'
-                    }
+                        'Content-Type': 'application/json',
+                    },
                 });
 
-                console.log(`api is successfully fetched`)
+                console.log('api is successfully fetched');
                 if (response.data.roles && Array.isArray(response.data.roles)) {
                     setRoles(response.data.roles);
                 }
@@ -119,11 +119,11 @@ const SignUp = ({ navigation }) => {
                     >
                         {/* <View style={styles.inputContainer}> */}
                         <Text style={styles.text}>Create Account</Text>
-                        <TextInput style={styles.input} placeholder='First Name' placeholderTextColor="#888" value={firstName} onChangeText={setFirstName} />
-                        <TextInput style={styles.input} placeholder='Last Name' placeholderTextColor="#888" value={lastName} onChangeText={setLastName} />
-                        <TextInput style={styles.input} placeholder='E-mail' placeholderTextColor="#888" value={email} onChangeText={setEmail} />
-                        <TextInput style={styles.input} placeholder='Create Password' placeholderTextColor="#888" value={password} onChangeText={setPassword} />
-                        <TextInput style={styles.input} placeholder='LinkedIn URL' placeholderTextColor="#888" value={linkedin} onChangeText={setLinkedin} />
+                        <TextInput style={styles.input} placeholder="First Name" placeholderTextColor="#888" value={firstName} onChangeText={setFirstName} />
+                        <TextInput style={styles.input} placeholder="Last Name" placeholderTextColor="#888" value={lastName} onChangeText={setLastName} />
+                        <TextInput style={styles.input} placeholder="E-mail" placeholderTextColor="#888" value={email} onChangeText={setEmail} />
+                        <TextInput style={styles.input} placeholder="Create Password" placeholderTextColor="#888" value={password} onChangeText={setPassword} />
+                        <TextInput style={styles.input} placeholder="LinkedIn URL" placeholderTextColor="#888" value={linkedin} onChangeText={setLinkedin} />
                         <Menu
                             visible={visible}
                             onDismiss={() => setVisible(false)}
@@ -254,7 +254,7 @@ const styles = StyleSheet.create({
         fontWeight: 'bold',
         marginBottom: 50,
         color: '#34495e',
-        textAlign: "center",
+        textAlign: 'center',
         paddingTop: 50,
     },
     input: {
@@ -266,7 +266,7 @@ const styles = StyleSheet.create({
         marginLeft: 50,
         width: 313,
         height: 43,
-        backgroundColor: "#f7faff",
+        backgroundColor: '#f7faff',
     },
     anchorText: {
         color: '#888',
@@ -346,7 +346,7 @@ const styles = StyleSheet.create({
         marginTop: 20,
         marginLeft: 110,
         width: 194,
-        height: 39
+        height: 39,
     },
     buttonText: {
         color: '#fff',
