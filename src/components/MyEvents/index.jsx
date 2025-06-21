@@ -199,7 +199,7 @@ const groupEventsByMonth = (events) => {
   const sortedKeys = Object.keys(grouped).sort((a, b) => {
     const [yearA, monthA] = a.split('-').map(Number);
     const [yearB, monthB] = b.split('-').map(Number);
-    if (yearA === yearB) {return monthB - monthA;}
+    if (yearA === yearB) { return monthB - monthA; }
     return yearB - yearA;
   });
 
@@ -434,7 +434,7 @@ const styles = StyleSheet.create({
     paddingVertical: 6,
     width: 156,
     height: 41,
-    marginLeft: 100,
+    marginLeft: 85,
     borderWidth: 1,
     borderColor: '#888',
     borderRadius: 20,
@@ -490,12 +490,10 @@ const styles = StyleSheet.create({
     marginBottom: 24,
   },
   card: {
-    padding: 16,
-    width: 370,
-    height: 90,
+    width: '100%',       // ✅ Full width of parent
+    minHeight: 90,       // ✅ Use minHeight instead of fixed height
     marginVertical: 6,
     borderBottomWidth: 0.5,
-
   },
   eventName: {
     fontSize: 18,

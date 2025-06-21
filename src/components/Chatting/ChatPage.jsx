@@ -10,6 +10,7 @@ import {
     StyleSheet,
     SafeAreaView,
     KeyboardAvoidingView,
+    StatusBar,
     Platform,
     Image,
     Modal,
@@ -69,7 +70,7 @@ const ChatPage = ({ route }) => {
         let isMounted = true;
         async function initialize() {
             const token = await AsyncStorage.getItem('token');
-            if (!token) {return;}
+            if (!token) { return; }
 
             const decoded = jwtDecode(token);
             const userId = decoded.id || decoded.user_id;
@@ -111,7 +112,7 @@ const ChatPage = ({ route }) => {
             });
 
             socket.on('receive_message', (msg) => {
-                if (!isMounted) {return;}
+                if (!isMounted) { return; }
 
                 const newMsg = {
                     id: msg.id,
@@ -164,7 +165,7 @@ const ChatPage = ({ route }) => {
         initialize();
         return () => {
             isMounted = false;
-            if (socketRef.current) {socketRef.current.disconnect();}
+            if (socketRef.current) { socketRef.current.disconnect(); }
         };
     }, [peer_id]);
 
@@ -183,7 +184,7 @@ const ChatPage = ({ route }) => {
     }, [isFocused, chatId]);
 
     useEffect(() => {
-        if (!isFocused || !chatId || !socketRef.current) {return;}
+        if (!isFocused || !chatId || !socketRef.current) { return; }
 
         const hasUnread = messages.some(
             (msg) => msg.from === peer_id && !msg.isRead
@@ -288,92 +289,110 @@ const ChatPage = ({ route }) => {
     };
 
     return (
-        <SafeAreaView style={styles.container}>
-            {loading ? (
-                <View style={{ flex: 1, justifyContent: 'center', alignItems: 'center' }}>
-                    <ActivityIndicator size="large" color="#007aff" />
-                    <Text style={{ color: '#555', fontSize: 16, marginTop: 10 }}>
-                        Loading chat messages...
-                    </Text>
-                </View>
-            ) : (
-                <>
-                    <View style={styles.chatHeader}>
-                        <TouchableOpacity onPress={() => navigation.goBack()} style={styles.backButton}>
-                            <Ionicons name="arrow-back" size={24} color="#ffffff" />
-                        </TouchableOpacity>
-                        <TouchableOpacity onPress={() => setModalVisible(true)}>
+        <KeyboardAvoidingView
+            style={{ flex: 1 }}
+            behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
+            keyboardVerticalOffset={Platform.OS === 'ios' ? 80 : 0}
+        >
+            <SafeAreaView style={styles.container}>
+                <StatusBar
+                    translucent
+                    backgroundColor="transparent"
+                    barStyle={Platform.OS === 'ios' ? 'default' : 'dark-content'}
+                />
+
+                {loading ? (
+                    <View style={{ flex: 1, justifyContent: 'center', alignItems: 'center' }}>
+                        <ActivityIndicator size="large" color="#007aff" />
+                        <Text style={{ color: '#555', fontSize: 16, marginTop: 10 }}>
+                            Loading chat messages...
+                        </Text>
+                    </View>
+                ) : (
+                    <>
+                        <View style={styles.chatHeader}>
+                            <TouchableOpacity onPress={() => navigation.goBack()} style={styles.backButton}>
+                                <Ionicons name="arrow-back" size={24} color="#ffffff" />
+                            </TouchableOpacity>
+                            <TouchableOpacity onPress={() => setModalVisible(true)}>
+                                <Image
+                                    source={peerAvatar ? { uri: peerAvatar } : profile}
+                                    style={styles.headerAvatar}
+                                />
+                            </TouchableOpacity>
+                            <Text style={styles.headerName}>
+                                {`${peer.first_name} ${peer.last_name}`}
+                            </Text>
+                        </View>
+
+                        <View style={{ flex: 1 }}>
+                            <FlatList
+                                ref={flatListRef}
+                                data={[...groupedMessages].reverse()}
+                                renderItem={renderItem}
+                                keyExtractor={(item, index) =>
+                                    item.id ? item.id.toString() : `date-${index}`
+                                }
+                                contentContainerStyle={[styles.messagesContainer ]}
+                                inverted={true}
+                            />
+                            {isTyping && <Text style={styles.typingText}>Typing...</Text>}
+                        </View>
+
+                        <View style={styles.inputContainer}>
+                            <View style={{ flexDirection: 'row', alignItems: 'center' }}>
+                                <View style={styles.inputWrapper}>
+                                    <TextInput
+                                        style={styles.input}
+                                        value={inputText}
+                                        onChangeText={handleTyping}
+                                        placeholder="Type a message..."
+                                        placeholderTextColor="#888"
+                                    />
+                                </View>
+                                <TouchableOpacity onPress={sendMessage} style={styles.sendButton}>
+                                    <Text style={styles.sendButtonText}>Send</Text>
+                                </TouchableOpacity>
+                            </View>
+                        </View>
+                    </>
+                )}
+
+                <Modal
+                    transparent
+                    visible={isModalVisible}
+                    animationType="fade"
+                    onRequestClose={() => setModalVisible(false)}
+                >
+                    <View style={styles.modalOverlay}>
+                        <BlurView
+                            style={StyleSheet.absoluteFill}
+                            blurType="light"
+                            blurAmount={10}
+                            reducedTransparencyFallbackColor="white"
+                        />
+                        <TouchableOpacity onPress={() => setModalVisible(false)} style={styles.modalContent}>
                             <Image
                                 source={peerAvatar ? { uri: peerAvatar } : profile}
-                                style={styles.headerAvatar}
+                                style={styles.zoomedImage}
+                                resizeMode="contain"
                             />
                         </TouchableOpacity>
-                        <Text style={styles.headerName}>{`${peer.first_name} ${peer.last_name}`}</Text>
                     </View>
-                    <FlatList
-                        ref={flatListRef}
-                        data={[...groupedMessages].reverse()}
-                        renderItem={renderItem}
-                        keyExtractor={(item, index) =>
-                            item.id ? item.id.toString() : `date-${index}`
-                        }
-                        contentContainerStyle={styles.messagesContainer}
-                        inverted={true}
-                    />
-
-                    {isTyping && <Text style={styles.typingText}>Typing...</Text>}
-
-                    <KeyboardAvoidingView
-                        behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
-                        keyboardVerticalOffset={80}
-                        style={styles.inputContainer}
-                    >
-                        <View style={{ flexDirection: 'row', alignItems: 'center' }}>
-                            <View style={styles.inputWrapper}>
-                                <TextInput
-                                    style={styles.input}
-                                    value={inputText}
-                                    onChangeText={handleTyping}
-                                    placeholder="Type a message..."
-                                    placeholderTextColor="#888"
-                                />
-                            </View>
-                            <TouchableOpacity onPress={sendMessage} style={styles.sendButton}>
-                                <Text style={styles.sendButtonText}>Send</Text>
-                            </TouchableOpacity>
-                        </View>
-                    </KeyboardAvoidingView>
-                </>
-            )}
-
-            <Modal
-                transparent
-                visible={isModalVisible}
-                animationType="fade"
-                onRequestClose={() => setModalVisible(false)}
-            >
-                <View style={styles.modalOverlay}>
-                    <BlurView
-                        style={StyleSheet.absoluteFill}
-                        blurType="light"
-                        blurAmount={10}
-                        reducedTransparencyFallbackColor="white"
-                    />
-                    <TouchableOpacity onPress={() => setModalVisible(false)} style={styles.modalContent}>
-                        <Image
-                            source={peerAvatar ? { uri: peerAvatar } : profile}
-                            style={styles.zoomedImage}
-                            resizeMode="contain"
-                        />
-                    </TouchableOpacity>
-                </View>
-            </Modal>
-        </SafeAreaView>
+                </Modal>
+            </SafeAreaView>
+        </KeyboardAvoidingView>
     );
+
 };
 
 const styles = StyleSheet.create({
-    container: { flex: 1, backgroundColor: '#e8effc' },
+    container: {
+        flex: 1,
+        backgroundColor: '#e8effc',
+        paddingTop: Platform.OS === 'android' ? StatusBar.currentHeight : 0,
+    },
+
     chatHeader: {
         flexDirection: 'row',
         alignItems: 'center',
@@ -401,7 +420,6 @@ const styles = StyleSheet.create({
     messagesContainer: {
         flexGrow: 1,
         justifyContent: 'flex-end',
-        paddingHorizontal: 12,
         paddingTop: 8,
         paddingBottom: 0,
     },

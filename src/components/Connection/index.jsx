@@ -11,6 +11,9 @@ import {
   TextInput, TouchableOpacity, TouchableWithoutFeedback,
   View,
   ActivityIndicator,
+  SafeAreaView,
+  StatusBar,
+  Platform,
 } from 'react-native';
 import Entypo from 'react-native-vector-icons/Entypo';
 import Ionicons from 'react-native-vector-icons/Ionicons';
@@ -507,237 +510,243 @@ const Connections = ({ navigation }) => {
 
 
   return (
-    <View style={styles.container}>
-      <View style={styles.headingContainer}>
-        <View>
-          <TouchableOpacity onPress={() => navigation.goBack()}>
-            <Ionicons name="arrow-back-outline" size={24} color="white" />
-          </TouchableOpacity>
-        </View>
-        <View style={styles.titleContainer}>
+    <SafeAreaView style={styles.safeArea}>
+      <View style={styles.container}>
+        <View style={styles.headingContainer}>
           <View>
-            <Text style={styles.title}>Connections</Text>
+            <TouchableOpacity onPress={() => navigation.goBack()}>
+              <Ionicons name="arrow-back-outline" size={24} color="white" />
+            </TouchableOpacity>
           </View>
-          <View style={styles.selectedFilterContainer}>
-            <TouchableOpacity
-              onPress={() => {
-                if (currentFilter) {
-                  selectedTab === 'Requests' ? setRequestFilter('') : setSentFilter('');
-                }
-              }}
-              style={styles.clearFilterButton}
-            >
-              <Text style={styles.selectedFilter} numberOfLines={1} ellipsizeMode="tail">
-                {currentFilter || 'Global'}
-                {currentFilter ? ' ×' : ''}
-              </Text>
+          <View style={styles.titleContainer}>
+            <View>
+              <Text style={styles.title}>Connections</Text>
+            </View>
+            <View style={styles.selectedFilterContainer}>
+              <TouchableOpacity
+                onPress={() => {
+                  if (currentFilter) {
+                    selectedTab === 'Requests' ? setRequestFilter('') : setSentFilter('');
+                  }
+                }}
+                style={styles.clearFilterButton}
+              >
+                <Text style={styles.selectedFilter} numberOfLines={1} ellipsizeMode="tail">
+                  {currentFilter || 'Global'}
+                  {currentFilter ? ' ×' : ''}
+                </Text>
+              </TouchableOpacity>
+            </View>
+          </View>
+          <View>
+            <TouchableOpacity onPress={() => setShowFilters(true)}>
+              <View style={styles.filterContainer}>
+                <View style={styles.filterIcon}>
+                  <Ionicons name="filter" size={16} color="white" />
+                </View>
+              </View>
             </TouchableOpacity>
           </View>
         </View>
-        <View>
-          <TouchableOpacity onPress={() => setShowFilters(true)}>
-            <View style={styles.filterContainer}>
-              <View style={styles.filterIcon}>
-                <Ionicons name="filter" size={16} color="white" />
-              </View>
+
+        <View style={styles.searchBar}>
+          <Entypo name="magnifying-glass" size={24} color="black" />
+          <TextInput
+            placeholder="Search user..."
+            value={search}
+            onChangeText={setSearch}
+            style={styles.searchInput}
+            placeholderTextColor="#888"
+          />
+          {search.length > 0 && (
+            <TouchableOpacity onPress={() => setSearch('')}>
+              <Entypo name="cross" size={24} color="black" />
+            </TouchableOpacity>
+          )}
+        </View>
+
+        <View style={styles.tabs}>
+          {['Requests', 'Connections req. sent'].map(tab => (
+            <TouchableOpacity
+              key={tab}
+              onPress={() => setSelectedTab(tab)}
+              style={[styles.tab, selectedTab === tab && styles.activeTab]}
+            >
+              <Text style={[styles.tabText, selectedTab === tab && styles.activeTabText]}>{tab}</Text>
+            </TouchableOpacity>
+          ))}
+        </View>
+
+        {loading ? (
+          <View style={{ alignItems: 'center', marginTop: 40 }}>
+            <ActivityIndicator size="large" color="#007AFF" />
+            <Text style={{ marginTop: 10, fontSize: 16, color: '#333' }}>
+              Fetching connections...
+            </Text>
+          </View>
+        ) : filteredUsers.length === 0 ? (
+          <View style={styles.filterResultContainer}>
+            <Text style={styles.filterResultText}>
+              {selectedTab === 'Requests' ? 'No pending requests found!' : 'No connections found!'}
+            </Text>
+            <LottieView
+              style={styles.lottieContainer}
+              source={require('../../assets/Not-Found.json')}
+              autoPlay
+              loop
+              resizeMode="cover"
+            />
+          </View>
+        ) : (
+          <FlatList
+            data={filteredUsers}
+            keyExtractor={(item) => item.id.toString()}
+            renderItem={renderItem}
+            contentContainerStyle={styles.list}
+            keyboardShouldPersistTaps="handled"
+          />
+        )}
+
+        {showUndo && (undoUser || undoRequestUser) && (
+          <Animated.View style={[styles.undoContainer, { opacity: fadeAnim }]}>
+            <Text style={styles.undoText}>
+              {undoUser
+                ? `Accepted ${undoUser.name}`
+                : `Sent request to ${undoRequestUser.name}`}
+            </Text>
+            <TouchableOpacity onPress={handleUndo}>
+              <Text style={styles.undoButton}>Undo</Text>
+            </TouchableOpacity>
+          </Animated.View>
+        )}
+
+        {showFilters && (
+          <Modal animationType="fade" transparent visible={showFilters}>
+            <TouchableOpacity
+              style={styles.filterOptionsContainer}
+              activeOpacity={1}
+              onPressOut={() => setShowFilters(false)}
+            >
+              <TouchableWithoutFeedback>
+                <View style={styles.filterOptions}>
+                  {(() => {
+                    const activeUsers = selectedTab === 'Requests' ? requests : allUsers;
+                    if (activeUsers.length === 0) {
+                      return <Text style={styles.noUsersText}>No users available to filter</Text>;
+                    }
+                    const uniqueRoles = [...new Set(activeUsers.map(user => user.role).filter(Boolean))];
+
+                    if (uniqueRoles.length === 0) {
+                      return <Text style={styles.noUsersText}>No role filters available</Text>;
+                    }
+                    const filteredRoles = uniqueRoles.filter(role =>
+                      role.toLowerCase().includes(roleSearch.toLowerCase())
+                    );
+                    const itemHeight = 35;
+                    const visibleItemCount = Math.min(filteredRoles.length, 5);
+                    const containerHeight = itemHeight * visibleItemCount;
+                    return (
+                      <>
+                        <View style={styles.roleSearchWrapper}>
+                          <TextInput
+                            ref={roleInputRef}
+                            placeholder="Search role..."
+                            value={roleSearch}
+                            onChangeText={setRoleSearch}
+                            style={styles.roleSearchInput}
+                            placeholderTextColor="#888"
+                          />
+                          {roleSearch.length > 0 && (
+                            <TouchableOpacity onPress={() => setRoleSearch('')} style={styles.clearIcon}>
+                              <Entypo name="cross" size={18} color="#888" />
+                            </TouchableOpacity>
+                          )}
+                        </View>
+                        {filteredRoles.length === 0 ? (
+                          <Text style={styles.noUsersText}>No role found</Text>
+                        ) : (
+                          <ScrollView
+                            style={{ maxHeight: containerHeight }}
+                            nestedScrollEnabled
+                            showsVerticalScrollIndicator={false}
+                          >
+                            {filteredRoles.map((role) => {
+                              const isActive = currentFilter === role;
+                              return (
+                                <TouchableOpacity
+                                  key={role}
+                                  style={[
+                                    styles.filterOption,
+                                    isActive && styles.filterActive,
+                                  ]}
+                                  activeOpacity={0.7}
+                                  onPress={() => {
+                                    selectedTab === 'Requests'
+                                      ? setRequestFilter(role)
+                                      : setSentFilter(role);
+                                    setShowFilters(false);
+                                    setRoleSearch('');
+                                  }}
+                                >
+                                  <Text style={styles.filterText}>{role}</Text>
+                                </TouchableOpacity>
+                              );
+                            })}
+                          </ScrollView>
+                        )}
+                      </>
+                    );
+                  })()}
+                </View>
+              </TouchableWithoutFeedback>
+            </TouchableOpacity>
+          </Modal>
+        )}
+
+        <Modal visible={profileView} transparent animationType="fade">
+          <BlurView
+            style={styles.blur}
+            blurType="light"
+            blurAmount={15}
+            reducedTransparencyFallbackColor="white"
+          />
+          <TouchableOpacity style={styles.modalOverlay} onPressOut={() => setProfileView(false)}>
+            <View style={styles.modalContent}>
+              {previewImage && previewImage.length > 100 ? (
+                <Image
+                  source={{ uri: previewImage }}
+                  style={styles.fullImage}
+                  resizeMode="contain"
+                />
+              ) : (
+                <View style={[styles.circle, styles.fullImageFallback]}>
+                  <Text style={styles.initialsPreview}>{previewName}</Text>
+                </View>
+              )}
             </View>
           </TouchableOpacity>
-        </View>
-      </View>
-      <View style={styles.searchBar}>
-        <Entypo name="magnifying-glass" size={24} color="black" />
-        <TextInput
-          placeholder="Search user..."
-          value={search}
-          onChangeText={setSearch}
-          style={styles.searchInput}
-          placeholderTextColor="#888"
-        />
-        {search.length > 0 && (
-          <TouchableOpacity onPress={() => setSearch('')}>
-            <Entypo name="cross" size={24} color="black" />
-          </TouchableOpacity>
+        </Modal>
+
+        {toast !== '' && (
+          <Animated.View style={[styles.toastContainer, { opacity: fadeAnim }]}>
+            <Text style={styles.toastText}>{toast}</Text>
+          </Animated.View>
         )}
       </View>
-
-
-      <View style={styles.tabs}>
-        {['Requests', 'Connections req. sent'].map(tab => (
-          <TouchableOpacity
-            key={tab}
-            onPress={() => setSelectedTab(tab)}
-            style={[styles.tab, selectedTab === tab && styles.activeTab]}
-          >
-            <Text style={[styles.tabText, selectedTab === tab && styles.activeTabText]}>{tab}</Text>
-          </TouchableOpacity>
-        ))}
-      </View>
-
-      {loading ? (
-        <View style={{ alignItems: 'center', marginTop: 40 }}>
-          <ActivityIndicator size="large" color="#007AFF" />
-          <Text style={{ marginTop: 10, fontSize: 16, color: '#333' }}>
-            Fetching connections...
-          </Text>
-        </View>
-      ) : filteredUsers.length === 0 ? (
-        <View style={styles.filterResultContainer}>
-          <Text style={styles.filterResultText}>
-            {selectedTab === 'Requests' ? 'No pending requests found!' : 'No connections found!'}
-          </Text>
-          <LottieView
-            style={styles.lottieContainer}
-            source={require('../../assets/Not-Found.json')}
-            autoPlay
-            loop
-            resizeMode="cover"
-          />
-        </View>
-      ) : (
-        <FlatList
-          data={filteredUsers}
-          keyExtractor={(item) => item.id.toString()}
-          renderItem={renderItem}
-          contentContainerStyle={styles.list}
-          keyboardShouldPersistTaps="handled"
-        />
-      )}
-
-      {showUndo && (undoUser || undoRequestUser) && (
-        <Animated.View style={[styles.undoContainer, { opacity: fadeAnim }]}>
-          <Text style={styles.undoText}>
-            {undoUser
-              ? `Accepted ${undoUser.name}`
-              : `Sent request to ${undoRequestUser.name}`}
-          </Text>
-          <TouchableOpacity onPress={handleUndo}>
-            <Text style={styles.undoButton}>Undo</Text>
-          </TouchableOpacity>
-        </Animated.View>
-      )}
-
-      {showFilters && (
-        <Modal animationType="fade" transparent visible={showFilters}>
-          <TouchableOpacity
-            style={styles.filterOptionsContainer}
-            activeOpacity={1}
-            onPressOut={() => setShowFilters(false)}
-          >
-            <TouchableWithoutFeedback>
-              <View style={styles.filterOptions}>
-                {(() => {
-                  const activeUsers = selectedTab === 'Requests' ? requests : allUsers;
-                  if (activeUsers.length === 0) {
-                    return <Text style={styles.noUsersText}>No users available to filter</Text>;
-                  }
-                  const uniqueRoles = [...new Set(activeUsers.map(user => user.role).filter(Boolean))];
-
-                  if (uniqueRoles.length === 0) {
-                    return <Text style={styles.noUsersText}>No role filters available</Text>;
-                  }
-                  const filteredRoles = uniqueRoles.filter(role =>
-                    role.toLowerCase().includes(roleSearch.toLowerCase())
-                  );
-                  const itemHeight = 35;
-                  const visibleItemCount = Math.min(filteredRoles.length, 5);
-                  const containerHeight = itemHeight * visibleItemCount;
-                  return (
-                    <>
-                      {/* 🔍 Search Input */}
-                      <View style={styles.roleSearchWrapper}>
-                        <TextInput
-                          ref={roleInputRef}
-                          placeholder="Search role..."
-                          value={roleSearch}
-                          onChangeText={setRoleSearch}
-                          style={styles.roleSearchInput}
-                          placeholderTextColor="#888"
-                        />
-                        {roleSearch.length > 0 && (
-                          <TouchableOpacity onPress={() => setRoleSearch('')} style={styles.clearIcon}>
-                            <Entypo name="cross" size={18} color="#888" />
-                          </TouchableOpacity>
-                        )}
-                      </View>
-                      {/* 📜 Role Scroll List */}
-                      {filteredRoles.length === 0 ? (
-                        <Text style={styles.noUsersText}>No role found</Text>
-                      ) : (
-                        <ScrollView
-                          style={{ maxHeight: containerHeight }}
-                          nestedScrollEnabled
-                          showsVerticalScrollIndicator={false}
-                        >
-                          {filteredRoles.map((role) => {
-                            const isActive = currentFilter === role;
-                            return (
-                              <TouchableOpacity
-                                key={role}
-                                style={[
-                                  styles.filterOption,
-                                  isActive && styles.filterActive,
-                                ]}
-                                activeOpacity={0.7}
-                                onPress={() => {
-                                  selectedTab === 'Requests'
-                                    ? setRequestFilter(role)
-                                    : setSentFilter(role);
-                                  setShowFilters(false);
-                                  setRoleSearch('');
-                                }}
-                              >
-                                <Text style={styles.filterText}>{role}</Text>
-                              </TouchableOpacity>
-                            );
-                          })}
-                        </ScrollView>
-                      )}
-                    </>
-                  );
-                })()}
-              </View>
-            </TouchableWithoutFeedback>
-          </TouchableOpacity>
-        </Modal>
-      )}
-
-      <Modal visible={profileView} transparent animationType="fade">
-        <BlurView
-          style={styles.blur}
-          blurType="light"
-          blurAmount={15}
-          reducedTransparencyFallbackColor="white"
-        />
-        <TouchableOpacity style={styles.modalOverlay} onPressOut={() => setProfileView(false)}>
-          <View style={styles.modalContent}>
-            {previewImage && previewImage.length > 100 ? (
-              <Image
-                source={{ uri: previewImage }}
-                style={styles.fullImage}
-                resizeMode="contain"
-              />
-            ) : (
-              <View style={[styles.circle, styles.fullImageFallback]}>
-                <Text style={styles.initialsPreview}>{previewName}</Text>
-              </View>
-            )}
-          </View>
-        </TouchableOpacity>
-      </Modal>
-
-      {toast !== '' && (
-        <Animated.View style={[styles.toastContainer, { opacity: fadeAnim }]}>
-          <Text style={styles.toastText}>{toast}</Text>
-        </Animated.View>
-      )}
-    </View>
+    </SafeAreaView>
   );
+
 };
 
 export default Connections;
 
 
 const styles = StyleSheet.create({
+  safeArea: {
+    flex: 1,
+    backgroundColor: '#E8EFFC',
+    paddingTop: Platform.OS === 'android' ? StatusBar.currentHeight : 0,
+  },
   container: { flex: 1, backgroundColor: '#E8EFFC' },
   fullFlex: {
     flex: 1,

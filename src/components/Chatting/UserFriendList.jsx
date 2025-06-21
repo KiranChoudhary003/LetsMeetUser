@@ -1,10 +1,11 @@
 import React, { useEffect, useState } from 'react';
 import {
-    View, Text, FlatList, TouchableOpacity, StyleSheet, Image, ActivityIndicator,
+    View, Text, FlatList, TouchableOpacity, StyleSheet, Image, ActivityIndicator, StatusBar,
 } from 'react-native';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import Ionicons from 'react-native-vector-icons/Ionicons';
 import { useNavigation } from '@react-navigation/native';
+import { SafeAreaView } from 'react-native-safe-area-context'; // ✅ updated
 import profile from '../../assets/profile.png';
 
 const API_URL = 'https://letsmeet-backend-47lv.onrender.com/api';
@@ -21,7 +22,7 @@ const NewChatScreen = () => {
                 headers: { Authorization: `Bearer ${token}` },
             });
             const data = await response.json();
-            setAllUsers(data.connections || []); // ✅ assuming `connections` is the array
+            setAllUsers(data.connections || []);
         } catch (err) {
             console.error('Failed to fetch users:', err);
         } finally {
@@ -34,7 +35,7 @@ const NewChatScreen = () => {
     }, []);
 
     const handleSelectUser = (user) => {
-        navigation.replace('ChatPage', { peer: user }); // Navigate to chat
+        navigation.replace('ChatPage', { peer: user });
     };
 
     const renderItem = ({ item }) => (
@@ -61,12 +62,13 @@ const NewChatScreen = () => {
     );
 
     return (
-        <View style={styles.container}>
+        <SafeAreaView style={styles.safeContainer}>
+            <StatusBar barStyle="dark-content" backgroundColor="#f9fafe" />
             <View style={styles.header}>
                 <TouchableOpacity onPress={() => navigation.goBack()}>
                     <Ionicons name="arrow-back" size={24} color="#2c3e50" />
                 </TouchableOpacity>
-                <Text style={styles.headerTitle}>New Chat</Text>
+                <Text style={styles.headerTitle}>Connection List</Text>
                 <View style={{ width: 24 }} />
             </View>
             {loading ? (
@@ -84,17 +86,26 @@ const NewChatScreen = () => {
                     contentContainerStyle={{ paddingBottom: 20 }}
                 />
             )}
-        </View>
+        </SafeAreaView>
     );
 };
 
 const styles = StyleSheet.create({
-    container: { flex: 1, backgroundColor: '#f9fafe', padding: 16 },
+    safeContainer: {
+        flex: 1,
+        backgroundColor: '#f9fafe',
+        paddingHorizontal: 16,
+    },
     header: {
-        flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', marginBottom: 20,
+        flexDirection: 'row',
+        alignItems: 'center',
+        justifyContent: 'space-between',
+        paddingVertical: 16,
     },
     headerTitle: {
-        fontSize: 20, fontWeight: 'bold', color: '#2c3e50',
+        fontSize: 20,
+        fontWeight: 'bold',
+        color: '#2c3e50',
     },
     userCard: {
         flexDirection: 'row',

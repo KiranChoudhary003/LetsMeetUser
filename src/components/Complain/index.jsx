@@ -1,10 +1,10 @@
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import axios from 'axios';
 import React, { useEffect, useState } from 'react';
-import { Alert, Animated, Modal, Pressable, SafeAreaView, ScrollView, StyleSheet, Text, TouchableOpacity, TouchableWithoutFeedback, View, ActivityIndicator } from 'react-native';
-import MaterialIcons from 'react-native-vector-icons/MaterialIcons';
-import Ionicons from 'react-native-vector-icons/Ionicons';
+import { ActivityIndicator, Alert, Modal, SafeAreaView, ScrollView, StyleSheet, Text, TouchableOpacity, TouchableWithoutFeedback, View } from 'react-native';
 import { TextInput } from 'react-native-gesture-handler';
+import Ionicons from 'react-native-vector-icons/Ionicons';
+import MaterialIcons from 'react-native-vector-icons/MaterialIcons';
 
 const ComplainCard = ({ description, status, updatedAt }) => {
 
@@ -74,7 +74,7 @@ const Complain = ({ navigation }) => {
             } catch (error) {
                 console.log(error);
             } finally {
-                setLoading(false); // 🟢 stop spinner
+                setLoading(false);
             }
         };
         fetchComplain();
@@ -261,7 +261,7 @@ const styles = StyleSheet.create({
     header: {
         display: 'flex',
         alignItems: 'center',
-        marginVertical: 20,
+        marginBottom: 20,
     },
     desk: {
         fontSize: 25,
@@ -306,11 +306,11 @@ const styles = StyleSheet.create({
         marginBottom: 4,
     },
     card: {
-        padding: 16,
-        width: 370,
+        padding: 6,
         minHeight: 90,
         marginVertical: 3,
         borderBottomWidth: 0.5,
+        borderRadius: 8,
     },
     plus: {
         width: 60,
@@ -365,12 +365,9 @@ const styles = StyleSheet.create({
         fontWeight: '600',
     },
     complainData: {
-        flex: 1,
-        display: 'flex',
+        width: '100%',
         flexDirection: 'column',
         justifyContent: 'space-between',
-        alignItems: 'center',
-
     },
     complainStatus: {
         width: 110,
@@ -379,16 +376,20 @@ const styles = StyleSheet.create({
         alignItems: 'center',
         justifyContent: 'center',
         borderColor: '#888',
-        marginLeft: 160,
         paddingVertical: 3,
     },
+
     complainDetails: {
         width: '100%',
     },
     date: {
         flexDirection: 'row',
-        justifyContent: 'center',
+        justifyContent: 'space-between',
+        alignItems: 'center',
+        marginTop: 8,
+        width: '100%',
     },
+
     filterOptionsContainer: {
         flex: 1,
         justifyContent: 'flex-start',

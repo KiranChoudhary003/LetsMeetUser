@@ -1,5 +1,6 @@
 import React from 'react';
 import { View, StyleSheet } from 'react-native';
+import { SafeAreaView } from 'react-native-safe-area-context';
 import Header from '../Header';
 import BottomTab from '../BottomTab';
 import { createStackNavigator } from '@react-navigation/stack';
@@ -11,32 +12,43 @@ const InnerStack = createStackNavigator();
 
 const Layout = () => {
   return (
-    <View style={styles.container}>
-      <View style={styles.header}>
-        <Header />
-      </View>
+    <SafeAreaView style={styles.safeArea} edges={['top', 'bottom']}>
+      <View style={styles.container}>
+        {/* ✅ Header is inside safe area now */}
+        <View style={styles.header}>
+          <Header />
+        </View>
 
-      <View style={styles.body}>
-        <InnerStack.Navigator screenOptions={{ headerShown: false }}>
-          <InnerStack.Screen name="Home" component={Home} />
-          <InnerStack.Screen name="MyEvents" component={MyEvents} />
-          <InnerStack.Screen name="Complain" component={Complain} />
-        </InnerStack.Navigator>
-      </View>
+        {/* ✅ Body with stack navigation */}
+        <View style={styles.body}>
+          <InnerStack.Navigator screenOptions={{ headerShown: false }}>
+            <InnerStack.Screen name="Home" component={Home} />
+            <InnerStack.Screen name="MyEvents" component={MyEvents} />
+            <InnerStack.Screen name="Complain" component={Complain} />
+          </InnerStack.Navigator>
+        </View>
 
-      <View style={styles.footer}>
-        <BottomTab />
+        {/* ✅ Footer also respects safe area */}
+        <View style={styles.footer}>
+          <BottomTab />
+        </View>
       </View>
-    </View>
+    </SafeAreaView>
   );
 };
 
 export default Layout;
 
 const styles = StyleSheet.create({
-  container: { flex: 1 },
+  safeArea: {
+    flex: 1,
+    backgroundColor: '#fff', // match your app's background
+  },
+  container: {
+    flex: 1,
+  },
   header: {
-    height: 60,
+    minHeight: 60,
     justifyContent: 'center',
     alignItems: 'center',
   },
@@ -44,7 +56,7 @@ const styles = StyleSheet.create({
     flex: 1,
   },
   footer: {
-    height: 60,
+    minHeight: 60,
     justifyContent: 'center',
     alignItems: 'center',
   },

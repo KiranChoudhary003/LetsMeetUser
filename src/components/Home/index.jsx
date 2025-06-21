@@ -1,6 +1,6 @@
 import React, { useRef, useState, useEffect, useContext } from 'react';
 import { Easing, ToastAndroid, Modal, Image, TouchableWithoutFeedback, ActivityIndicator } from 'react-native';
-
+import { Dimensions } from 'react-native';
 import {
     ScrollView,
     Text,
@@ -41,6 +41,7 @@ const EventCard = ({
         Animated.spring(scale, { toValue: 1, friction: 3, useNativeDriver: true }).start();
     };
 
+    const screenWidth = Dimensions.get('window').width;
     return (
         <>
             <Pressable onPressIn={handlePressIn} onPressOut={handlePressOut} onPress={onPress}>
@@ -194,7 +195,7 @@ const Home = ({ navigation }) => {
 
 
     const formatDate = (date) => {
-        if (!(date instanceof Date)) {return '';}
+        if (!(date instanceof Date)) { return ''; }
 
         const day = date.getDate().toString().padStart(2, '0');
         const month = (date.getMonth() + 1).toString().padStart(2, '0'); // Months are 0-based
@@ -224,13 +225,13 @@ const Home = ({ navigation }) => {
                 );
 
             case 'Choose from Calendar':
-                if (!customDate) {return [];}
+                if (!customDate) { return []; }
                 return events.filter(event =>
                     new Date(event.date).toDateString() === customDate.toDateString()
                 );
 
             case 'Near Me':
-                if (!location?.latitude || !location?.longitude) {return [];}
+                if (!location?.latitude || !location?.longitude) { return []; }
                 return events.filter(event => {
                     const distance = calculateDistance(
                         location.latitude,
@@ -614,7 +615,7 @@ const styles = StyleSheet.create({
     selectedFilterContainer: {
         flexDirection: 'row',
         alignItems: 'center',
-        marginLeft: 110,
+        marginLeft: 85,
     },
     filterIcon: {
         marginHorizontal: 4,
@@ -747,7 +748,7 @@ const styles = StyleSheet.create({
         paddingVertical: 6,
         width: 156,
         height: 41,
-        marginLeft: 100,
+        marginLeft: 85,
         borderWidth: 1,
         borderColor: '#888',
         borderRadius: 20,
@@ -806,12 +807,12 @@ const styles = StyleSheet.create({
         marginBottom: 8,
     },
     card: {
-        padding: 16,
-        width: 370,
-        height: 90,
+        width: '100%',       // ✅ Full width of parent
+        minHeight: 90,       // ✅ Use minHeight instead of fixed height
         marginVertical: 6,
         borderBottomWidth: 0.5,
     },
+
     eventName: {
         fontSize: 18,
         fontWeight: 'bold',
