@@ -1,5 +1,5 @@
 import React, { useRef, useState, useEffect, useContext } from "react";
-import { Easing, ToastAndroid, Modal, Image, TouchableWithoutFeedback } from "react-native";
+import { Easing, ToastAndroid, Modal, Image, TouchableWithoutFeedback, ActivityIndicator } from "react-native";
 
 import {
     ScrollView,
@@ -190,6 +190,8 @@ const Home = ({ navigation }) => {
     const [filteredEvents, setFilteredEvents] = useState([]);
     const [showDatePicker, setShowDatePicker] = useState(false);
     const [hasDateBeenPicked, setHasDateBeenPicked] = useState(false);
+    const [loading, setLoading] = useState(false);
+
 
     const formatDate = (date) => {
         if (!(date instanceof Date)) return '';
@@ -317,15 +319,15 @@ const Home = ({ navigation }) => {
 
     const fetchUpcomingEvents = async () => {
         try {
-            const token = await AsyncStorage.getItem('token'); // replace with your auth method
+            setLoading(true); // Start loading
+            const token = await AsyncStorage.getItem('token');
             if (!location?.latitude || !location?.longitude) {
                 console.warn("Location not available yet");
                 return;
             }
 
-            console.log("Api is fetching")
             const response = await axios.post(
-                'https://letsmeet-backend-47lv.onrender.com/api/user-events/upcoming-events', // ✅ Replace with your API URL
+                'https://letsmeet-backend-47lv.onrender.com/api/user-events/upcoming-events',
                 {
                     latitude: location.latitude,
                     longitude: location.longitude
@@ -337,11 +339,8 @@ const Home = ({ navigation }) => {
                     },
                 }
             );
-            console.log("Api is fetched")
 
             const rawEvents = response.data.events;
-
-            // 🔁 Map the response to your expected format
             const formattedEvents = rawEvents.map(event => ({
                 id: event.id,
                 name: event.name,
@@ -362,8 +361,11 @@ const Home = ({ navigation }) => {
             setFilteredEvents(filterEvents(formattedEvents, selectedFilter, customDate, location));
         } catch (error) {
             console.error('Error fetching events:', error.message || error);
+        } finally {
+            setLoading(false); // Stop loading
         }
     };
+
 
     useEffect(() => {
         if (location?.latitude && location?.longitude) {
@@ -542,45 +544,51 @@ const Home = ({ navigation }) => {
                         </Modal>
                     )}
 
-                    {Object.entries(events).map(([month, data]) => (
-                        <View key={month} style={styles.monthSection}>
-                            <Text style={styles.monthTitle}>{`${data.monthName} ${data.year}`}</Text>
-
-                            {data.events.map((event, index) => (
-                                <EventCard
-                                    key={event.id.toString()} // ✅ Better unique key
-                                    name={event.name}
-                                    organizer={event.organizer}
-                                    date={event.date}
-                                    lat={event.lat}
-                                    lon={event.lon}
-                                    isRegistered={event.is_registered}
-                                    checkInAvailable={event.check_in_available} // ✅ Assuming this is precomputed
-                                    already_checked_in={event.already_checked_in} // ✅ Required to prevent re-check-in
-                                    onRegister={() => handleRegister(event.id)}
-                                    onCheckIn={() => handleCheckIn(event.id)}
-                                    onPress={() =>
-                                        navigation.navigate("Description", {
-                                            id: event.id,
-                                            name: event.name,
-                                            organizer: event.organizer,
-                                            description: event.description,
-                                            date: event.date,
-                                            endDate: event.endDate,
-                                            lat: event.lat,
-                                            lon: event.lon,
-                                            webUrl: event.webUrl,
-                                            banner: event.banner,
-                                            isRegistered: event.is_registered,
-                                            checkInAvailable: event.check_in_available,
-                                            already_checked_in: event.already_checked_in,
-                                            fetchUpcomingEvents,
-                                        })
-                                    }
-                                />
-                            ))}
+                    {loading ? (
+                        <View style={{ marginTop: 40, alignItems: 'center' }}>
+                            <ActivityIndicator size="large" color="#34495e" />
+                            <Text style={{ marginTop: 10, color: '#34495e', fontWeight: '600' }}>Loading events...</Text>
                         </View>
-                    ))}
+                    ) : (
+                        Object.entries(events).map(([month, data]) => (
+                            <View key={month} style={styles.monthSection}>
+                                <Text style={styles.monthTitle}>{`${data.monthName} ${data.year}`}</Text>
+                                {data.events.map((event) => (
+                                    <EventCard
+                                        key={event.id.toString()}
+                                        name={event.name}
+                                        organizer={event.organizer}
+                                        date={event.date}
+                                        lat={event.lat}
+                                        lon={event.lon}
+                                        isRegistered={event.is_registered}
+                                        checkInAvailable={event.check_in_available}
+                                        already_checked_in={event.already_checked_in}
+                                        onRegister={() => handleRegister(event.id)}
+                                        onCheckIn={() => handleCheckIn(event.id)}
+                                        onPress={() =>
+                                            navigation.navigate("Description", {
+                                                id: event.id,
+                                                name: event.name,
+                                                organizer: event.organizer,
+                                                description: event.description,
+                                                date: event.date,
+                                                endDate: event.endDate,
+                                                lat: event.lat,
+                                                lon: event.lon,
+                                                webUrl: event.webUrl,
+                                                banner: event.banner,
+                                                isRegistered: event.is_registered,
+                                                checkInAvailable: event.check_in_available,
+                                                already_checked_in: event.already_checked_in,
+                                                fetchUpcomingEvents,
+                                            })
+                                        }
+                                    />
+                                ))}
+                            </View>
+                        ))
+                    )}
 
                 </ScrollView>
             </SafeAreaView>

@@ -69,9 +69,13 @@ const NewChatScreen = () => {
                 <Text style={styles.headerTitle}>New Chat</Text>
                 <View style={{ width: 24 }} />
             </View>
-
             {loading ? (
-                <ActivityIndicator size="large" color="#007AFF" style={{ marginTop: 30 }} />
+                <View style={{ alignItems: 'center', marginTop: 30 }}>
+                    <ActivityIndicator size="large" color="#007AFF" />
+                    <Text style={{ marginTop: 10, color: '#555', fontSize: 14 }}>
+                        Fetching your connections. Please wait...
+                    </Text>
+                </View>
             ) : (
                 <FlatList
                     data={allUsers}

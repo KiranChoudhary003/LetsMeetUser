@@ -13,6 +13,7 @@ import {
   Animated,
   ToastAndroid,
   Pressable,
+  ActivityIndicator,
 } from "react-native";
 import profile from '../../assets/profile.png'
 import scanner from '../../assets/scanner.png'
@@ -66,6 +67,7 @@ const EventCard = ({
   const scale = useRef(new Animated.Value(1)).current;
   const [withinRange, setWithinRange] = useState(false);
   const [isFutureEvent, setIsFutureEvent] = useState(true);
+
 
   const handlePressIn = () => {
     Animated.spring(scale, {
@@ -218,6 +220,7 @@ const groupEventsByMonth = (events) => {
 const EventsScreen = ({ navigation }) => {
 
   const [eventData, setEventData] = useState([])
+  const [loading, setLoading] = useState(true);
 
   const { location } = useContext(LocationContext);
 
@@ -265,10 +268,9 @@ const EventsScreen = ({ navigation }) => {
   };
 
   const fetchUpcomingEvents = async () => {
-    console.log(" Try to Api is fetching")
+    setLoading(true); // Show spinner
     try {
-      const token = await AsyncStorage.getItem('token'); // replace with your auth method
-      console.log("Api is fetching")
+      const token = await AsyncStorage.getItem('token');
       const response = await axios.post(
         'https://letsmeet-backend-47lv.onrender.com/api/user-events/registered-events',
         {
@@ -282,11 +284,9 @@ const EventsScreen = ({ navigation }) => {
           },
         }
       );
-      console.log("Api is fetched")
 
       const rawEvents = response.data.events;
 
-      // 🔁 Map the response to your expected format
       const formattedEvents = rawEvents.map(event => ({
         id: event.id,
         name: event.name,
@@ -304,13 +304,16 @@ const EventsScreen = ({ navigation }) => {
         approvedRequests: event.approved_requests,
         pendingRequests: event.pending_requests,
         already_checked_in: event.already_checked_in
-      }))
+      }));
 
       setEventData(formattedEvents);
     } catch (error) {
       console.error('Error fetching events:', error.message || error);
+    } finally {
+      setLoading(false); // Hide spinner
     }
   };
+
 
   useEffect(() => {
     fetchUpcomingEvents();
@@ -321,58 +324,64 @@ const EventsScreen = ({ navigation }) => {
       <SafeAreaView style={styles.container}>
 
         <StatusBar barStyle="dark-content" />
-
-        <ScrollView contentContainerStyle={styles.scrollView}>
-          <View style={styles.header}>
-            <View style={styles.eventsLabel}>
-              <Text style={styles.eventsLabelText}>My Events</Text>
-            </View>
+        {loading ? (
+          <View style={{ flex: 1, justifyContent: 'center', alignItems: 'center' }}>
+            <Text style={{ marginBottom: 10, fontSize: 16, color: '#555' }}>Loading your events...</Text>
+            <ActivityIndicator size="large" color="#34495e" />
           </View>
-
-          {Object.entries(events).map(([month, data]) => (
-            <View key={month} style={styles.monthSection}>
-              <Text style={styles.monthTitle}>{`${data.monthName} ${data.year}`}</Text>
-
-              {data.events.map((event) => (
-                <EventCard
-                  key={event.id}
-                  id={event.id}
-                  name={event.name}
-                  organizer={event.organizer}
-                  start_date={event.start_date}
-                  end_date={event.end_date}
-                  lat={event.lat}
-                  lon={event.lon}
-                  already_checked_in={event.already_checked_in}
-                  userLat={location?.latitude}
-                  userLon={location?.longitude}
-                  onCheckIn={() => handleCheckIn(event.id)}
-                  onPress={() =>
-                    navigation.navigate("MyEventsDescription", {
-                      id: event.id,
-                      name: event.name,
-                      organizer: event.organizer,
-                      description: event.description,
-                      start_date: event.start_date,
-                      end_date: event.end_date,
-                      lat: event.lat,
-                      lon: event.lon,
-                      webUrl: event.webUrl,
-                      banner: event.banner,
-                      isRegistered: event.is_registered,
-                      checkInAvailable: event.check_in_available,
-                      already_checked_in: event.already_checked_in,
-                      totalConnections: event.total_connections,
-                      approvedRequests: event.approved_requests,
-                      pendingRequests: event.pending_requests,
-                      fetchUpcomingEvents,
-                    })}
-                />
-              ))}
+        ) : (
+          <ScrollView contentContainerStyle={styles.scrollView}>
+            <View style={styles.header}>
+              <View style={styles.eventsLabel}>
+                <Text style={styles.eventsLabelText}>My Events</Text>
+              </View>
             </View>
-          ))}
 
-        </ScrollView>
+            {Object.entries(events).map(([month, data]) => (
+              <View key={month} style={styles.monthSection}>
+                <Text style={styles.monthTitle}>{`${data.monthName} ${data.year}`}</Text>
+
+                {data.events.map((event) => (
+                  <EventCard
+                    key={event.id}
+                    id={event.id}
+                    name={event.name}
+                    organizer={event.organizer}
+                    start_date={event.start_date}
+                    end_date={event.end_date}
+                    lat={event.lat}
+                    lon={event.lon}
+                    already_checked_in={event.already_checked_in}
+                    userLat={location?.latitude}
+                    userLon={location?.longitude}
+                    onCheckIn={() => handleCheckIn(event.id)}
+                    onPress={() =>
+                      navigation.navigate("MyEventsDescription", {
+                        id: event.id,
+                        name: event.name,
+                        organizer: event.organizer,
+                        description: event.description,
+                        start_date: event.start_date,
+                        end_date: event.end_date,
+                        lat: event.lat,
+                        lon: event.lon,
+                        webUrl: event.webUrl,
+                        banner: event.banner,
+                        isRegistered: event.is_registered,
+                        checkInAvailable: event.check_in_available,
+                        already_checked_in: event.already_checked_in,
+                        totalConnections: event.total_connections,
+                        approvedRequests: event.approved_requests,
+                        pendingRequests: event.pending_requests,
+                        fetchUpcomingEvents,
+                      })}
+                  />
+                ))}
+              </View>
+            ))}
+
+          </ScrollView>
+        )}
       </SafeAreaView>
 
     </View>

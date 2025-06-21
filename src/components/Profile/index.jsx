@@ -1,7 +1,7 @@
 import React, { useEffect, useState } from 'react';
 import {
   Image, Modal, StyleSheet, Text, TouchableOpacity, View, Alert, Linking,
-  Platform, PermissionsAndroid,
+  Platform, PermissionsAndroid, ActivityIndicator,
 } from 'react-native';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import MaterialIcons from 'react-native-vector-icons/MaterialIcons';
@@ -14,6 +14,8 @@ import { launchImageLibrary } from 'react-native-image-picker';
 const Profile = ({ navigation, route }) => {
   const [userProfile, setUserProfile] = useState({});
   const [profileView, setProfileView] = useState(false);
+  const [loading, setLoading] = useState(false);
+
 
   const passedUser = route?.params?.user;
   const isViewingOwnProfile = !passedUser;
@@ -21,6 +23,7 @@ const Profile = ({ navigation, route }) => {
   useEffect(() => {
     const fetchProfileData = async () => {
       try {
+        setLoading(true);
         const token = await AsyncStorage.getItem('token');
         const response = await axios.get('https://letsmeet-backend-47lv.onrender.com/api/user-profile', {
           headers: {
@@ -31,6 +34,8 @@ const Profile = ({ navigation, route }) => {
         setUserProfile(response.data.user);
       } catch (err) {
         console.error('Error fetching profile:', err);
+      } finally {
+        setLoading(false);
       }
     };
 
@@ -40,6 +45,7 @@ const Profile = ({ navigation, route }) => {
       fetchProfileData();
     }
   }, []);
+
 
   const requestGalleryPermission = async () => {
     if (Platform.OS === 'android') {
@@ -120,6 +126,14 @@ const Profile = ({ navigation, route }) => {
       ...userProfile,
     });
   };
+
+  if (isViewingOwnProfile && loading) {
+    return (
+      <View style={[styles.container, { justifyContent: 'center', alignItems: 'center' }]}>
+        <ActivityIndicator size="large" color="#34495e" />
+      </View>
+    );
+  }
 
   return (
     <View style={styles.container}>

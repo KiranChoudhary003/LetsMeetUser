@@ -10,6 +10,7 @@ import {
   Text,
   TextInput, TouchableOpacity, TouchableWithoutFeedback,
   View,
+  ActivityIndicator
 } from 'react-native';
 import Entypo from 'react-native-vector-icons/Entypo';
 import Ionicons from 'react-native-vector-icons/Ionicons';
@@ -61,6 +62,7 @@ const Connections = ({ navigation }) => {
   const [sentFilter, setSentFilter] = useState('');
   const [previewName, setPreviewName] = useState('');
   const [roleSearch, setRoleSearch] = useState('');
+  const [loading, setLoading] = useState(true);
 
 
   useEffect(() => {
@@ -74,8 +76,15 @@ const Connections = ({ navigation }) => {
 
 
   useEffect(() => {
-    fetchPendingRequests();
-    fetchAllUsers();
+    const fetchData = async () => {
+      setLoading(true);
+      await Promise.all([
+        fetchPendingRequests(),
+        fetchAllUsers()
+      ]);
+      setLoading(false);
+    };
+    fetchData();
   }, []);
 
   useEffect(() => {
@@ -325,7 +334,7 @@ const Connections = ({ navigation }) => {
       setShowUndo(false);
       setToast('');
     })();
-  // eslint-disable-next-line react-hooks/exhaustive-deps
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [selectedTab]);
 
 
@@ -564,7 +573,14 @@ const Connections = ({ navigation }) => {
         ))}
       </View>
 
-      {filteredUsers.length === 0 ? (
+      {loading ? (
+        <View style={{ alignItems: 'center', marginTop: 40 }}>
+          <ActivityIndicator size="large" color="#007AFF" />
+          <Text style={{ marginTop: 10, fontSize: 16, color: '#333' }}>
+            Fetching connections...
+          </Text>
+        </View>
+      ) : filteredUsers.length === 0 ? (
         <View style={styles.filterResultContainer}>
           <Text style={styles.filterResultText}>
             {selectedTab === 'Requests' ? 'No pending requests found!' : 'No connections found!'}

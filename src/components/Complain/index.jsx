@@ -1,7 +1,7 @@
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import axios from 'axios';
 import React, { useEffect, useState } from 'react'
-import { Alert, Animated, Modal, Pressable, SafeAreaView, ScrollView, StyleSheet, Text, TouchableOpacity, TouchableWithoutFeedback, View } from 'react-native'
+import { Alert, Animated, Modal, Pressable, SafeAreaView, ScrollView, StyleSheet, Text, TouchableOpacity, TouchableWithoutFeedback, View, ActivityIndicator } from 'react-native'
 import MaterialIcons from 'react-native-vector-icons/MaterialIcons';
 import Ionicons from 'react-native-vector-icons/Ionicons';
 import { TextInput } from 'react-native-gesture-handler';
@@ -50,10 +50,13 @@ const Complain = ({ navigation }) => {
     const [filter, setFilter] = useState(false)
     const [selectedFilter, setSelectedFilter] = useState(null);
     const [allComplains, setAllComplains] = useState([]);
+    const [loading, setLoading] = useState(true);
+    const [saving, setSaving] = useState(false);
+
 
     useEffect(() => {
         const fetchComplain = async () => {
-            console.log(`Api is fetching`)
+            setLoading(true); // 🟡 start spinner
             try {
                 const token = await AsyncStorage.getItem('token');
                 const response = await axios.get(
@@ -65,17 +68,18 @@ const Complain = ({ navigation }) => {
                         },
                     }
                 );
-                console.log(`api is fetched`)
-
                 const data = response.data.reports;
                 setAllComplains(data);
                 applyFilter(data, selectedFilter);
             } catch (error) {
                 console.log(error);
+            } finally {
+                setLoading(false); // 🟢 stop spinner
             }
         };
         fetchComplain();
     }, []);
+
 
     const submitComplain = async () => {
         if (!newComplain.trim()) {
@@ -84,12 +88,12 @@ const Complain = ({ navigation }) => {
         }
 
         try {
+            setSaving(true); // 🟢 start spinner
+
             const token = await AsyncStorage.getItem('token');
             await axios.post(
                 `https://letsmeet-backend-47lv.onrender.com/api/user-profile/submit-report`,
-                {
-                    Description: newComplain,
-                },
+                { Description: newComplain },
                 {
                     headers: {
                         Authorization: `Bearer ${token}`,
@@ -99,9 +103,9 @@ const Complain = ({ navigation }) => {
             );
 
             Alert.alert('Success', 'Your complaint has been submitted.');
-
             setNewComplain('');
             setShowModal(false);
+
             const response = await axios.get(
                 `https://letsmeet-backend-47lv.onrender.com/api/user-profile/reports`,
                 {
@@ -115,8 +119,11 @@ const Complain = ({ navigation }) => {
         } catch (err) {
             console.log(err);
             Alert.alert('Error', 'Something went wrong while submitting your complaint.');
+        } finally {
+            setSaving(false); // 🔴 stop spinner
         }
-    }
+    };
+
 
     useEffect(() => {
         applyFilter(allComplains, selectedFilter);
@@ -138,66 +145,75 @@ const Complain = ({ navigation }) => {
     };
 
     return (
-        <View style={styles.background} resizeMode="cover">
+        <View style={styles.background}>
             <SafeAreaView style={styles.container}>
-                <ScrollView contentContainerStyle={styles.scrollView}>
-                    <View style={styles.header}>
-                        <Text style={styles.desk}>Complain Desk</Text>
-                    </View>
 
-                    <View style={styles.complain}>
-                        <Text style={styles.myComplain}>My Complain</Text>
-                        <TouchableOpacity onPress={() => setFilter(true)}>
-                            <Ionicons name="filter" size={16} color="#000" />
-                        </TouchableOpacity>
+                {loading ? (
+                    <View style={styles.loaderContainer}>
+                        <ActivityIndicator size="large" color="#000" />
+                        <Text style={{ marginTop: 8, color: '#444' }}>Loading complaints...</Text>
                     </View>
-                    {filter && (
-                        <Modal animationType="slide" transparent visible={filter} onRequestClose={() => setFilter(false)}>
-                            <TouchableOpacity
-                                style={styles.filterOptionsContainer}
-                                activeOpacity={1}
-                                onPressOut={() => setFilter(false)}
-                            >
-                                <TouchableWithoutFeedback>
-                                    <View style={styles.filterOptions}>
-                                        {['All', 'Pending', 'In Progress', 'Complete'].map((option) => {
-                                            const normalized = option === 'All' ? null : option.toLowerCase().replace(' ', '_');
-                                            const isActive = selectedFilter === normalized;
+                ) : (
+                    <ScrollView contentContainerStyle={styles.scrollView}>
+                        <View style={styles.header}>
+                            <Text style={styles.desk}>Complain Desk</Text>
+                        </View>
 
-                                            return (
-                                                <TouchableOpacity key={option} onPress={() => handleFilterChange(option)} style={styles.filterOption}>
-                                                    <Text style={[styles.filterText, isActive && styles.filterActive]}>
-                                                        {option}
-                                                    </Text>
-                                                </TouchableOpacity>
-                                            );
-                                        })}
-                                    </View>
-                                </TouchableWithoutFeedback>
+                        <View style={styles.complain}>
+                            <Text style={styles.myComplain}>My Complain</Text>
+                            <TouchableOpacity onPress={() => setFilter(true)}>
+                                <Ionicons name="filter" size={16} color="#000" />
                             </TouchableOpacity>
-                        </Modal>
-                    )}
+                        </View>
 
-                    <View style={styles.complainCard}>
-                        {complains.map((complain) => (
-                            <ComplainCard
-                                key={complain.id}
-                                description={complain.description}
-                                status={complain.status}
-                                updatedAt={complain.updated_at}
-                            />
-                        ))}
-                    </View>
-                </ScrollView>
+                        <View style={styles.complainCard}>
+                            {complains.map((complain) => (
+                                <ComplainCard
+                                    key={complain.id}
+                                    description={complain.description}
+                                    status={complain.status}
+                                    updatedAt={complain.updated_at}
+                                />
+                            ))}
+                        </View>
+                    </ScrollView>
+                )}
+
                 <TouchableOpacity style={styles.plus} onPress={() => setShowModal(true)}>
                     <MaterialIcons name="add" size={40} color="#fff" style={styles.add} />
                 </TouchableOpacity>
+
+                {/* Filter Modal */}
+                {filter && (
+                    <Modal animationType="slide" transparent visible={filter} onRequestClose={() => setFilter(false)}>
+                        <TouchableOpacity
+                            style={styles.filterOptionsContainer}
+                            activeOpacity={1}
+                            onPressOut={() => setFilter(false)}
+                        >
+                            <TouchableWithoutFeedback>
+                                <View style={styles.filterOptions}>
+                                    {['All', 'Pending', 'In Progress', 'Complete'].map((option) => {
+                                        const normalized = option === 'All' ? null : option.toLowerCase().replace(' ', '_');
+                                        const isActive = selectedFilter === normalized;
+
+                                        return (
+                                            <TouchableOpacity key={option} onPress={() => handleFilterChange(option)} style={styles.filterOption}>
+                                                <Text style={[styles.filterText, isActive && styles.filterActive]}>
+                                                    {option}
+                                                </Text>
+                                            </TouchableOpacity>
+                                        );
+                                    })}
+                                </View>
+                            </TouchableWithoutFeedback>
+                        </TouchableOpacity>
+                    </Modal>
+                )}
+
+                {/* Complaint Modal */}
                 {showModal && (
-                    <Modal
-                        animationType="slide"
-                        transparent
-                        onRequestClose={() => setShowModal(false)}
-                    >
+                    <Modal animationType="slide" transparent onRequestClose={() => setShowModal(false)}>
                         <TouchableOpacity
                             style={styles.modalOverlay}
                             activeOpacity={1}
@@ -211,16 +227,21 @@ const Complain = ({ navigation }) => {
                                     value={newComplain}
                                     onChangeText={setNewComplain}
                                 />
-                                <TouchableOpacity style={styles.saveButton} onPress={submitComplain}>
-                                    <Text style={styles.saveButtonText}>Save</Text>
+                                <TouchableOpacity style={styles.saveButton} onPress={submitComplain} disabled={saving}>
+                                    <View style={{ flexDirection: 'row', alignItems: 'center' }}>
+                                        <Text style={styles.saveButtonText}>Save</Text>
+                                        {saving && <ActivityIndicator size="small" color="#fff" style={{ marginLeft: 10 }} />}
+                                    </View>
                                 </TouchableOpacity>
+
                             </View>
                         </TouchableOpacity>
                     </Modal>
                 )}
             </SafeAreaView>
         </View>
-    )
+    );
+
 }
 
 export default Complain
@@ -389,9 +410,9 @@ const styles = StyleSheet.create({
     },
     filterActive: {
         backgroundColor: 'rgba(255,255,255,.29)',
-        width : 100,
-        paddingVertical : 10,
-        borderRadius : 5
+        width: 100,
+        paddingVertical: 10,
+        borderRadius: 5
     },
     filterText: { fontSize: 14, color: '#fff' },
 
@@ -402,4 +423,11 @@ const styles = StyleSheet.create({
         borderWidth: 0.5,
         borderColor: '#e8effc',
     },
+    loaderContainer: {
+        flex: 1,
+        justifyContent: 'center',
+        alignItems: 'center',
+        marginTop: 50,
+    },
+
 })

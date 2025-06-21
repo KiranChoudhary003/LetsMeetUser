@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from 'react';
-import { StyleSheet, Text, TextInput, TouchableOpacity, View } from 'react-native';
+import { StyleSheet, Text, TextInput, TouchableOpacity, View, ActivityIndicator } from 'react-native';
 import { Checkbox, IconButton, Menu, Modal, Provider } from 'react-native-paper';
 import { ScrollView } from 'react-native-gesture-handler';
 import axios from 'axios';
@@ -18,6 +18,8 @@ const Edit = ({ route, navigation }) => {
     const [roles, setRoles] = useState([]);
     const [visible, setVisible] = useState(false);
     const [modalVisible, setModalVisible] = useState(false);
+    const [isSaving, setIsSaving] = useState(false);
+
 
     const toggleRole = (role) => {
         setSelectedRoles((prevSelectedRoles) =>
@@ -54,6 +56,9 @@ const Edit = ({ route, navigation }) => {
     }, []);
 
     const handleEdit = async () => {
+        if (isSaving) return; // Prevent duplicate taps
+        setIsSaving(true);
+
         try {
             const token = await AsyncStorage.getItem('token');
             const response = await axios.put(
@@ -81,8 +86,11 @@ const Edit = ({ route, navigation }) => {
         } catch (error) {
             console.log('Error updating profile:', error.response?.data || error.message);
             alert('Failed to update profile');
+        } finally {
+            setIsSaving(false);
         }
     };
+
 
     useEffect(() => {
         console.log("Initial selected preferences:", preference);
@@ -157,9 +165,18 @@ const Edit = ({ route, navigation }) => {
                     ))}
                 </View>
 
-                <TouchableOpacity style={styles.button} onPress={handleEdit}>
-                    <Text style={styles.buttonText}>Save</Text>
+                <TouchableOpacity style={styles.button} onPress={handleEdit} disabled={isSaving}>
+                    {isSaving ? (
+                        <View style={{ flexDirection: 'row', alignItems: 'center' }}>
+                            <ActivityIndicator size="small" color="#fff" style={{ marginRight: 8 }} />
+                            <Text style={styles.buttonText}>Saving...</Text>
+                        </View>
+                    ) : (
+                        <Text style={styles.buttonText}>Save</Text>
+                    )}
+
                 </TouchableOpacity>
+
             </View>
         </Provider>
     );
@@ -281,7 +298,7 @@ const styles = StyleSheet.create({
         fontSize: 16,
     },
     backArrow: {
-        marginTop : 20,
-        marginLeft : 10
+        marginTop: 20,
+        marginLeft: 10
     }
 })

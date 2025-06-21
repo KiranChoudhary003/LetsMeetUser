@@ -200,7 +200,12 @@ export default function UserListScreen() {
             />
 
             {loading ? (
-                <ActivityIndicator size="large" color="#007AFF" style={{ marginTop: 30 }} />
+                <View style={{ alignItems: 'center', marginTop: 30 }}>
+                    <ActivityIndicator size="large" color="#007AFF" />
+                    <Text style={{ marginTop: 10, color: '#555', fontSize: 14 }}>
+                        Loading your connections...
+                    </Text>
+                </View>
             ) : filteredUsers.length === 0 ? (
                 <Text style={styles.noUsersText}>No users found</Text>
             ) : (
