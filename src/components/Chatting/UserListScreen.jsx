@@ -3,6 +3,7 @@ import {
     View, Text, FlatList, TouchableOpacity, StyleSheet,
     TextInput, ActivityIndicator, Image, Platform,
 } from 'react-native';
+import { SafeAreaView } from 'react-native-safe-area-context'; // ✅ added
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { useNavigation } from '@react-navigation/native';
 import Ionicons from 'react-native-vector-icons/Ionicons';
@@ -10,6 +11,7 @@ import profile from '../../assets/profile.png';
 import { io } from 'socket.io-client';
 import { jwtDecode } from 'jwt-decode';
 import { useFocusEffect } from '@react-navigation/native';
+import Entypo from 'react-native-vector-icons/Entypo';
 
 const API_URL = 'https://letsmeet-backend-47lv.onrender.com/api';
 
@@ -53,7 +55,7 @@ export default function UserListScreen() {
         let socket;
         const setupSocket = async () => {
             const token = await AsyncStorage.getItem('token');
-            if (!token) {return;}
+            if (!token) { return; }
 
             const decoded = jwtDecode(token);
             const currentUserId = decoded.id || decoded.user_id;
@@ -94,7 +96,7 @@ export default function UserListScreen() {
 
         setupSocket();
         return () => {
-            if (socket) {socket.disconnect();}
+            if (socket) { socket.disconnect(); }
         };
     }, []);
 
@@ -128,7 +130,7 @@ export default function UserListScreen() {
 
         const confirmDelete = () => {
             if (Platform.OS === 'web') {
-                if (window.confirm(`Delete chat with ${item.first_name}?`)) {handleDeleteChat();}
+                if (window.confirm(`Delete chat with ${item.first_name}?`)) { handleDeleteChat(); }
             } else {
                 import('react-native').then(({ Alert }) =>
                     Alert.alert(
@@ -182,23 +184,24 @@ export default function UserListScreen() {
     };
 
     return (
-        <View style={styles.container}>
-            <View style={styles.header}>
-                <TouchableOpacity onPress={() => navigation.goBack()}>
-                    <Ionicons name="arrow-back" size={24} color="#2c3e50" />
-                </TouchableOpacity>
-                <Text style={styles.headerTitle}>Chat</Text>
-                <View style={{ width: 24 }} />
+        <SafeAreaView style={styles.safeContainer}>
+            <View style={styles.headingContainer}>
+                <View style={styles.headerRow}>
+                    <TouchableOpacity onPress={() => navigation.goBack()} style={styles.backButton}>
+                        <Ionicons name="arrow-back-outline" size={24} color="white" />
+                    </TouchableOpacity>
+                    <Text style={styles.title}>Connections</Text>
+                </View>
             </View>
-
-            <TextInput
-                style={styles.searchInput}
-                placeholder="Search users..."
-                onChangeText={setSearchQuery}
-                value={searchQuery}
-                placeholderTextColor="#888"
-            />
-
+            <View style={styles.searchBar}>
+                <Entypo name="magnifying-glass" size={24} color="black" />
+                <TextInput
+                    placeholder="Search users..."
+                    onChangeText={setSearchQuery}
+                    value={searchQuery}
+                    placeholderTextColor="#888"
+                />
+            </View>
             {loading ? (
                 <View style={{ alignItems: 'center', marginTop: 30 }}>
                     <ActivityIndicator size="large" color="#007AFF" />
@@ -223,7 +226,7 @@ export default function UserListScreen() {
             >
                 <Ionicons name="add" size={30} color="#fff" />
             </TouchableOpacity>
-        </View>
+        </SafeAreaView>
     );
 }
 
@@ -234,26 +237,43 @@ const styles = StyleSheet.create({
         paddingHorizontal: 16,
         paddingTop: Platform.OS === 'android' ? 40 : 16,
     },
-    header: {
+    safeContainer: {
+        flex: 1,
+        backgroundColor: '#f9fafe',
+    },
+
+    headingContainer: {
+        backgroundColor: '#34495E',
+        paddingVertical: 12,
+        paddingHorizontal: 16,
+    },
+
+    headerRow: {
         flexDirection: 'row',
         alignItems: 'center',
-        justifyContent: 'space-between',
-        marginBottom: 20,
+        justifyContent: 'center',
+        position: 'relative',
+        height: 40,
     },
-    headerTitle: {
-        fontSize: 20,
-        fontWeight: 'bold',
-        color: '#2c3e50',
+
+    backButton: {
+        position: 'absolute',
+        left: 0,
+        top: 0,
+        bottom: 0,
+        justifyContent: 'center',
+        paddingRight: 12,
     },
-    searchInput: {
-        height: 45,
-        borderColor: '#dcdde1',
+    title: { fontSize: 22, fontWeight: 'bold', color: '#ffffff' },
+    searchBar: {
+        margin: 15,
+        paddingHorizontal: 10,
+        flexDirection: 'row',
+        alignItems: 'center',
         borderWidth: 1,
-        borderRadius: 12,
-        paddingHorizontal: 15,
-        backgroundColor: '#fff',
-        marginBottom: 15,
-        fontSize: 16,
+        borderColor: '#333',
+        borderRadius: 25,
+        backgroundColor: '#f9f9f9f7',
     },
     userCard: {
         backgroundColor: '#fff',

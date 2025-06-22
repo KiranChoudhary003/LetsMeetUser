@@ -635,7 +635,7 @@ const styles = StyleSheet.create({
         flex: 1,
         justifyContent: 'flex-start',
         alignItems: 'flex-end',
-        top: 80,
+        top: 120,
     },
     filterOptions: {
         backgroundColor: '#34495E',

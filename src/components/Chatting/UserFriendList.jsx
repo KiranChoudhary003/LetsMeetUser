@@ -1,86 +1,165 @@
-import React, { useEffect, useState } from 'react';
+import React, { useEffect, useState, useCallback } from 'react';
 import {
-    View, Text, FlatList, TouchableOpacity, StyleSheet, Image, ActivityIndicator, StatusBar,
+    View, Text, FlatList, TouchableOpacity, StyleSheet,
+    TextInput, ActivityIndicator, Image, Platform
 } from 'react-native';
+import { SafeAreaView } from 'react-native-safe-area-context';
 import AsyncStorage from '@react-native-async-storage/async-storage';
+import { useNavigation, useFocusEffect } from '@react-navigation/native';
 import Ionicons from 'react-native-vector-icons/Ionicons';
-import { useNavigation } from '@react-navigation/native';
-import { SafeAreaView } from 'react-native-safe-area-context'; // ✅ updated
+import Entypo from 'react-native-vector-icons/Entypo';
 import profile from '../../assets/profile.png';
+import { io } from 'socket.io-client';
+import { jwtDecode } from 'jwt-decode';
 
 const API_URL = 'https://letsmeet-backend-47lv.onrender.com/api';
 
-const NewChatScreen = () => {
+export default function UserListScreen() {
     const navigation = useNavigation();
-    const [allUsers, setAllUsers] = useState([]);
+    const [users, setUsers] = useState([]);
+    const [searchQuery, setSearchQuery] = useState('');
     const [loading, setLoading] = useState(true);
 
-    const fetchAllUsers = async () => {
+    useEffect(() => {
+        fetchConnections();
+    }, []);
+
+    useFocusEffect(useCallback(() => {
+        fetchConnections();
+    }, []));
+
+    const fetchConnections = async () => {
         try {
             const token = await AsyncStorage.getItem('token');
             const response = await fetch(`${API_URL}/user-chat/chat-connections`, {
                 headers: { Authorization: `Bearer ${token}` },
             });
             const data = await response.json();
-            setAllUsers(data.connections || []);
-        } catch (err) {
-            console.error('Failed to fetch users:', err);
+            const filtered = (data.connections || [])
+                .filter(user => user.chat_id && user.last_message)
+                .sort((a, b) => new Date(b.last_message_time) - new Date(a.last_message_time));
+            setUsers(filtered);
+        } catch (error) {
+            console.error('Error fetching connections:', error);
         } finally {
             setLoading(false);
         }
     };
 
     useEffect(() => {
-        fetchAllUsers();
+        let socket;
+        const setupSocket = async () => {
+            const token = await AsyncStorage.getItem('token');
+            if (!token) return;
+
+            socket = io('https://letsmeet-backend-47lv.onrender.com/', {
+                auth: { token },
+                transports: ['websocket'],
+            });
+
+            socket.on('receive_message', (msg) => {
+                setUsers(prevUsers => {
+                    const updatedUsers = prevUsers.map(user => {
+                        if (user.id === msg.sender_id) {
+                            return {
+                                ...user,
+                                last_message: msg.content,
+                                last_message_time: msg.sent_at,
+                                unread_count: (user.unread_count || 0) + 1,
+                            };
+                        }
+                        return user;
+                    });
+                    return updatedUsers.sort((a, b) => new Date(b.last_message_time) - new Date(a.last_message_time));
+                });
+            });
+
+            socket.on('messages_marked_read', ({ chat_id }) => {
+                setUsers(prevUsers =>
+                    prevUsers.map(user =>
+                        user.chat_id === chat_id ? { ...user, unread_count: 0 } : user
+                    ).sort((a, b) => new Date(b.last_message_time) - new Date(a.last_message_time))
+                );
+            });
+        };
+
+        setupSocket();
+        return () => {
+            if (socket) socket.disconnect();
+        };
     }, []);
 
-    const handleSelectUser = (user) => {
-        navigation.replace('ChatPage', { peer: user });
-    };
+    const filteredUsers = users.filter(user =>
+        (`${user.first_name} ${user.last_name}`).toLowerCase().includes(searchQuery.toLowerCase())
+    );
 
     const renderItem = ({ item }) => (
-        <TouchableOpacity style={styles.userCard} onPress={() => handleSelectUser(item)}>
-            <Image
-                source={
-                    item.photo
-                        ? {
-                            uri: item.photo.startsWith('data:image') || item.photo.startsWith('http')
-                                ? item.photo
-                                : `data:image/jpeg;base64,${item.photo}`,
-                        }
-                        : profile
-                }
-                style={styles.avatar}
-            />
-            <View style={{ flex: 1 }}>
-                <Text style={styles.name}>{`${item.first_name} ${item.last_name}`}</Text>
-                <Text style={styles.lastMessage} numberOfLines={1}>
-                    {item.last_message || 'No message yet'}
-                </Text>
+        <TouchableOpacity
+            style={styles.userCard}
+            onPress={() => navigation.navigate('ChatPage', { peer: item })}
+        >
+            <View style={styles.row}>
+
+                <Image
+                    source={
+                        item.photo
+                            ? {
+                                uri: item.photo.startsWith('data:image') || item.photo.startsWith('http')
+                                    ? item.photo
+                                    : `data:image/jpeg;base64,${item.photo}`,
+                            }
+                            : profile
+                    }
+                    style={styles.avatar}
+                />
+                <View style={styles.info}>
+                    <View style={styles.nameRow}>
+                        <Text style={styles.name}>{`${item.first_name} ${item.last_name}`}</Text>
+                    </View>
+                    <Text style={styles.lastMessage} numberOfLines={1}>
+                        {item.last_message}
+                    </Text>
+                </View>
             </View>
         </TouchableOpacity>
     );
 
     return (
         <SafeAreaView style={styles.safeContainer}>
-            <StatusBar barStyle="dark-content" backgroundColor="#f9fafe" />
-            <View style={styles.header}>
-                <TouchableOpacity onPress={() => navigation.goBack()}>
-                    <Ionicons name="arrow-back" size={24} color="#2c3e50" />
-                </TouchableOpacity>
-                <Text style={styles.headerTitle}>Connection List</Text>
-                <View style={{ width: 24 }} />
+            <View style={styles.headingContainer}>
+                <View style={styles.headerRow}>
+                    <TouchableOpacity onPress={() => navigation.goBack()} style={styles.backButton}>
+                        <Ionicons name="arrow-back-outline" size={24} color="white" />
+                    </TouchableOpacity>
+                    <Text style={styles.title}>My Network</Text>
+                </View>
+            </View>
+            <View style={styles.searchBar}>
+                <Entypo name="magnifying-glass" size={24} color="black" />
+                <TextInput
+                    style={styles.searchInput}
+                    placeholder="Search users..."
+                    onChangeText={setSearchQuery}
+                    value={searchQuery}
+                    placeholderTextColor="#888"
+                />
             </View>
             {loading ? (
-                <View style={{ alignItems: 'center', marginTop: 30 }}>
+                <View style={styles.loadingContainer}>
                     <ActivityIndicator size="large" color="#007AFF" />
-                    <Text style={{ marginTop: 10, color: '#555', fontSize: 14 }}>
-                        Fetching your connections. Please wait...
-                    </Text>
+                    <Text style={styles.loadingText}>Fetching your connections. Please wait...</Text>
+                </View>
+            ) : users.length === 0 ? (
+                <View style={styles.emptyState}>
+                    <Text style={styles.emptyText}>You have no connections.</Text>
+                </View>
+            ) : filteredUsers.length === 0 ? (
+                <View style={styles.emptyState}>
+                    <Text style={styles.emptyText}>No users found.</Text>
                 </View>
             ) : (
                 <FlatList
-                    data={allUsers}
+                    data={filteredUsers}
                     keyExtractor={item => item.id.toString()}
                     renderItem={renderItem}
                     contentContainerStyle={{ paddingBottom: 20 }}
@@ -88,47 +167,80 @@ const NewChatScreen = () => {
             )}
         </SafeAreaView>
     );
-};
+}
 
 const styles = StyleSheet.create({
     safeContainer: {
         flex: 1,
         backgroundColor: '#f9fafe',
+    },
+    headingContainer: {
+        backgroundColor: '#34495E',
+        paddingVertical: 12,
         paddingHorizontal: 16,
     },
-    header: {
+    headerRow: {
+        flexDirection: 'row',
+        alignItems: 'center',
+        justifyContent: 'center',
+        position: 'relative',
+        height: 40,
+    },
+    backButton: {
+        position: 'absolute',
+        left: 0,
+        top: 0,
+        bottom: 0,
+        justifyContent: 'center',
+        paddingRight: 12,
+    },
+    title: {
+        fontSize: 22,
+        fontWeight: 'bold',
+        color: '#ffffff',
+    },
+    searchBar: {
+        margin: 15,
+        paddingHorizontal: 10,
+        flexDirection: 'row',
+        alignItems: 'center',
+        borderWidth: 1,
+        borderColor: '#333',
+        borderRadius: 25,
+        backgroundColor: '#f9f9f9f7',
+    },
+    userCard: {
+        backgroundColor: '#fff',
+        padding: 16,
+        borderRadius: 16,
+        marginBottom: 12,
+        shadowColor: '#000',
+        shadowOffset: { width: 0, height: 3 },
+        shadowOpacity: 0.1,
+        shadowRadius: 6,
+        elevation: 4,
+    },
+    row: {
+        flexDirection: 'row',
+        alignItems: 'center',
+    },
+    avatar: {
+        width: 52,
+        height: 52,
+        borderRadius: 26,
+        marginRight: 14,
+        backgroundColor: '#eee',
+    },
+    info: {
+        flex: 1,
+    },
+    nameRow: {
         flexDirection: 'row',
         alignItems: 'center',
         justifyContent: 'space-between',
-        paddingVertical: 16,
-    },
-    headerTitle: {
-        fontSize: 20,
-        fontWeight: 'bold',
-        color: '#2c3e50',
-    },
-    userCard: {
-        flexDirection: 'row',
-        alignItems: 'center',
-        backgroundColor: '#fff',
-        padding: 12,
-        borderRadius: 12,
-        marginBottom: 10,
-        shadowColor: '#000',
-        shadowOffset: { width: 0, height: 2 },
-        shadowOpacity: 0.1,
-        shadowRadius: 4,
-        elevation: 2,
-    },
-    avatar: {
-        width: 48,
-        height: 48,
-        borderRadius: 24,
-        marginRight: 12,
-        backgroundColor: '#eee',
     },
     name: {
-        fontSize: 16,
+        fontSize: 17,
         fontWeight: '600',
         color: '#2c3e50',
     },
@@ -137,6 +249,21 @@ const styles = StyleSheet.create({
         color: '#7f8c8d',
         marginTop: 4,
     },
+    loadingContainer: {
+        alignItems: 'center',
+        marginTop: 30,
+    },
+    loadingText: {
+        marginTop: 10,
+        color: '#555',
+        fontSize: 14,
+    },
+    emptyState: {
+        marginTop: 40,
+        alignItems: 'center',
+    },
+    emptyText: {
+        fontSize: 16,
+        color: '#888',
+    },
 });
-
-export default NewChatScreen;

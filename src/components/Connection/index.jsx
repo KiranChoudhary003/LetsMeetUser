@@ -792,14 +792,6 @@ const styles = StyleSheet.create({
     color: '#209dec',
     fontWeight: 'bold',
   },
-  searchContainer: {
-    marginTop: 24,
-    paddingHorizontal: 15,
-    paddingBottom: 10,
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: 10,
-  },
   filterResultContainer: {
     alignItems: 'center',
     marginTop: 40,
@@ -814,7 +806,6 @@ const styles = StyleSheet.create({
     paddingHorizontal: 10,
     flexDirection: 'row',
     alignItems: 'center',
-    gap: 10,
     borderWidth: 1,
     borderColor: '#333',
     borderRadius: 25,
