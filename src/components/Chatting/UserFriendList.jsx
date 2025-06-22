@@ -172,7 +172,7 @@ export default function UserListScreen() {
 const styles = StyleSheet.create({
     safeContainer: {
         flex: 1,
-        backgroundColor: '#f9fafe',
+        backgroundColor: '#e8effc',
     },
     headingContainer: {
         backgroundColor: '#34495E',

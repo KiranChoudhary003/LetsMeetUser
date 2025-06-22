@@ -27,7 +27,7 @@ const EventCard = ({
     lon,
     isRegistered,
     checkInAvailable,
-    already_checked_in, // ✅ NEW PROP
+    already_checked_in, 
     onRegister,
     onCheckIn,
 }) => {
@@ -93,7 +93,7 @@ const EventCard = ({
                                 }}
                             >
                                 <Text style={{ color: '#fff', fontWeight: 'bold', fontSize: 12 }}>
-                                    ✔ Checked-In
+                                    Checked-In
                                 </Text>
                             </View>
                         ) : checkInAvailable ? (
@@ -138,16 +138,15 @@ const EventCard = ({
 const groupEventsByMonth = (events) => {
     const now = new Date();
 
-    // Only keep upcoming events (today or later)
     const upcomingEvents = events.filter(event => {
-        const eventDate = new Date(event.endDate); // change if needed
+        const eventDate = new Date(event.endDate); 
         return eventDate >= now;
     });
 
     const grouped = upcomingEvents.reduce((acc, event) => {
-        const eventDate = new Date(event.date); // change if needed
+        const eventDate = new Date(event.date); 
         const year = eventDate.getFullYear();
-        const monthNumber = eventDate.getMonth(); // 0 = Jan
+        const monthNumber = eventDate.getMonth()
         const monthName = eventDate.toLocaleString('default', { month: 'long' });
 
         const key = `${year}-${monthNumber}`;
@@ -164,14 +163,12 @@ const groupEventsByMonth = (events) => {
         return acc;
     }, {});
 
-    // Sort month keys
     const sortedKeys = Object.keys(grouped).sort((a, b) => {
         const [yearA, monthA] = a.split('-').map(Number);
         const [yearB, monthB] = b.split('-').map(Number);
         return yearA === yearB ? monthA - monthB : yearA - yearB;
     });
 
-    // Build the final object in sorted order
     const result = {};
     sortedKeys.forEach(key => {
         result[key] = grouped[key];
@@ -198,10 +195,10 @@ const Home = ({ navigation }) => {
         if (!(date instanceof Date)) { return ''; }
 
         const day = date.getDate().toString().padStart(2, '0');
-        const month = (date.getMonth() + 1).toString().padStart(2, '0'); // Months are 0-based
+        const month = (date.getMonth() + 1).toString().padStart(2, '0'); 
         const year = date.getFullYear();
 
-        return `${day}-${month}-${year}`; // e.g., 16-06-2025
+        return `${day}-${month}-${year}`;
     };
 
     const filterEvents = (events, filterType, customDate, location) => {
@@ -239,7 +236,7 @@ const Home = ({ navigation }) => {
                         event.lat,
                         event.lon
                     );
-                    return distance <= 5; // within 5km
+                    return distance <= 5; 
                 });
 
             default:
@@ -248,7 +245,7 @@ const Home = ({ navigation }) => {
     };
 
     const calculateDistance = (lat1, lon1, lat2, lon2) => {
-        const R = 6371; // Earth's radius in km
+        const R = 6371; 
         const dLat = (lat2 - lat1) * Math.PI / 180;
         const dLon = (lon2 - lon1) * Math.PI / 180;
 
@@ -274,7 +271,7 @@ const Home = ({ navigation }) => {
                 return;
             }
 
-            console.log('Registering for event ID:', eventId); // ✅ debug
+            console.log('Registering for event ID:', eventId);
 
             await axios.post(
                 'https://letsmeet-backend-47lv.onrender.com/api/user-events/register-event',
@@ -310,7 +307,6 @@ const Home = ({ navigation }) => {
             );
             ToastAndroid.show('Checked-In Successfully!', ToastAndroid.SHORT);
 
-            // Optionally refetch events to update UI
             fetchUpcomingEvents();
         } catch (error) {
             console.error('Check-in error:', error.response?.data || error.message || error);
@@ -320,7 +316,7 @@ const Home = ({ navigation }) => {
 
     const fetchUpcomingEvents = async () => {
         try {
-            setLoading(true); // Start loading
+            setLoading(true); 
             const token = await AsyncStorage.getItem('token');
             if (!location?.latitude || !location?.longitude) {
                 console.warn('Location not available yet');
@@ -363,7 +359,7 @@ const Home = ({ navigation }) => {
         } catch (error) {
             console.error('Error fetching events:', error.message || error);
         } finally {
-            setLoading(false); // Stop loading
+            setLoading(false); 
         }
     };
 
@@ -384,16 +380,6 @@ const Home = ({ navigation }) => {
 
     const events = groupEventsByMonth(filteredEvents);
     const animatedPosition = useRef(new Animated.Value(0)).current;
-
-    const moveToLeft = () => {
-        Animated.timing(animatedPosition, {
-
-            toValue: -120, // move farther left
-            duration: 500, // longer = smoother
-            easing: Easing.out(Easing.exp), // smooth easing
-            useNativeDriver: true,
-        }).start();
-    };
 
     const handleFilterChange = (option) => {
         setSelectedFilter(option);
@@ -807,8 +793,8 @@ const styles = StyleSheet.create({
         marginBottom: 8,
     },
     card: {
-        width: '100%',       // ✅ Full width of parent
-        minHeight: 90,       // ✅ Use minHeight instead of fixed height
+        width: '100%',     
+        minHeight: 90,      
         marginVertical: 6,
         borderBottomWidth: 0.5,
     },
@@ -830,76 +816,6 @@ const styles = StyleSheet.create({
         color: '#555',
         alignSelf: 'flex-start',
         marginTop: 3,
-    },
-    bottomBarContainer: {
-        position: 'absolute',
-        bottom: 0,
-        left: 0,
-        right: 0,
-        height: 80,
-        backgroundColor: '#34495e',
-        flexDirection: 'row',
-        justifyContent: 'space-around',
-        alignItems: 'center',
-        paddingHorizontal: 20,
-        // borderTopLeftRadius: 20,
-        // borderTopRightRadius: 20,
-        overflow: 'visible',
-    },
-
-    centerCircle: {
-        position: 'absolute',
-        top: -25,
-        left: '50%',
-        right: '100%',
-        marginLeft: -3, // half of width to center properly
-        width: 60,
-        height: 60,
-        borderRadius: 30,
-        backgroundColor: '#465E5D',
-        alignItems: 'center',
-        justifyContent: 'center',
-        elevation: 8,
-        shadowColor: '#000',
-        shadowOffset: { width: 0, height: 4 },
-        shadowOpacity: 0.3,
-        shadowRadius: 6,
-    },
-
-    bottomIcon: {
-        fontSize: 24,
-
-        color: 'white',
-    },
-    bottomIconleft:
-    {
-        fontSize: 24,
-        left: -20,
-        color: 'white',
-    },
-    bottomIconright:
-    {
-        fontSize: 24,
-        right: -25,
-        color: 'white',
-    },
-    checkInNote: {
-        fontSize: 10,
-        color: '#333',
-        backgroundColor: 'rgba(255, 255, 255, 0.6)', // Semi-transparent white
-        padding: 10,
-        borderRadius: 10,
-        marginVertical: 10,
-        marginHorizontal: 6,
-        textAlign: 'center',
-        fontWeight: '500',
-        shadowColor: '#000',
-        shadowOffset: { width: 0, height: 2 },
-        shadowOpacity: 0.1,
-        shadowRadius: 4,
-        marginLeft: -320,
-        marginBottom: -50,
-        elevation: 3, // Android shadow
     },
 });
 

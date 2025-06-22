@@ -13,6 +13,7 @@ import {
     ActivityIndicator,
     ToastAndroid,
 } from 'react-native';
+import Ionicons from 'react-native-vector-icons/Ionicons';
 
 const backgroundImage = require('../../assets/bgg.png');
 
@@ -37,21 +38,15 @@ const Description = ({ navigation, route }) => {
     console.log('Route params:', route.params);
 
     const [buttonState, setButtonState] = useState(() => {
-        if (!isRegistered) {return 'register';}
-        if (already_checked_in) {return 'checkedin';}
+        if (!isRegistered) { return 'register'; }
+        if (already_checked_in) { return 'checkedin'; }
         return 'checkin';
     });
-    // const [isInRange, setIsInRange] = useState(false); // false = out of range, true = within 500m
-    const [isLoading, setIsLoading] = useState(false); // Loading spinner state
 
-    // // Simulate entering range (static for demo)
-    // React.useEffect(() => {
-    //     const timer = setTimeout(() => setIsInRange(true), 2000);  // Auto "enter range" after 2 sec
-    //     return () => clearTimeout(timer);
-    // }, []);
+    const [isLoading, setIsLoading] = useState(false);
 
     const handlePress = async () => {
-        if (isLoading) {return;}
+        if (isLoading) { return; }
 
         if (buttonState === 'register') {
             if (!id) {
@@ -63,9 +58,7 @@ const Description = ({ navigation, route }) => {
             try {
                 await handleRegister(id);
                 setButtonState('checkin');
-                // ToastAndroid.show("Registered successfully!", ToastAndroid.SHORT);
             } catch (error) {
-                // handleRegister already shows toast
             }
             setIsLoading(false);
         } else if (buttonState === 'checkin') {
@@ -78,9 +71,7 @@ const Description = ({ navigation, route }) => {
             try {
                 await handleCheckIn(id);
                 setButtonState('checkedin');
-                // ToastAndroid.show("You are successfully checked in", ToastAndroid.SHORT);
             } catch (error) {
-                // handleCheckIn already shows toast
             }
             setIsLoading(false);
         }
@@ -95,7 +86,7 @@ const Description = ({ navigation, route }) => {
                 return;
             }
 
-            console.log('Registering for event ID:', eventId); // ✅ debug
+            console.log('Registering for event ID:', eventId);
 
             await axios.post(
                 'https://letsmeet-backend-47lv.onrender.com/api/user-events/register-event',
@@ -131,7 +122,6 @@ const Description = ({ navigation, route }) => {
             );
             ToastAndroid.show('Checked-In Successfully!', ToastAndroid.SHORT);
 
-            // Optionally refetch events to update UI
             fetchUpcomingEvents();
         } catch (error) {
             console.error('Check-in error:', error.response?.data || error.message || error);
@@ -144,19 +134,25 @@ const Description = ({ navigation, route }) => {
             <SafeAreaView style={styles.container}>
                 <View style={styles.header}>
                     <TouchableOpacity onPress={() => navigation.goBack()}>
-                        <Text style={styles.backArrow}>←</Text>
+                        <Text style={styles.backArrow}><Ionicons name="arrow-back-outline" size={30} color="#f9efef" /></Text>
                     </TouchableOpacity>
                     <Text style={styles.headerTitle}> {name}</Text>
                 </View>
 
                 <ScrollView contentContainerStyle={styles.scrollContainer}>
-                    <Image
-                        source={{ uri: banner }} // banner is the full base64 data URI
-                        style={styles.poster}
-                        resizeMode="cover"
-                    />
+                    {banner ? (
+                        <Image
+                            source={{ uri: banner }} 
+                            style={styles.poster}
+                            resizeMode="cover"
+                        />
+                    ) : (null)
+                    }
 
-                    <Text style={styles.locationLabel}>📍 {organizer}</Text>
+                    <View style={styles.locationLabel}>
+                        <Ionicons name="location-outline" size={16} color="#000" />
+                        <Text style={styles.locationText}> {organizer}</Text>
+                    </View>
 
                     <Text style={styles.descriptionHeading}>Description</Text>
                     <Text style={styles.descriptionText}>{description}</Text>
@@ -186,7 +182,7 @@ const Description = ({ navigation, route }) => {
                             <ActivityIndicator size="small" color="#0000ff" />
                         ) : buttonState === 'checkedin' ? (
                             <View style={styles.tickWrapper}>
-                                <Text style={styles.tickText}>✔ Checked In</Text>
+                                <Text style={styles.tickText}>Checked In</Text>
                             </View>
                         ) : (
                             <Text
@@ -235,7 +231,14 @@ const styles = StyleSheet.create({
     headerTitle: { color: 'white', fontSize: 18, fontWeight: 'bold' },
     scrollContainer: { padding: 16 },
     poster: { width: '100%', height: 400, borderRadius: 10, marginBottom: 20 },
-    locationLabel: { fontSize: 16, marginBottom: 10, color: '#000000' },
+    locationLabel: {
+        flexDirection: 'row',
+        alignItems: 'center',
+        marginBottom: 16,
+        fontSize: 16,
+        color: '#000',
+        marginLeft: 4,
+    },
     descriptionHeading: { fontWeight: 'bold', fontSize: 20, marginBottom: 8, color: '#333' },
     descriptionText: {
         fontSize: 14,

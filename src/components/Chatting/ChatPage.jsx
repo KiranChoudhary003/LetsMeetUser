@@ -1,5 +1,3 @@
-'';// ✅ Enhanced ChatPage with Read Receipt Support + Date Grouping + Auto Scroll + Focus-aware Read
-
 import React, { useEffect, useState, useRef } from 'react';
 import {
     View,

@@ -37,20 +37,17 @@ const SignUp = ({ navigation }) => {
         }
 
         try {
-            // Prepare the payload according to the API documentation.
             const payload = {
                 first_name: firstName,
                 last_name: lastName,
                 email: email,
                 password: password,
                 linkedin_url: linkedin,
-                // Assuming jobRole is either an object (with an id and label) or just a string.
                 role_id: typeof jobRole === 'object' ? parseInt(jobRole.id) : parseInt(jobRole),
                 attendees_role: typeof jobRole === 'object' ? jobRole.label : jobRole,
-                preference: selectedRoles, // Array of preferences
+                preference: selectedRoles, 
             };
             console.log('Api is fetchinng');
-            // Perform the API call using fetch.
             const response = await fetch('https://letsmeet-backend-47lv.onrender.com/api/user-profile/register', {
                 method: 'POST',
                 headers: {
@@ -117,7 +114,6 @@ const SignUp = ({ navigation }) => {
                         contentContainerStyle={{ flexGrow: 1 }}
                         keyboardShouldPersistTaps="handled"
                     >
-                        {/* <View style={styles.inputContainer}> */}
                         <Text style={styles.text}>Create Account</Text>
                         <TextInput style={styles.input} placeholder="First Name" placeholderTextColor="#888" value={firstName} onChangeText={setFirstName} />
                         <TextInput style={styles.input} placeholder="Last Name" placeholderTextColor="#888" value={lastName} onChangeText={setLastName} />
@@ -150,7 +146,7 @@ const SignUp = ({ navigation }) => {
                                         setVisible(false);
                                     }}
                                     title={role}
-                                    titleStyle={styles.menuItemTitle} // customize title style if needed
+                                    titleStyle={styles.menuItemTitle} 
                                 />
                             ))}
                         </Menu>
@@ -193,7 +189,6 @@ const SignUp = ({ navigation }) => {
                             </View>
                         </Modal>
 
-                        {/* Selected roles display */}
                         <View style={styles.selectedWrapper}>
                             {selectedRoles.map((role, index) => (
                                 <View key={index} style={styles.tag}>

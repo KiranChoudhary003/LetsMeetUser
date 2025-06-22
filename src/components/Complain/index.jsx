@@ -15,7 +15,7 @@ const ComplainCard = ({ description, status, updatedAt }) => {
         backgroundColor = 'rgba(157, 9, 11, 0.96 )';
     } else if (status === 'in_progress') {
         statusColor = '#333';
-        backgroundColor = 'rgba(221, 177, 31)';
+        backgroundColor = 'rgb(221, 177, 31)';
     } else if (status === 'complete') {
         backgroundColor = ' #28a745';
     }
@@ -56,7 +56,7 @@ const Complain = ({ navigation }) => {
 
     useEffect(() => {
         const fetchComplain = async () => {
-            setLoading(true); // 🟡 start spinner
+            setLoading(true); 
             try {
                 const token = await AsyncStorage.getItem('token');
                 const response = await axios.get(
@@ -88,7 +88,7 @@ const Complain = ({ navigation }) => {
         }
 
         try {
-            setSaving(true); // 🟢 start spinner
+            setSaving(true); 
 
             const token = await AsyncStorage.getItem('token');
             await axios.post(
@@ -120,7 +120,7 @@ const Complain = ({ navigation }) => {
             console.log(err);
             Alert.alert('Error', 'Something went wrong while submitting your complaint.');
         } finally {
-            setSaving(false); // 🔴 stop spinner
+            setSaving(false); 
         }
     };
 
@@ -211,7 +211,6 @@ const Complain = ({ navigation }) => {
                     </Modal>
                 )}
 
-                {/* Complaint Modal */}
                 {showModal && (
                     <Modal animationType="slide" transparent onRequestClose={() => setShowModal(false)}>
                         <TouchableOpacity
@@ -328,7 +327,7 @@ const styles = StyleSheet.create({
     },
     modalOverlay: {
         flex: 1,
-        backgroundColor: 'rgba(0,0,0,0.6)', // Semi-transparent black background
+        backgroundColor: 'rgba(0,0,0,0.6)', 
         justifyContent: 'center',
         alignItems: 'center',
     },

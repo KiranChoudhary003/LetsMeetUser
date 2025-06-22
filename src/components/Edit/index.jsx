@@ -5,6 +5,7 @@ import { ScrollView } from 'react-native-gesture-handler';
 import axios from 'axios';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import MaterialIcons from 'react-native-vector-icons/MaterialIcons';
+import MaterialCommunityIcons from 'react-native-vector-icons/MaterialCommunityIcons';
 
 const Edit = ({ route, navigation }) => {
     const { first_name, last_name, email, linkedin_url, attendees_role, preference } = route.params;
@@ -40,7 +41,7 @@ const Edit = ({ route, navigation }) => {
                     headers: { 'Content-Type': 'application/json' },
                 });
 
-                console.log('Roles response:', response.data); // Add this
+                console.log('Roles response:', response.data);
 
                 if (response.data.roles && Array.isArray(response.data.roles)) {
                     setRoles(response.data.roles);
@@ -56,7 +57,7 @@ const Edit = ({ route, navigation }) => {
     }, []);
 
     const handleEdit = async () => {
-        if (isSaving) {return;} // Prevent duplicate taps
+        if (isSaving) { return; }
         setIsSaving(true);
 
         try {
@@ -103,10 +104,10 @@ const Edit = ({ route, navigation }) => {
                     <Text style={styles.backArrow}><MaterialIcons name="arrow-back" size={24} color="#000" /></Text>
                 </TouchableOpacity>
                 <Text style={styles.text}>Edit Account</Text>
-                <TextInput style={styles.input} placeholder="First Name" value={newFirstName} onChangeText={setNewFirstName} />
-                <TextInput style={styles.input} placeholder="Last Name" value={newLastName} onChangeText={setNewLastName} />
-                <TextInput style={styles.input} placeholder="E-mail" value={newEmail} onChangeText={setNewEmail} />
-                <TextInput style={styles.input} placeholder="LinkedIn URL" value={newLinkedin} onChangeText={setNewLinkedin} />
+                <TextInput style={styles.input} placeholder="First Name" placeholderTextColor="#888" value={newFirstName} onChangeText={setNewFirstName} />
+                <TextInput style={styles.input} placeholder="Last Name" placeholderTextColor="#888" value={newLastName} onChangeText={setNewLastName} />
+                <TextInput style={styles.input} placeholder="E-mail" placeholderTextColor="#888" value={newEmail} onChangeText={setNewEmail} />
+                <TextInput style={styles.input} placeholder="LinkedIn URL" placeholderTextColor="#888" value={newLinkedin} onChangeText={setNewLinkedin} />
 
                 <Menu
                     visible={visible}
@@ -157,7 +158,9 @@ const Edit = ({ route, navigation }) => {
                         <View key={index} style={styles.tag}>
                             <Text style={styles.tagText}>{role}</Text>
                             <IconButton
-                                icon={() => <Text style={styles.crossIcon}>✕</Text>}
+                                icon={() => (
+                                    <MaterialCommunityIcons name="close" size={20} color="#000" />
+                                )}
                                 onPress={() => removeRole(role)}
                                 style={styles.closeIcon}
                             />
@@ -209,7 +212,7 @@ const styles = StyleSheet.create({
         padding: 12,
         borderRadius: 8,
         marginBottom: 30,
-        marginLeft: 50,
+        marginLeft: 40,
         width: 313,
         height: 43,
         backgroundColor: '#f7faff',
@@ -289,7 +292,7 @@ const styles = StyleSheet.create({
         borderRadius: 8,
         alignItems: 'center',
         marginTop: 50,
-        marginLeft: 120,
+        marginLeft: 105,
         width: 194,
         height: 39,
     },

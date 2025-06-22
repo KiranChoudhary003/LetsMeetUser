@@ -1,26 +1,54 @@
-import { useNavigation } from '@react-navigation/native';
+import { useNavigation, useNavigationState } from '@react-navigation/native';
 import React from 'react';
 import { StyleSheet, TouchableOpacity, View } from 'react-native';
-import { Text } from 'react-native-gesture-handler';
-import MaterialIcons from 'react-native-vector-icons/MaterialIcons';
+import MaterialCommunityIcons from 'react-native-vector-icons/MaterialCommunityIcons';
 
 const BottomTab = () => {
-
     const navigation = useNavigation();
+
+    const currentScreen = useNavigationState((state) => {
+        const layoutTab = state.routes.find(r => r.name === 'Layout');
+        const nestedState = layoutTab?.state;
+        const activeRoute = nestedState?.routes[nestedState.index];
+        return activeRoute?.name;
+    });
+
+    const tabs = [
+        {
+            name: 'Home',
+            iconActive: 'home',
+            iconInactive: 'home-outline',
+        },
+        {
+            name: 'MyEvents',
+            iconActive: 'calendar-month',
+            iconInactive: 'calendar-month-outline',
+        },
+        {
+            name: 'Complain',
+            iconActive: 'message-alert',
+            iconInactive: 'message-alert-outline',
+        },
+    ];
 
     return (
         <View style={styles.bottomBarContainer}>
-            <TouchableOpacity onPress={() => { navigation.navigate('Layout', { screen: 'Home' }); }}>
-                <MaterialIcons name="calendar-today" size={30} color="#4CAF50" style={styles.bottomIconleft} />
-            </TouchableOpacity>
-
-            <TouchableOpacity onPress={() => { navigation.navigate('Layout', { screen: 'MyEvents' }); }}>
-                <MaterialIcons name="event" size={30} color="#4CAF50" style={styles.bottomIconleft} />
-            </TouchableOpacity>
-
-            <TouchableOpacity onPress={() => { navigation.navigate('Layout', { screen: 'Complain' }); }}>
-                <MaterialIcons name="report" size={30} color="#4CAF50" style={styles.bottomIconleft} />
-            </TouchableOpacity>
+            {tabs.map((tab) => {
+                const isActive = currentScreen === tab.name;
+                return (
+                    <TouchableOpacity
+                        key={tab.name}
+                        onPress={() => navigation.navigate('Layout', { screen: tab.name })}
+                        style={styles.iconWrapper}
+                    >
+                        <MaterialCommunityIcons
+                            name={isActive ? tab.iconActive : tab.iconInactive}
+                            size={isActive ? 32 : 26}
+                            color={'#fff'}
+                        />
+                    </TouchableOpacity>
+                );
+            })}
         </View>
     );
 };
@@ -33,24 +61,17 @@ const styles = StyleSheet.create({
         bottom: 0,
         left: 0,
         right: 0,
-        height: 80,
+        height: 60,
         backgroundColor: '#34495e',
         flexDirection: 'row',
         justifyContent: 'space-around',
         alignItems: 'center',
         paddingHorizontal: 20,
-        overflow: 'visible',
         width: '100%',
+        zIndex: 1000,
     },
-    bottomIconleft:
-    {
-        fontSize: 24,
-        color: 'white',
-    },
-    bottomIconright:
-    {
-        fontSize: 24,
-        right: -25,
-        color: 'white',
+    iconWrapper: {
+        alignItems: 'center',
+        justifyContent: 'center',
     },
 });

@@ -10,16 +10,19 @@ import axios from 'axios';
 import { BlurView } from '@react-native-community/blur';
 import { launchImageLibrary } from 'react-native-image-picker';
 import { useFocusEffect } from '@react-navigation/native';
+import { ActivityIndicator } from 'react-native-paper';
 
 const UserProfile = ({ navigation, route }) => {
     const [userProfile, setUserProfile] = useState({});
     const [profileView, setProfileView] = useState(false);
+    const [loading, setLoading] = useState(true);
 
     const passedUser = route?.params?.user;
     const isViewingOwnProfile = !passedUser;
 
     const fetchProfileData = async () => {
         try {
+            setLoading(true);
             const token = await AsyncStorage.getItem('token');
             const response = await axios.get('https://letsmeet-backend-47lv.onrender.com/api/user-profile', {
                 headers: {
@@ -30,7 +33,6 @@ const UserProfile = ({ navigation, route }) => {
             const user = response.data.user;
             setUserProfile(user);
 
-            // Cache the photo URL of logged-in user
             if (user.photo) {
                 const photoUri = user.photo.startsWith('data:image') || user.photo.startsWith('http')
                     ? user.photo
@@ -39,6 +41,9 @@ const UserProfile = ({ navigation, route }) => {
             }
         } catch (err) {
             console.error('Error fetching profile:', err);
+        }
+        finally {
+            setLoading(false);
         }
     };
 
@@ -52,7 +57,7 @@ const UserProfile = ({ navigation, route }) => {
 
     useFocusEffect(
         useCallback(() => {
-            if (!passedUser) {fetchProfileData();}
+            if (!passedUser) { fetchProfileData(); }
         }, [])
     );
 
@@ -81,10 +86,10 @@ const UserProfile = ({ navigation, route }) => {
         }
 
         launchImageLibrary({ mediaType: 'photo', quality: 0.8 }, async (response) => {
-            if (response.didCancel || response.errorCode) {return;}
+            if (response.didCancel || response.errorCode) { return; }
 
             const asset = response.assets?.[0];
-            if (!asset?.uri) {return;}
+            if (!asset?.uri) { return; }
 
             const formData = new FormData();
             formData.append('photo', {
@@ -117,7 +122,7 @@ const UserProfile = ({ navigation, route }) => {
     const handleLogout = async () => {
         try {
             await AsyncStorage.removeItem('token');
-            await AsyncStorage.removeItem('user_photo'); // Clear cached photo
+            await AsyncStorage.removeItem('user_photo');
             navigation.replace('Login');
         } catch (err) {
             console.log('Logout error:', err);
@@ -141,7 +146,7 @@ const UserProfile = ({ navigation, route }) => {
     };
 
     const getProfileImageSource = () => {
-        if (!userProfile.photo) {return profile;}
+        if (!userProfile.photo) { return profile; }
         return {
             uri: userProfile.photo.startsWith('data:image') || userProfile.photo.startsWith('http')
                 ? userProfile.photo
@@ -151,7 +156,6 @@ const UserProfile = ({ navigation, route }) => {
 
     return (
         <View style={styles.container}>
-            {/* Header */}
             <View style={styles.headerContainer}>
                 <View style={styles.header}>
                     <TouchableOpacity onPress={() => navigation.goBack()}>
@@ -173,12 +177,10 @@ const UserProfile = ({ navigation, route }) => {
                 </View>
             </View>
 
-            {/* Profile Picture */}
             <TouchableOpacity onPress={() => setProfileView(true)}>
                 <Image source={getProfileImageSource()} style={styles.profile} />
             </TouchableOpacity>
 
-            {/* Modal */}
             <Modal visible={profileView} transparent animationType="fade">
                 <BlurView
                     style={styles.blur}
@@ -202,8 +204,12 @@ const UserProfile = ({ navigation, route }) => {
                 </TouchableOpacity>
             </Modal>
 
-            {/* User Details */}
-            <View style={styles.user}>
+            {loading ? (
+                <View style={{ marginTop: 150, alignItems: 'center' }}>
+                    <ActivityIndicator size="large" color="#34495e" />
+                    <Text style={{ marginTop: 10, color: '#34495e', fontWeight: '600' }}>Loading Profile...</Text>
+                </View>
+            ) : (<View style={styles.user}>
                 <View style={styles.userDetails}>
                     <Text style={styles.data}>E-mail: </Text>
                     <Text style={styles.details}>{userProfile.email}</Text>
@@ -211,7 +217,17 @@ const UserProfile = ({ navigation, route }) => {
                 <View style={styles.userDetails}>
                     <Text style={styles.data}>LinkedIn: </Text>
                     {userProfile.linkedin_url ? (
-                        <TouchableOpacity onPress={() => Linking.openURL(userProfile.linkedin_url)}>
+                        <TouchableOpacity
+                            onPress={() => {
+                                let url = userProfile.linkedin_url;
+                                if (!url.startsWith('http')) {
+                                    url = 'https://' + url;
+                                }
+                                Linking.openURL(url).catch(err =>
+                                    Alert.alert('Error', 'Failed to open the link.')
+                                );
+                            }}
+                        >
                             <Text style={styles.linkText}>{userProfile.linkedin_url}</Text>
                         </TouchableOpacity>
                     ) : (
@@ -231,6 +247,7 @@ const UserProfile = ({ navigation, route }) => {
                     </TouchableOpacity>
                 )}
             </View>
+            )}
         </View>
     );
 };
@@ -242,7 +259,7 @@ const styles = StyleSheet.create({
         position: 'relative',
     },
     profileEdit: {
-        marginLeft: 240,
+        marginLeft: 220,
     },
     fullImage: {
         width: 300,
@@ -310,7 +327,7 @@ const styles = StyleSheet.create({
         borderRadius: 75,
         position: 'absolute',
         top: -70,
-        right: 130,
+        right: 120,
     },
     userDetails: {
         flexDirection: 'row',
@@ -334,7 +351,7 @@ const styles = StyleSheet.create({
         color: 'white',
         textAlign: 'center',
         fontSize: 17,
-        marginLeft: 155,
+        marginLeft: 140,
         marginTop: 50,
         paddingVertical: 5,
     },
@@ -345,6 +362,7 @@ const styles = StyleSheet.create({
         flexDirection: 'row',
         alignItems: 'center',
         marginTop: 20,
+        marginHorizontal : 10
     },
     linkText: {
         color: '#007BFF',

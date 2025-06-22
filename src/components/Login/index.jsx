@@ -24,7 +24,7 @@ const Login = ({ navigation }) => {
 
     const handleSubmit = async () => {
         setLoading(true);
-        console.log('Login attempt with:', login); // 🔍 Debug
+        console.log('Login attempt with:', login)
         try {
             console.log('Sending request to login API...');
             const response = await axios.post(
@@ -34,17 +34,15 @@ const Login = ({ navigation }) => {
                     headers: {
                         'Content-Type': 'application/json',
                     },
-                    timeout: 10000, // Set timeout to catch hanging requests
+                    timeout: 10000, 
                 }
             );
 
-            console.log('Login successful, token received:', response.data.token); // ✅ Debug
+            console.log('Login successful, token received:', response.data.token); 
 
-            // Store token if needed
             await AsyncStorage.setItem('token', response.data.token);
-            console.log('Token saved to AsyncStorage'); // ✅ Debug
+            console.log('Token saved to AsyncStorage');
 
-            // Redirect to dashboard
             navigation.navigate('Layout', { screen: 'Home' });
         } catch (error) {
             if (error.response) {
@@ -166,7 +164,6 @@ const styles = StyleSheet.create({
     remember: {
         fontSize: 12,
         color: '#000',
-        // space between checkbox and text
     },
     forgotPassword: {
         fontSize: 13,

@@ -15,10 +15,6 @@ import {
   Pressable,
   ActivityIndicator,
 } from 'react-native';
-import profile from '../../assets/profile.png';
-import scanner from '../../assets/scanner.png';
-import connection from '../../assets/connection.png';
-import chat from '../../assets/chat.png';
 import { LocationContext } from '../LocationContext/LocationContext';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import axios from 'axios';
@@ -94,7 +90,7 @@ const EventCard = ({
       Math.cos(lat2 * Math.PI / 180) *
       Math.sin(dLon / 2) ** 2;
     const c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a));
-    return R * c; // distance in KM
+    return R * c; 
   };
 
   const checkProximityAndDate = () => {
@@ -104,7 +100,7 @@ const EventCard = ({
 
     if (userLat != null && userLon != null && lat != null && lon != null) {
       const distance = calculateDistance(userLat, userLon, lat, lon);
-      setWithinRange(distance <= 0.5); // Within 500 meters
+      setWithinRange(distance <= 0.5); 
     } else {
       setWithinRange(false);
     }
@@ -143,7 +139,7 @@ const EventCard = ({
               alignItems: 'center',
               justifyContent: 'center',
             }}>
-              <Text style={{ color: '#fff', fontWeight: 'bold', fontSize: 12 }}>✔ Checked In</Text>
+              <Text style={{ color: '#fff', fontWeight: 'bold', fontSize: 12 }}>Checked In</Text>
             </View>
           ) : isFutureEvent ? (
             <TouchableOpacity
@@ -227,23 +223,6 @@ const EventsScreen = ({ navigation }) => {
   const events = groupEventsByMonth(eventData);
   const animatedPosition = useRef(new Animated.Value(0)).current;
 
-  const handleQRCode = () => {
-    navigation.navigate('QRCode');
-  };
-
-  const handleProfile = () => {
-    navigation.navigate('UserProfile');
-  };
-
-  const moveToRight = () => {
-    Animated.timing(animatedPosition, {
-      toValue: 120,
-      duration: 500,
-      easing: Easing.out(Easing.exp),
-      useNativeDriver: true,
-    }).start();
-  };
-
   const handleCheckIn = async (eventId) => {
     try {
       const token = await AsyncStorage.getItem('token');
@@ -259,7 +238,6 @@ const EventsScreen = ({ navigation }) => {
       );
       ToastAndroid.show('Checked-In Successfully!', ToastAndroid.SHORT);
 
-      // Optionally refetch events to update UI
       fetchUpcomingEvents();
     } catch (error) {
       console.error('Check-in error:', error.response?.data || error.message || error);
@@ -268,7 +246,7 @@ const EventsScreen = ({ navigation }) => {
   };
 
   const fetchUpcomingEvents = async () => {
-    setLoading(true); // Show spinner
+    setLoading(true); 
     try {
       const token = await AsyncStorage.getItem('token');
       const response = await axios.post(
@@ -310,10 +288,9 @@ const EventsScreen = ({ navigation }) => {
     } catch (error) {
       console.error('Error fetching events:', error.message || error);
     } finally {
-      setLoading(false); // Hide spinner
+      setLoading(false); 
     }
   };
-
 
   useEffect(() => {
     fetchUpcomingEvents();
@@ -467,7 +444,6 @@ const styles = StyleSheet.create({
   monthTitle: {
     fontSize: 25,
     fontWeight: 'bold',
-    // fontStyle: "italic",
     color: '#333',
     marginBottom: 8,
   },
@@ -490,8 +466,8 @@ const styles = StyleSheet.create({
     marginBottom: 24,
   },
   card: {
-    width: '100%',       // ✅ Full width of parent
-    minHeight: 90,       // ✅ Use minHeight instead of fixed height
+    width: '100%',       
+    minHeight: 90,    
     marginVertical: 6,
     borderBottomWidth: 0.5,
   },
@@ -511,54 +487,7 @@ const styles = StyleSheet.create({
     color: '#555',
     alignSelf: 'flex-start',
     marginTop: 3,
-  },
-  bottomBarContainer: {
-    position: 'absolute',
-    bottom: 0,
-    left: 0,
-    right: 0,
-    height: 80,
-    backgroundColor: '#34495e',
-    flexDirection: 'row',
-    justifyContent: 'space-around',
-    alignItems: 'center',
-    paddingHorizontal: 20,
-    // borderTopLeftRadius: 20,
-    // borderTopRightRadius: 20,
-    overflow: 'visible',
-  },
-  centerCircle: {
-    position: 'absolute',
-    top: -25,
-    left: '50%',
-    right: '100%',
-    marginLeft: -3,
-    width: 60,
-    height: 60,
-    borderRadius: 30,
-    backgroundColor: '#465E5D',
-    alignItems: 'center',
-    justifyContent: 'center',
-    elevation: 8,
-    shadowColor: '#000',
-    shadowOffset: { width: 0, height: 4 },
-    shadowOpacity: 0.3,
-    shadowRadius: 6,
-  },
-  bottomIcon: {
-    fontSize: 24,
-    color: 'white',
-  },
-  bottomIconleft: {
-    fontSize: 24,
-    left: -20,
-    color: 'white',
-  },
-  bottomIconright: {
-    fontSize: 24,
-    right: -25,
-    color: 'white',
-  },
+  }
 });
 
 export default EventsScreen;

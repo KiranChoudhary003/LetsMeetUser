@@ -10,6 +10,7 @@ import {
     SafeAreaView,
     ToastAndroid,
 } from 'react-native';
+import Ionicons from 'react-native-vector-icons/Ionicons';
 
 const backgroundImage = require('../../assets/bgg.png');
 
@@ -54,7 +55,7 @@ const MyEventsDesciption = ({ navigation, route }) => {
     const [isLoading, setIsLoading] = useState(false);
 
     const handlePress = async () => {
-        if (isLoading) {return;}
+        if (isLoading) { return; }
 
         if (buttonState === 'checkin') {
             if (!checkInAvailable) {
@@ -88,7 +89,6 @@ const MyEventsDesciption = ({ navigation, route }) => {
             );
             ToastAndroid.show('Checked-In Successfully!', ToastAndroid.SHORT);
 
-            // Optionally refetch events to update UI
             fetchUpcomingEvents();
         } catch (error) {
             console.error('Check-in error:', error.response?.data || error.message || error);
@@ -101,18 +101,24 @@ const MyEventsDesciption = ({ navigation, route }) => {
             <SafeAreaView style={styles.container}>
                 <View style={styles.header}>
                     <TouchableOpacity onPress={() => navigation.goBack()}>
-                        <Text style={styles.backArrow}>←</Text>
+                        <Text style={styles.backArrow}><Ionicons name="arrow-back-outline" size={30} color="#f9efef" /></Text>
                     </TouchableOpacity>
                     <Text style={styles.headerTitle}>{name}</Text>
                 </View>
 
                 <ScrollView contentContainerStyle={styles.scrollContainer}>
-                    <Image
-                        source={{ uri: banner }} // banner is the full base64 data URI
-                        style={styles.poster}
-                        resizeMode="cover"
-                    />
-                    <Text style={styles.locationLabel}>📍{organizer}</Text>
+                    {banner ? (
+                        <Image
+                            source={{ uri: banner }} 
+                            style={styles.poster}
+                            resizeMode="cover"
+                        />
+                    ) : (null)
+                    }
+                    <View style={styles.locationLabel}>
+                        <Ionicons name="location-outline" size={16} color="#000" />
+                        <Text style={styles.locationText}> {organizer}</Text>
+                    </View>
 
                     <Text style={styles.descriptionHeading}>Description</Text>
                     <Text style={styles.descriptionText}>{description}</Text>
@@ -186,7 +192,7 @@ const styles = StyleSheet.create({
     tickText: {
         fontWeight: 'bold',
         fontSize: 14,
-        color: '#4CAF50', // default green, override in red case
+        color: '#4CAF50', 
     },
     background: {
         flex: 1,
@@ -231,9 +237,12 @@ const styles = StyleSheet.create({
         marginBottom: 20,
     },
     locationLabel: {
-        fontSize: 16,
+        flexDirection: 'row',
+        alignItems: 'center',
         marginBottom: 16,
+        fontSize: 16,
         color: '#000',
+        marginLeft: 4,
     },
     descriptionHeading: {
         fontWeight: 'bold',
@@ -275,7 +284,7 @@ const styles = StyleSheet.create({
         paddingVertical: 14,
         paddingHorizontal: 8,
         borderWidth: 1.5,
-        borderColor: '#3A5BFF',  // Changed to a stronger blue
+        borderColor: '#3A5BFF', 
         borderRadius: 12,
         backgroundColor: 'transparent',
         alignItems: 'center',

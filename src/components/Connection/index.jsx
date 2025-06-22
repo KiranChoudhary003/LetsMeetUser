@@ -72,7 +72,7 @@ const Connections = ({ navigation }) => {
     if (showFilters) {
       const timeout = setTimeout(() => {
         roleInputRef.current?.focus();
-      }, 300); // Give modal time to render
+      }, 300);
       return () => clearTimeout(timeout);
     }
   }, [showFilters]);
@@ -98,7 +98,6 @@ const Connections = ({ navigation }) => {
         useNativeDriver: true,
       }).start();
 
-      // 👇 Capture snapshot of undoUser
       const localUndoUser = undoUser;
 
       const timer = setTimeout(() => {
@@ -107,7 +106,6 @@ const Connections = ({ navigation }) => {
           duration: 300,
           useNativeDriver: true,
         }).start(() => {
-          // ✅ Use localUndoUser here instead of undoUser
           if (localUndoUser && acceptedUsers[localUndoUser.id]) {
             (async () => {
               const token = await getToken();
@@ -170,11 +168,9 @@ const Connections = ({ navigation }) => {
       });
       const data = await response.json();
 
-      // ✅ Log the full data once to inspect
       console.log('Raw attended_users response:', data.attended_users);
 
       const formattedUsers = (data.attended_users || []).map(user => {
-        // ✅ Log each user's preference value
         console.log(`User ${user.id} preference:`, user.preference);
 
         return {
@@ -337,14 +333,7 @@ const Connections = ({ navigation }) => {
       setShowUndo(false);
       setToast('');
     })();
-    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [selectedTab]);
-
-
-
-
-
-
 
   const handleUndo = () => {
     if (undoUser && pendingAccepts[undoUser.id]) {
@@ -405,8 +394,6 @@ const Connections = ({ navigation }) => {
         (!sentFilter || user.role === sentFilter)
       );
 
-
-  // Inside renderItem function
   const renderItem = ({ item }) => {
     const transformedUser = {
       first_name: item.name?.split(' ')[0] || '',
@@ -432,8 +419,6 @@ const Connections = ({ navigation }) => {
           .toUpperCase()
         : 'NA';
 
-
-    // Handle profile image click
     const handleImagePress = () => {
       const imgUri =
         item.image && item.image.length > 100
@@ -441,16 +426,15 @@ const Connections = ({ navigation }) => {
             ? item.image
             : `data:image/png;base64,${item.image}`
           : '';
-      setPreviewImage(imgUri);     // full image or undefined
-      setPreviewName(initials);    // <--- also set initials fallback
-      setProfileView(true);        // open modal
+      setPreviewImage(imgUri);     
+      setPreviewName(initials);   
+      setProfileView(true);     
     };
 
 
     return (
       <View style={styles.card}>
         <View style={styles.userInfoRow}>
-          {/* Profile Image */}
           <TouchableOpacity onPress={handleImagePress}>
             <View style={styles.circle}>
               {item.image && item.image.length > 100 ? (
@@ -468,7 +452,6 @@ const Connections = ({ navigation }) => {
             </View>
           </TouchableOpacity>
 
-          {/* Name (Navigates to Profile) */}
           <TouchableOpacity
             onPress={() => navigation.navigate('UserProfile', { user: transformedUser })}
           >
@@ -476,7 +459,6 @@ const Connections = ({ navigation }) => {
           </TouchableOpacity>
         </View>
 
-        {/* Action Buttons */}
         <View style={styles.Buttons}>
           <TouchableOpacity
             style={[
@@ -740,12 +722,10 @@ const Connections = ({ navigation }) => {
 
 export default Connections;
 
-
 const styles = StyleSheet.create({
   safeArea: {
     flex: 1,
     backgroundColor: '#E8EFFC',
-    paddingTop: Platform.OS === 'android' ? StatusBar.currentHeight : 0,
   },
   container: { flex: 1, backgroundColor: '#E8EFFC' },
   fullFlex: {
@@ -834,7 +814,7 @@ const styles = StyleSheet.create({
     borderColor: '#ccc',
     borderRadius: 8,
     paddingLeft: 12,
-    paddingRight: 10, // space for the clear icon
+    paddingRight: 10, 
     backgroundColor: '#f9f9f9f7',
     color: '#000',
   },
@@ -843,7 +823,7 @@ const styles = StyleSheet.create({
     position: 'absolute',
     right: 10,
     top: '50%',
-    transform: [{ translateY: -9 }], // vertical centering
+    transform: [{ translateY: -9 }], 
     zIndex: 1,
   },
 

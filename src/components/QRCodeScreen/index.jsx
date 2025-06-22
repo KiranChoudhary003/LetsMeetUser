@@ -1,13 +1,15 @@
 import React, { useEffect, useState } from 'react';
-import { View, Text, StyleSheet, TouchableOpacity, Share, Image } from 'react-native';
+import { View, Text, StyleSheet, TouchableOpacity, Share, Image, ActivityIndicator } from 'react-native';
 import QRCode from 'react-native-qrcode-svg';
 import axios from 'axios';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import scanner from '../../assets/vector.png';
+import MaterialIcons from 'react-native-vector-icons/MaterialIcons';
 
 const QRCodeScreen = ({ navigation }) => {
 
-  const [userData, setUserData] = useState({});
+  const [userData, setUserData] = useState({})
+  const [loading, setLoading] = useState(true);
 
   useEffect(() => {
     const fetchUserData = async () => {
@@ -24,12 +26,11 @@ const QRCodeScreen = ({ navigation }) => {
           },
         }
         );
-        console.log('Login successful, token received:', response.data.token); // ✅ Debug
+        console.log('Login successful, token received:', response.data.token);
 
         const user = response.data.user;
 
         setUserData({
-          // id : user.id,
           firstName: user.first_name,
           lastName: user.last_name,
           email: user.email,
@@ -39,6 +40,9 @@ const QRCodeScreen = ({ navigation }) => {
         });
       } catch (error) {
         console.log(`Error fetching the user data ${error}`);
+      }
+      finally {
+        setLoading(false)
       }
     };
     fetchUserData();
@@ -58,31 +62,31 @@ const QRCodeScreen = ({ navigation }) => {
 
   return (
     <View style={styles.container}>
-      {/* Top Navigation */}
       <View style={styles.header}>
         <TouchableOpacity onPress={() => navigation.goBack()}>
-          <Text style={styles.headerBackText}>←</Text>
+          <Text style={styles.headerBackText}>
+            <MaterialIcons name="arrow-back" size={24} color="#000" />
+          </Text>
         </TouchableOpacity>
-        {/* <TouchableOpacity style={styles.headerTitle} onPress={() => navigation.navigate("Scanner")}> */}
+        <TouchableOpacity style={styles.headerTitle} onPress={() => navigation.navigate("Scanner")}>
           <Image source={scanner} />
           <Text style={{ fontSize: 20, paddingLeft: 10 }}>Scan</Text>
-        {/* </TouchableOpacity> */}
-        <View style={{ width: 24 }} /> {/* Placeholder to center title */}
+        </TouchableOpacity>
+        <View style={{ width: 24 }} />
       </View>
 
-      {/* QR Card */}
       <View style={styles.card}>
         <Text style={styles.cardTitle}>Scan QR</Text>
         <View style={styles.qrBox}>
-          {userData ? (
-            <QRCode value={qrValue} size={180} />
+          {loading ? (
+            <ActivityIndicator size="large" color="#7680DE" />
           ) : (
-            <Text style={{ color: '#fff' }}>Loading...</Text>
+            <QRCode value={qrValue} size={180} />
           )}
         </View>
 
         <View style={styles.buttonRow}>
-          <TouchableOpacity style={styles.button} onPress={() => navigation.goBack()}>
+          <TouchableOpacity style={styles.button} >
             <Text style={styles.buttonText}>Done</Text>
           </TouchableOpacity>
           <TouchableOpacity style={styles.button} onPress={handleShare}>
@@ -121,7 +125,7 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     position: 'fixed',
     top: -40,
-    right: -140,
+    right: -130,
   },
   headerBackText: {
     fontSize: 35,
@@ -129,7 +133,7 @@ const styles = StyleSheet.create({
     color: '#000',
     position: 'fixed',
     top: -45,
-    left: -120,
+    left: -110,
   },
   card: {
     marginTop: 100,
@@ -151,6 +155,10 @@ const styles = StyleSheet.create({
     backgroundColor: '#fff',
     padding: 15,
     borderRadius: 15,
+    alignItems: 'center',
+    justifyContent: 'center',
+    minHeight: 200,
+    minWidth: 200
   },
   buttonRow: {
     flexDirection: 'row',

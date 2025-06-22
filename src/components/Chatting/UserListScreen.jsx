@@ -3,7 +3,7 @@ import {
     View, Text, FlatList, TouchableOpacity, StyleSheet,
     TextInput, ActivityIndicator, Image, Platform,
 } from 'react-native';
-import { SafeAreaView } from 'react-native-safe-area-context'; // ✅ added
+import { SafeAreaView } from 'react-native-safe-area-context'; 
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { useNavigation } from '@react-navigation/native';
 import Ionicons from 'react-native-vector-icons/Ionicons';
@@ -72,7 +72,7 @@ export default function UserListScreen() {
                             return {
                                 ...user,
                                 last_message: msg.content,
-                                last_message_time: msg.sent_at, // Make sure this is a valid date string
+                                last_message_time: msg.sent_at, 
                                 unread_count: (user.unread_count || 0) + 1,
                             };
                         }
@@ -88,7 +88,7 @@ export default function UserListScreen() {
                     prevUsers.map(user =>
                         user.chat_id === chat_id ? { ...user, unread_count: 0 } : user
                     )
-                        .sort((a, b) => new Date(b.last_message_time) - new Date(a.last_message_time)) // ✅ Keep sorted
+                        .sort((a, b) => new Date(b.last_message_time) - new Date(a.last_message_time))
                 );
             });
 
@@ -239,7 +239,7 @@ const styles = StyleSheet.create({
     },
     safeContainer: {
         flex: 1,
-        backgroundColor: '#f9fafe',
+        backgroundColor: '#e9effc',
     },
 
     headingContainer: {
@@ -340,7 +340,7 @@ const styles = StyleSheet.create({
         position: 'absolute',
         bottom: 30,
         right: 20,
-        backgroundColor: '#007AFF',
+        backgroundColor: '#34495e',
         width: 60,
         height: 60,
         borderRadius: 30,
