@@ -39,13 +39,13 @@ export default Layout;
 const styles = StyleSheet.create({
   safeArea: {
     flex: 1,
-    backgroundColor: '#fff', 
+    backgroundColor: '#fff',
   },
   container: {
     flex: 1,
   },
   header: {
-    minHeight: 60,
+    height: 60,
     justifyContent: 'center',
     alignItems: 'center',
   },
@@ -53,7 +53,7 @@ const styles = StyleSheet.create({
     flex: 1,
   },
   footer: {
-    minHeight: 60,
+    height: 60,
     justifyContent: 'center',
     alignItems: 'center',
   },

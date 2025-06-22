@@ -12,6 +12,8 @@ import {
     SafeAreaView,
     ActivityIndicator,
     ToastAndroid,
+    Platform,
+    StatusBar,
 } from 'react-native';
 import Ionicons from 'react-native-vector-icons/Ionicons';
 
@@ -142,7 +144,7 @@ const Description = ({ navigation, route }) => {
                 <ScrollView contentContainerStyle={styles.scrollContainer}>
                     {banner ? (
                         <Image
-                            source={{ uri: banner }} 
+                            source={{ uri: banner }}
                             style={styles.poster}
                             resizeMode="cover"
                         />
@@ -216,6 +218,7 @@ const styles = StyleSheet.create({
     container: {
         flex: 1,
         backgroundColor: '#e9effc',
+        paddingTop: Platform.OS === 'android' ? StatusBar.currentHeight : 0,
     },
     background: {
         flex: 1,

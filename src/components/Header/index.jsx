@@ -2,6 +2,8 @@ import { useNavigation } from '@react-navigation/native';
 import React, { useEffect, useState } from 'react';
 import {
     Image, StyleSheet, TouchableOpacity, View, Alert,
+    Platform,
+    StatusBar,
 } from 'react-native';
 import profile from '../../assets/profile.png';
 import Ionicons from 'react-native-vector-icons/Ionicons';
@@ -70,7 +72,8 @@ const Header = () => {
                         source={getProfileImageSource()}
                         style={styles.profile}
                         resizeMode="cover"
-                    />                </TouchableOpacity>
+                    />
+                </TouchableOpacity>
                 <TouchableOpacity onPress={handleQRCode}>
                     <Ionicons name="scan-outline" size={30} color="#f9efef" style={styles.Chatstyle} />
                 </TouchableOpacity>
@@ -99,13 +102,14 @@ const styles = StyleSheet.create({
         paddingHorizontal: 16,
         paddingVertical: 8,
         width: '100%',
-        height: 60
+        height: 60,
+        // paddingTop: Platform.OS === 'android' ? StatusBar.currentHeight : 0,
     },
 
     profile: {
         width: 30,
         height: 30,
-        borderRadius : 15
+        borderRadius: 15
     },
     Chatstyle: {
         justifyContent: 'center',

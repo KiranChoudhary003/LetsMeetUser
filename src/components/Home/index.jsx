@@ -734,7 +734,7 @@ const styles = StyleSheet.create({
         paddingVertical: 6,
         width: 156,
         height: 41,
-        marginLeft: 85,
+        marginLeft: 105,
         borderWidth: 1,
         borderColor: '#888',
         borderRadius: 20,

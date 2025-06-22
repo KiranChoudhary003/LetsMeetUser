@@ -10,7 +10,7 @@ const BottomTab = () => {
         const layoutTab = state.routes.find(r => r.name === 'Layout');
         const nestedState = layoutTab?.state;
         const activeRoute = nestedState?.routes[nestedState.index];
-        return activeRoute?.name;
+        return activeRoute?.name || "Home"
     });
 
     const tabs = [
@@ -53,14 +53,10 @@ const BottomTab = () => {
     );
 };
 
-export default BottomTab;
+export default BottomTab
 
 const styles = StyleSheet.create({
     bottomBarContainer: {
-        position: 'absolute',
-        bottom: 0,
-        left: 0,
-        right: 0,
         height: 60,
         backgroundColor: '#34495e',
         flexDirection: 'row',
@@ -68,10 +64,9 @@ const styles = StyleSheet.create({
         alignItems: 'center',
         paddingHorizontal: 20,
         width: '100%',
-        zIndex: 1000,
     },
     iconWrapper: {
         alignItems: 'center',
         justifyContent: 'center',
     },
-});
+})

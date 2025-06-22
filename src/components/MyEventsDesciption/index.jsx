@@ -9,6 +9,8 @@ import {
     ScrollView,
     SafeAreaView,
     ToastAndroid,
+    Platform,
+    StatusBar,
 } from 'react-native';
 import Ionicons from 'react-native-vector-icons/Ionicons';
 
@@ -109,7 +111,7 @@ const MyEventsDesciption = ({ navigation, route }) => {
                 <ScrollView contentContainerStyle={styles.scrollContainer}>
                     {banner ? (
                         <Image
-                            source={{ uri: banner }} 
+                            source={{ uri: banner }}
                             style={styles.poster}
                             resizeMode="cover"
                         />
@@ -181,6 +183,7 @@ const styles = StyleSheet.create({
     container: {
         flex: 1,
         backgroundColor: '#e8effc',
+        paddingTop: Platform.OS === 'android' ? StatusBar.currentHeight : 0,
     },
     tickWrapper: {
         padding: 12,
@@ -192,7 +195,7 @@ const styles = StyleSheet.create({
     tickText: {
         fontWeight: 'bold',
         fontSize: 14,
-        color: '#4CAF50', 
+        color: '#4CAF50',
     },
     background: {
         flex: 1,
@@ -284,7 +287,7 @@ const styles = StyleSheet.create({
         paddingVertical: 14,
         paddingHorizontal: 8,
         borderWidth: 1.5,
-        borderColor: '#3A5BFF', 
+        borderColor: '#3A5BFF',
         borderRadius: 12,
         backgroundColor: 'transparent',
         alignItems: 'center',

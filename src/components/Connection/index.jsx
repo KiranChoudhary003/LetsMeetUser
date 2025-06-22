@@ -426,9 +426,9 @@ const Connections = ({ navigation }) => {
             ? item.image
             : `data:image/png;base64,${item.image}`
           : '';
-      setPreviewImage(imgUri);     
-      setPreviewName(initials);   
-      setProfileView(true);     
+      setPreviewImage(imgUri);
+      setPreviewName(initials);
+      setProfileView(true);
     };
 
 
@@ -726,6 +726,7 @@ const styles = StyleSheet.create({
   safeArea: {
     flex: 1,
     backgroundColor: '#E8EFFC',
+    paddingTop: Platform.OS === 'android' ? StatusBar.currentHeight : 0,
   },
   container: { flex: 1, backgroundColor: '#E8EFFC' },
   fullFlex: {
@@ -814,7 +815,7 @@ const styles = StyleSheet.create({
     borderColor: '#ccc',
     borderRadius: 8,
     paddingLeft: 12,
-    paddingRight: 10, 
+    paddingRight: 10,
     backgroundColor: '#f9f9f9f7',
     color: '#000',
   },
@@ -823,7 +824,7 @@ const styles = StyleSheet.create({
     position: 'absolute',
     right: 10,
     top: '50%',
-    transform: [{ translateY: -9 }], 
+    transform: [{ translateY: -9 }],
     zIndex: 1,
   },
 

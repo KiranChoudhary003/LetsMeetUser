@@ -3,12 +3,14 @@ import { ActivityIndicator, Alert, Button, Image, StyleSheet, Text, TextInput, T
 import logo from '../../assets/logo.png';
 import axios from 'axios';
 import AsyncStorage from '@react-native-async-storage/async-storage';
+import MaterialIcons from 'react-native-vector-icons/MaterialIcons';
 
 const Login = ({ navigation }) => {
 
     const [error, setError] = useState('');
     const [login, setLogin] = useState({ email: '', password: '' });
     const [loading, setLoading] = useState(false);
+    const [showPassword, setShowPassword] = useState(false);
 
     useEffect(() => {
         const checkToken = async () => {
@@ -34,11 +36,11 @@ const Login = ({ navigation }) => {
                     headers: {
                         'Content-Type': 'application/json',
                     },
-                    timeout: 10000, 
+                    timeout: 10000,
                 }
             );
 
-            console.log('Login successful, token received:', response.data.token); 
+            console.log('Login successful, token received:', response.data.token);
 
             await AsyncStorage.setItem('token', response.data.token);
             console.log('Token saved to AsyncStorage');
@@ -76,15 +78,24 @@ const Login = ({ navigation }) => {
                 value={login.email}
                 onChangeText={(text) => setLogin({ ...login, email: text })}
             />
+            <View style={styles.passwordInputContainer}>
+                <TextInput
+                    style={styles.passwordInput}
+                    placeholder="Password"
+                    placeholderTextColor="#888"
+                    secureTextEntry={!showPassword}
+                    value={login.password}
+                    onChangeText={(text) => setLogin({ ...login, password: text })}
+                />
+                <TouchableOpacity onPress={() => setShowPassword(!showPassword)} style={styles.eyeIcon}>
+                    <MaterialIcons
+                        name={showPassword ? 'visibility-off' : 'visibility'}
+                        size={22}
+                        color="#888"
+                    />
+                </TouchableOpacity>
+            </View>
 
-            <TextInput
-                style={styles.input}
-                placeholder="Password"
-                placeholderTextColor="#888"
-                secureTextEntry
-                value={login.password}
-                onChangeText={(text) => setLogin({ ...login, password: text })}
-            />
             <View style={styles.password}>
                 <View style={styles.checkContainer}>
                     {/* <CheckBox
@@ -129,14 +140,14 @@ const styles = StyleSheet.create({
         height: 209,
         resizeMode: 'contain',
         borderRadius: 105,
-        marginTop: 100,
+        marginTop: 80,
         marginBottom: 30,
     },
     text: {
         fontSize: 35,
         fontWeight: 'bold',
         color: '#34495e',
-        marginBottom: 30,
+        marginBottom: 10,
     },
     input: {
         width: 313,
@@ -177,7 +188,7 @@ const styles = StyleSheet.create({
         display: 'flex',
         justifyContent: 'center',
         alignItems: 'center',
-        marginTop: 20,
+        marginTop: 40,
     },
     buttonText: {
         fontSize: 20,
@@ -190,11 +201,33 @@ const styles = StyleSheet.create({
         flexDirection: 'row',
     },
     signUp: {
-        color: '#777',
-        fontSize: 13,
+        fontSize: 14,
+        color: '#34495e',
+        fontWeight: '700',
+        marginLeft: 4,
     },
     account: {
         fontSize: 13,
+        color: '#7f8c8d',
+    },
+    passwordInputContainer: {
+        flexDirection: 'row',
+        alignItems: 'center',
+        width: 313,
+        height: 43,
+        backgroundColor: '#f7faff',
+        margin: 10,
+        borderRadius: 5,
+        paddingHorizontal: 10,
+        borderColor: '#ccc',
+        borderWidth: 1,
+    },
+    passwordInput: {
+        flex: 1,
+        color: '#000',
+    },
+    eyeIcon: {
+        paddingHorizontal: 5,
     },
 });
 

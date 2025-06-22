@@ -344,14 +344,15 @@ const styles = StyleSheet.create({
         fontSize: 15,
     },
     logout: {
-        width: 118,
-        height: 40,
+        width: 194,
+        height: 39,
         backgroundColor: '#34495e',
         borderRadius: 10,
         color: 'white',
         textAlign: 'center',
-        fontSize: 17,
-        marginLeft: 140,
+        fontSize: 20,
+        fontWeight: 'bold',
+        marginLeft: 110,
         marginTop: 50,
         paddingVertical: 5,
     },
@@ -362,7 +363,7 @@ const styles = StyleSheet.create({
         flexDirection: 'row',
         alignItems: 'center',
         marginTop: 20,
-        marginHorizontal : 10
+        marginHorizontal: 10
     },
     linkText: {
         color: '#007BFF',

@@ -3,6 +3,7 @@ import { StyleSheet, Text, TextInput, TouchableOpacity, View, Image, KeyboardAvo
 import { ActivityIndicator, Checkbox, IconButton, Menu, Modal, Provider } from 'react-native-paper';
 import { ScrollView } from 'react-native-gesture-handler';
 import axios from 'axios';
+import MaterialIcons from 'react-native-vector-icons/MaterialIcons';
 
 const SignUp = ({ navigation }) => {
     const [jobRole, setJobRole] = useState('');
@@ -17,6 +18,8 @@ const SignUp = ({ navigation }) => {
     const [roles, setRoles] = useState([]);
     const [loadingRoles, setLoadingRoles] = useState(true);
     const [loading, setLoading] = useState(false);
+    const [policyModalVisible, setPolicyModalVisible] = useState(false);
+    const [modalContent, setModalContent] = useState('');
 
     const toggleRole = (role) => {
         setSelectedRoles((prevSelectedRoles) => {
@@ -45,7 +48,7 @@ const SignUp = ({ navigation }) => {
                 linkedin_url: linkedin,
                 role_id: typeof jobRole === 'object' ? parseInt(jobRole.id) : parseInt(jobRole),
                 attendees_role: typeof jobRole === 'object' ? jobRole.label : jobRole,
-                preference: selectedRoles, 
+                preference: selectedRoles,
             };
             console.log('Api is fetchinng');
             const response = await fetch('https://letsmeet-backend-47lv.onrender.com/api/user-profile/register', {
@@ -146,7 +149,7 @@ const SignUp = ({ navigation }) => {
                                         setVisible(false);
                                     }}
                                     title={role}
-                                    titleStyle={styles.menuItemTitle} 
+                                    titleStyle={styles.menuItemTitle}
                                 />
                             ))}
                         </Menu>
@@ -173,7 +176,7 @@ const SignUp = ({ navigation }) => {
                                                 <Checkbox.Android
                                                     status={selectedRoles.includes(role) ? 'checked' : 'unchecked'}
                                                     onPress={() => toggleRole(role)}
-                                                    color="#37795e"
+                                                    color="#34495e"
                                                 />
                                             </View>
                                         ))}
@@ -189,36 +192,51 @@ const SignUp = ({ navigation }) => {
                             </View>
                         </Modal>
 
-                        <View style={styles.selectedWrapper}>
+                        <ScrollView
+                            horizontal
+                            showsHorizontalScrollIndicator={false}
+                            contentContainerStyle={styles.selectedWrapper}
+                        >
                             {selectedRoles.map((role, index) => (
                                 <View key={index} style={styles.tag}>
                                     <Text style={styles.tagText}>{role}</Text>
-                                    <IconButton
-                                        icon={() => (
-                                            <Text style={styles.crossIcon}>✕</Text>
-                                        )}
-                                        onPress={() => removeRole(role)}
-                                        style={styles.closeIcon}
-                                    />
-
+                                    <TouchableOpacity onPress={() => removeRole(role)}>
+                                        <MaterialIcons name="close" size={16} color="#888" />
+                                    </TouchableOpacity>
                                 </View>
                             ))}
-                        </View>
+                        </ScrollView>
                         {loading ? (
                             <ActivityIndicator size="large" color="#7680DE" />
                         ) : (
                             <TouchableOpacity style={styles.button} onPress={handleSubmit}>
-                                <Text style={styles.buttonText}>Sign-in</Text>
+                                <Text style={styles.buttonText}>Sign-up</Text>
                             </TouchableOpacity>
                         )}
 
                         <View style={styles.condition}>
                             <Text style={styles.agree}>By continuing you agree to all </Text>
-                            <Text style={styles.terms}>terms, condition </Text>
+                            <Text
+                                style={styles.terms}
+                                onPress={() => {
+                                    setModalContent('Terms and Conditions content goes here...');
+                                    setPolicyModalVisible(true);
+                                }}
+                            >
+                                terms, condition
+                            </Text>
                         </View>
                         <View style={styles.privacy}>
                             <Text style={styles.and}>& </Text>
-                            <Text style={styles.policy}>privacy policy</Text>
+                            <Text
+                                style={styles.policy}
+                                onPress={() => {
+                                    setModalContent('Privacy Policy content goes here...');
+                                    setPolicyModalVisible(true);
+                                }}
+                            >
+                                privacy policy
+                            </Text>
                         </View>
                         <View style={styles.account}>
                             <Text style={styles.already}>Already have an account? </Text>
@@ -226,6 +244,29 @@ const SignUp = ({ navigation }) => {
                                 <Text style={styles.login}>log-in</Text>
                             </TouchableOpacity>
                         </View>
+
+                        <Modal
+                            visible={policyModalVisible}
+                            transparent={true}
+                            animationType="slide"
+                            onRequestClose={() => setPolicyModalVisible(false)}
+                        >
+                            <View style={styles.modalOverlay}>
+                                <View style={styles.modalContainer}>
+                                    <ScrollView>
+                                        <Text style={styles.modalTitle}>Information</Text>
+                                        <Text style={styles.modalText}>{modalContent}</Text>
+                                    </ScrollView>
+                                    <TouchableOpacity
+                                        style={styles.doneButton}
+                                        onPress={() => setPolicyModalVisible(false)}
+                                    >
+                                        <Text style={styles.doneText}>Close</Text>
+                                    </TouchableOpacity>
+                                </View>
+                            </View>
+                        </Modal>
+
                     </ScrollView>
                 </KeyboardAvoidingView>
             </View>
@@ -267,7 +308,7 @@ const styles = StyleSheet.create({
         color: '#888',
     },
     menuItemTitle: {
-        color: '#fff',
+        color: '#888',
     },
     modalOverlay: {
         backgroundColor: 'rgba(0, 0, 0, 0.3)',
@@ -310,8 +351,9 @@ const styles = StyleSheet.create({
     },
     selectedWrapper: {
         flexDirection: 'row',
-        flexWrap: 'wrap',
-        marginTop: 10,
+        paddingHorizontal: 10,
+        paddingTop: 4,
+        paddingBottom: 4,
     },
     tag: {
         backgroundColor: '#ddd',
@@ -322,9 +364,10 @@ const styles = StyleSheet.create({
         flexDirection: 'row',
         alignItems: 'center',
         alignSelf: 'flex-start',
-        maxWidth: '30%',
-        height: 20,
+        maxWidth: 'auto',
+        height: 25,
     },
+
     tagText: {
         marginRight: 8,
     },
@@ -335,22 +378,23 @@ const styles = StyleSheet.create({
 
     button: {
         backgroundColor: '#34495e',
-        paddingVertical: 8,
-        borderRadius: 8,
+        borderRadius: 10,
+        display: 'flex',
+        justifyContent: 'center',
         alignItems: 'center',
-        marginTop: 20,
         marginLeft: 110,
         width: 194,
         height: 39,
     },
     buttonText: {
-        color: '#fff',
-        fontSize: 16,
+        fontSize: 20,
+        fontWeight: 'bold',
+        color: 'white',
     },
     condition: {
         flexDirection: 'row',
         justifyContent: 'center',
-        marginTop: 12,
+        marginTop: 40,
     },
     agree: {
         fontSize: 13,
@@ -390,6 +434,18 @@ const styles = StyleSheet.create({
         fontWeight: '700',
         marginLeft: 4,
     },
+    modalTitle: {
+        fontSize: 18,
+        fontWeight: 'bold',
+        marginBottom: 10,
+        color: '#34495e',
+    },
+    modalText: {
+        fontSize: 14,
+        color: '#444',
+        lineHeight: 20,
+    },
+
 });
 
 export default SignUp;
