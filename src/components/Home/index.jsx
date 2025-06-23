@@ -759,7 +759,7 @@ const styles = StyleSheet.create({
         shadowOpacity: 0.1,
         shadowRadius: 4,
         elevation: 3,
-        marginBottom: 16,
+        marginBottom: 5,
     },
     eventsLabelText: {
         fontSize: 18,

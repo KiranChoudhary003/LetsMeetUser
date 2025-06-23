@@ -394,7 +394,7 @@ const styles = StyleSheet.create({
         flex: 1,
         justifyContent: 'flex-start',
         alignItems: 'flex-end',
-        top: 100,
+        top: 160,
     },
     filterOptions: {
         backgroundColor: '#34495E',

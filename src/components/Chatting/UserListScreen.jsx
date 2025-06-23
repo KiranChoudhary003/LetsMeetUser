@@ -12,6 +12,8 @@ import { io } from 'socket.io-client';
 import { jwtDecode } from 'jwt-decode';
 import { useFocusEffect } from '@react-navigation/native';
 import Entypo from 'react-native-vector-icons/Entypo';
+import { Alert } from 'react-native'; // ✅ Add this at the top
+
 
 const API_URL = 'https://letsmeet-backend-47lv.onrender.com/api';
 
@@ -130,20 +132,21 @@ export default function UserListScreen() {
 
         const confirmDelete = () => {
             if (Platform.OS === 'web') {
-                if (window.confirm(`Delete chat with ${item.first_name}?`)) { handleDeleteChat(); }
+                if (window.confirm(`Delete chat with ${item.first_name}?`)) {
+                    handleDeleteChat();
+                }
             } else {
-                import('react-native').then(({ Alert }) =>
-                    Alert.alert(
-                        'Delete Chat',
-                        `Are you sure you want to delete chat with ${item.first_name}?`,
-                        [
-                            { text: 'Cancel', style: 'cancel' },
-                            { text: 'Delete', onPress: handleDeleteChat, style: 'destructive' },
-                        ]
-                    )
+                Alert.alert(
+                    'Delete Chat',
+                    `Are you sure you want to delete chat with ${item.first_name}?`,
+                    [
+                        { text: 'Cancel', style: 'cancel' },
+                        { text: 'Delete', onPress: handleDeleteChat, style: 'destructive' },
+                    ]
                 );
             }
         };
+
 
         return (
             <TouchableOpacity
@@ -214,10 +217,18 @@ export default function UserListScreen() {
             ) : (
                 <FlatList
                     data={filteredUsers}
-                    keyExtractor={item => item.id.toString()}
+                    keyExtractor={(item) => item.id.toString()}
                     renderItem={renderItem}
                     contentContainerStyle={{ paddingBottom: 20 }}
+                    extraData={users} // ✅ Ensures FlatList re-renders on state update
+                    keyboardShouldPersistTaps="handled" // ✅ Allows input + touch to work smoothly
+                    ListEmptyComponent={
+                        !loading && (
+                            <Text style={styles.noUsersText}>No users found</Text>
+                        )
+                    }
                 />
+
             )}
 
             <TouchableOpacity

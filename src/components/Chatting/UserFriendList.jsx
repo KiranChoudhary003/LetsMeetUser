@@ -35,16 +35,15 @@ export default function UserListScreen() {
                 headers: { Authorization: `Bearer ${token}` },
             });
             const data = await response.json();
-            const filtered = (data.connections || [])
-                .filter(user => user.chat_id && user.last_message)
-                .sort((a, b) => new Date(b.last_message_time) - new Date(a.last_message_time));
-            setUsers(filtered);
+            const updatedUsers = (data.connections || []).sort((a, b) => new Date(b.last_message_time) - new Date(a.last_message_time));
+            setUsers(updatedUsers);
         } catch (error) {
             console.error('Error fetching connections:', error);
         } finally {
             setLoading(false);
         }
     };
+
 
     useEffect(() => {
         let socket;
