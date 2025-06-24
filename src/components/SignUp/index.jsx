@@ -299,7 +299,7 @@ const styles = StyleSheet.create({
         padding: 12,
         borderRadius: 8,
         marginBottom: 25,
-        marginLeft: 50,
+        marginLeft: "10%",
         width: 313,
         height: 43,
         backgroundColor: '#f7faff',
@@ -382,7 +382,7 @@ const styles = StyleSheet.create({
         display: 'flex',
         justifyContent: 'center',
         alignItems: 'center',
-        marginLeft: 110,
+        marginLeft: "25%",
         width: 194,
         height: 39,
     },
@@ -394,7 +394,7 @@ const styles = StyleSheet.create({
     condition: {
         flexDirection: 'row',
         justifyContent: 'center',
-        marginTop: 40,
+        marginTop: 30,
     },
     agree: {
         fontSize: 13,
@@ -423,6 +423,7 @@ const styles = StyleSheet.create({
         flexDirection: 'row',
         justifyContent: 'center',
         marginTop: 16,
+        paddingBottom : 20,
     },
     already: {
         fontSize: 14,

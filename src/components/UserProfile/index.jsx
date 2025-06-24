@@ -2,6 +2,7 @@ import React, { useCallback, useEffect, useState } from 'react';
 import {
     Image, Modal, StyleSheet, Text, TouchableOpacity, View, Alert, Linking,
     Platform, PermissionsAndroid,
+    Dimensions,
 } from 'react-native';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import MaterialIcons from 'react-native-vector-icons/MaterialIcons';
@@ -11,6 +12,8 @@ import { BlurView } from '@react-native-community/blur';
 import { launchImageLibrary } from 'react-native-image-picker';
 import { useFocusEffect } from '@react-navigation/native';
 import { ActivityIndicator } from 'react-native-paper';
+
+const { width: SCREEN_WIDTH } = Dimensions.get('window');
 
 const UserProfile = ({ navigation, route }) => {
     const [userProfile, setUserProfile] = useState({});
@@ -170,7 +173,7 @@ const UserProfile = ({ navigation, route }) => {
                 </View>
                 <View style={styles.userName}>
                     <Text style={styles.userDetail}>{userProfile.first_name}</Text>
-                    <Text style={styles.userDetail}>{userProfile.last_name}</Text>
+                    <Text style={styles.userDetail}> {userProfile.last_name}</Text>
                 </View>
                 <View style={styles.userRole}>
                     <Text style={styles.userDetail}>{userProfile.attendees_role}</Text>
@@ -204,7 +207,7 @@ const UserProfile = ({ navigation, route }) => {
                 </TouchableOpacity>
             </Modal>
 
-            {loading ? (
+            {isViewingOwnProfile && loading ? (
                 <View style={{ marginTop: 150, alignItems: 'center' }}>
                     <ActivityIndicator size="large" color="#34495e" />
                     <Text style={{ marginTop: 10, color: '#34495e', fontWeight: '600' }}>Loading Profile...</Text>
@@ -256,10 +259,10 @@ const styles = StyleSheet.create({
     container: {
         flex: 1,
         backgroundColor: '#e8effc',
-        position: 'relative',
     },
     profileEdit: {
-        marginLeft: 220,
+        position: 'absolute',
+        right: 20,
     },
     fullImage: {
         width: 300,
@@ -327,24 +330,27 @@ const styles = StyleSheet.create({
         borderRadius: 75,
         position: 'absolute',
         top: -70,
-        right: 120,
+        left: SCREEN_WIDTH / 2 - 75,
     },
     userDetails: {
         flexDirection: 'row',
         paddingLeft: 30,
         paddingTop: 20,
+        flexWrap: 'wrap',
     },
     details: {
         color: '#333',
         fontSize: 15,
-        width: 280,
+        flexShrink: 1,
+        flex: 1,
     },
     data: {
         fontWeight: 'bold',
         fontSize: 15,
+        marginRight: 5,
     },
     logout: {
-        width: 194,
+        width: SCREEN_WIDTH * 0.5,
         height: 39,
         backgroundColor: '#34495e',
         borderRadius: 10,
@@ -352,29 +358,31 @@ const styles = StyleSheet.create({
         textAlign: 'center',
         fontSize: 20,
         fontWeight: 'bold',
-        marginLeft: 110,
+        alignSelf: 'center',
         marginTop: 50,
         paddingVertical: 5,
     },
     user: {
-        top: 100,
+        marginTop: 100,
     },
     header: {
         flexDirection: 'row',
         alignItems: 'center',
         marginTop: 20,
-        marginHorizontal: 10
+        marginHorizontal: 10,
+        justifyContent: 'space-between',
     },
     linkText: {
         color: '#007BFF',
         textDecorationLine: 'underline',
         fontSize: 14,
-        width: 280,
+        width : 280
     },
     profileHeader: {
         color: 'white',
         fontSize: 25,
-        margin: 15,
+        marginLeft: 10,
+        flex: 1,
     },
 });
 

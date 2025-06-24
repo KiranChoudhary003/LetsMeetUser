@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from 'react';
-import { ActivityIndicator, Alert, Button, Image, StyleSheet, Text, TextInput, TouchableOpacity, View } from 'react-native';
+import { ActivityIndicator, Alert, Button, Image, Modal, StyleSheet, Text, TextInput, TouchableOpacity, View } from 'react-native';
 import logo from '../../assets/logo.png';
 import axios from 'axios';
 import AsyncStorage from '@react-native-async-storage/async-storage';
@@ -11,6 +11,9 @@ const Login = ({ navigation }) => {
     const [login, setLogin] = useState({ email: '', password: '' });
     const [loading, setLoading] = useState(false);
     const [showPassword, setShowPassword] = useState(false);
+    const [forgotModalVisible, setForgotModalVisible] = useState(false);
+    const [forgotEmail, setForgotEmail] = useState('');
+    const [forgotLoading, setForgotLoading] = useState(false);
 
     useEffect(() => {
         const checkToken = async () => {
@@ -65,6 +68,35 @@ const Login = ({ navigation }) => {
         }
     };
 
+    const handleForgotPassword = async () => {
+        if (!forgotEmail) {
+            Alert.alert('Error', 'Please enter your email.');
+            return;
+        }
+
+        setForgotLoading(true);
+        try {
+            const response = await axios.post(
+                'https://letsmeet-backend-47lv.onrender.com/api/user-profile/forgot-password',
+                { email: forgotEmail },
+                {
+                    headers: {
+                        'Content-Type': 'application/json',
+                    },
+                }
+            );
+
+            Alert.alert('Success', 'Password reset link sent to your email.');
+            setForgotModalVisible(false);
+            setForgotEmail('');
+        } catch (err) {
+            console.log("Forgot Password Error:", err);
+            Alert.alert('Error', 'Failed to send reset link.');
+        } finally {
+            setForgotLoading(false);
+        }
+    }
+
     return (
         <View style={styles.container}>
             <Image source={logo} style={styles.logo} />
@@ -96,21 +128,25 @@ const Login = ({ navigation }) => {
                 </TouchableOpacity>
             </View>
 
-            <View style={styles.password}>
-                <View style={styles.checkContainer}>
-                    {/* <CheckBox
+            {/* <View style={styles.password}> */}
+            {/* <View style={styles.checkContainer}> */}
+            {/* <CheckBox
                         value={agree}
                         onValueChange={setAgree}
                         tintColors={{ true: '#7680DE', false: 'gray' }}
                     /> */}
-                    {/* <Text style={styles.remember}>Remember me</Text> */}
-                    {/* <TouchableOpacity onPress={() => setShowPassword(!showPassword)}>
+            {/* <Text style={styles.remember}>Remember me</Text> */}
+            {/* <TouchableOpacity onPress={() => setShowPassword(!showPassword)}>
                         {showPassword ? <FaEyeSlash /> : <FaEye />}
                     </TouchableOpacity> */}
-                </View>
+            {/* </View> */}
 
-                <Text style={styles.forgotPassword}>Forgot password?</Text>
+            <View style={styles.password}>
+                <TouchableOpacity onPress={() => setForgotModalVisible(true)}>
+                    <Text style={styles.forgotPassword}>Forgot password?</Text>
+                </TouchableOpacity>
             </View>
+            {/* </View> */}
             {loading ? (
                 <ActivityIndicator size="large" color="#7680DE" />
             ) : (
@@ -124,6 +160,37 @@ const Login = ({ navigation }) => {
                     <Text style={styles.signUp}>sign up</Text>
                 </TouchableOpacity>
             </View>
+            <Modal
+                animationType="slide"
+                transparent
+                visible={forgotModalVisible}
+                onRequestClose={() => setForgotModalVisible(false)}
+            >
+                <View style={styles.modalContainer}>
+                    <View style={styles.modalBox}>
+                        <Text style={styles.modalTitle}>Reset Password</Text>
+                        <TextInput
+                            style={styles.input}
+                            placeholder="Enter your email"
+                            placeholderTextColor="#888"
+                            keyboardType="email-address"
+                            autoCapitalize="none"
+                            value={forgotEmail}
+                            onChangeText={setForgotEmail}
+                        />
+                        {forgotLoading ? (
+                            <ActivityIndicator size="small" color="#7680DE" />
+                        ) : (
+                            <TouchableOpacity style={styles.button} onPress={handleForgotPassword}>
+                                <Text style={styles.buttonText}>Submit</Text>
+                            </TouchableOpacity>
+                        )}
+                        <TouchableOpacity onPress={() => setForgotModalVisible(false)}>
+                            <Text style={{ marginTop: 10, color: 'gray' }}>Cancel</Text>
+                        </TouchableOpacity>
+                    </View>
+                </View>
+            </Modal>
         </View>
     );
 };
@@ -161,10 +228,7 @@ const styles = StyleSheet.create({
         borderWidth: 1,
     },
     password: {
-        flexDirection: 'row',
-        justifyContent: 'space-between',
         width: '75%',
-        alignItems: 'center',
     },
     checkContainer: {
         flexDirection: 'row',
@@ -178,7 +242,8 @@ const styles = StyleSheet.create({
     },
     forgotPassword: {
         fontSize: 13,
-        color: '#000',
+        color: '#7f8c8d',
+        marginLeft : "60%"
     },
     button: {
         width: 194,
@@ -228,6 +293,26 @@ const styles = StyleSheet.create({
     },
     eyeIcon: {
         paddingHorizontal: 5,
+    },
+    modalContainer: {
+        flex: 1,
+        backgroundColor: 'rgba(0,0,0,0.4)',
+        justifyContent: 'center',
+        alignItems: 'center',
+    },
+    modalBox: {
+        width: '85%',
+        backgroundColor: '#fff',
+        padding: 24,
+        borderRadius: 12,
+        elevation: 5,
+        alignItems: 'center',
+    },
+    modalTitle: {
+        fontSize: 20,
+        marginBottom: 12,
+        fontWeight: 'bold',
+        color: '#34495e',
     },
 });
 
