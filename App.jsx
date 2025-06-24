@@ -8,7 +8,7 @@ import { StatusBar } from 'react-native';
 import Welcome from './src/components/Welcome';
 import Login from './src/components/Login';
 import SignUp from './src/components/SignUp';
-import Profile from './src/components/Profile';
+// import Profile from './src/components/Profile';
 import Edit from './src/components/Edit';
 import QRCodeScreen from './src/components/QRCodeScreen';
 import Description from './src/components/Description';
@@ -29,32 +29,6 @@ const Stack = createStackNavigator();
 
 const App = () => {
   return (
-<<<<<<< Updated upstream
-    <SafeAreaProvider>
-      <LocationProvider>
-        <NavigationContainer>
-          <StatusBar barStyle="dark-content" backgroundColor="#fff" />
-          <Stack.Navigator initialRouteName="Welcome" screenOptions={{ headerShown: false }}>
-            <Stack.Screen name="Welcome" component={Welcome} />
-            <Stack.Screen name="Login" component={Login} />
-            <Stack.Screen name="SignUp" component={SignUp} />
-            <Stack.Screen name="Layout" component={Layout} />
-            <Stack.Screen name="Profile" component={Profile} />
-            <Stack.Screen name="Edit" component={Edit} />
-            <Stack.Screen name="UserListScreen" component={UserListScreen} />
-            <Stack.Screen name="UserFriendList" component={UserFriendList} />
-            <Stack.Screen name="ChatPage" component={ChatPage} />
-            <Stack.Screen name="Scanner" component={Scanner} />
-            <Stack.Screen name="QRCode" component={QRCodeScreen} />
-            <Stack.Screen name="Description" component={Description} />
-            <Stack.Screen name="Connection" component={Connection} />
-            <Stack.Screen name="UserProfile" component={UserProfile} />
-            <Stack.Screen name="MyEventsDescription" component={MyEventsDesciption} />
-          </Stack.Navigator>
-        </NavigationContainer>
-      </LocationProvider>
-    </SafeAreaProvider>
-=======
     <KeyboardProvider>
       <SafeAreaProvider>
         <LocationProvider>
@@ -80,7 +54,6 @@ const App = () => {
         </LocationProvider>
       </SafeAreaProvider>
     </KeyboardProvider>
->>>>>>> Stashed changes
   );
 };
 

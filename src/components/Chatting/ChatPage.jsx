@@ -1,9 +1,4 @@
-<<<<<<< Updated upstream
-'';// ✅ Enhanced ChatPage with Read Receipt Support + Date Grouping + Auto Scroll + Focus-aware Read
-
-import React, { useEffect, useState, useRef } from 'react';
-=======
-// '';// ✅ Enhanced ChatPage with Read Receipt Support + Date Grouping + Auto Scroll + Focus-aware Read
+// ✅ Enhanced ChatPage with Read Receipt Support + Date Grouping + Auto Scroll + Focus-aware Read
 
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { BlurView } from '@react-native-community/blur';
@@ -11,7 +6,6 @@ import { CommonActions, useIsFocused, useNavigation } from '@react-navigation/na
 import { jwtDecode } from 'jwt-decode';
 import moment from 'moment';
 import React, { useEffect, useRef, useState } from 'react';
->>>>>>> Stashed changes
 import {
     ActivityIndicator,
     Image,

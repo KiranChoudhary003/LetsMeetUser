@@ -1,16 +1,21 @@
-import React, { useState, useCallback, useEffect } from 'react';
+import AsyncStorage from '@react-native-async-storage/async-storage';
+import { useFocusEffect, useNavigation } from '@react-navigation/native';
+import React, { useCallback, useEffect, useState } from 'react';
 import {
-    View, Text, FlatList, TouchableOpacity, StyleSheet,
-    TextInput, ActivityIndicator, Image, Platform
+    ActivityIndicator,
+    FlatList,
+    Image,
+    StyleSheet,
+    Text,
+    TextInput,
+    TouchableOpacity,
+    View
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
-import AsyncStorage from '@react-native-async-storage/async-storage';
-import { useNavigation, useFocusEffect } from '@react-navigation/native';
-import Ionicons from 'react-native-vector-icons/Ionicons';
 import Entypo from 'react-native-vector-icons/Entypo';
-import profile from '../../assets/profile.png';
+import Ionicons from 'react-native-vector-icons/Ionicons';
 import { io } from 'socket.io-client';
-import { jwtDecode } from 'jwt-decode';
+import profile from '../../assets/profile.png';
 
 const API_URL = 'https://letsmeet-backend-47lv.onrender.com/api';
 
@@ -33,20 +38,14 @@ export default function UserListScreen() {
                 headers: { Authorization: `Bearer ${token}` },
             });
             const data = await response.json();
-<<<<<<< Updated upstream
-            const updatedUsers = (data.connections || []).sort((a, b) => new Date(b.last_message_time) - new Date(a.last_message_time));
-            setUsers(updatedUsers);
-=======
             const allUsers = data.connections || [];
             setUsers(allUsers);
->>>>>>> Stashed changes
         } catch (error) {
             console.error('Error fetching connections:', error);
         } finally {
             setLoading(false);
         }
     };
-
 
     useEffect(() => {
         let socket;
