@@ -1,19 +1,27 @@
-import React, { useEffect, useState, useCallback } from 'react';
+import React, { useState, useCallback } from 'react';
 import {
     View, Text, FlatList, TouchableOpacity, StyleSheet,
-    TextInput, ActivityIndicator, Image, Platform,
+    TextInput, ActivityIndicator, Image, Platform, Alert
 } from 'react-native';
+<<<<<<< Updated upstream
 import { SafeAreaView } from 'react-native-safe-area-context'; // ✅ added
+=======
+import { SafeAreaView } from 'react-native-safe-area-context';
+>>>>>>> Stashed changes
 import AsyncStorage from '@react-native-async-storage/async-storage';
-import { useNavigation } from '@react-navigation/native';
+import { useNavigation, useFocusEffect } from '@react-navigation/native';
 import Ionicons from 'react-native-vector-icons/Ionicons';
+import Entypo from 'react-native-vector-icons/Entypo';
 import profile from '../../assets/profile.png';
 import { io } from 'socket.io-client';
 import { jwtDecode } from 'jwt-decode';
+<<<<<<< Updated upstream
 import { useFocusEffect } from '@react-navigation/native';
 import Entypo from 'react-native-vector-icons/Entypo';
 import { Alert } from 'react-native'; // ✅ Add this at the top
 
+=======
+>>>>>>> Stashed changes
 
 const API_URL = 'https://letsmeet-backend-47lv.onrender.com/api';
 
@@ -23,16 +31,11 @@ export default function UserListScreen() {
     const [searchQuery, setSearchQuery] = useState('');
     const [loading, setLoading] = useState(true);
 
-    useEffect(() => {
-        fetchConnections();
-    }, []);
-
     useFocusEffect(
         useCallback(() => {
             fetchConnections();
         }, [])
     );
-
 
     const fetchConnections = async () => {
         try {
@@ -52,16 +55,18 @@ export default function UserListScreen() {
         }
     };
 
+    useFocusEffect(
+        useCallback(() => {
+            let socket;
 
-    useEffect(() => {
-        let socket;
-        const setupSocket = async () => {
-            const token = await AsyncStorage.getItem('token');
-            if (!token) { return; }
+            const setupSocket = async () => {
+                const token = await AsyncStorage.getItem('token');
+                if (!token) return;
 
-            const decoded = jwtDecode(token);
-            const currentUserId = decoded.id || decoded.user_id;
+                const decoded = jwtDecode(token);
+                const currentUserId = decoded.id || decoded.user_id;
 
+<<<<<<< Updated upstream
             socket = io('https://letsmeet-backend-47lv.onrender.com/', {
                 auth: { token },
                 transports: ['websocket'],
@@ -81,10 +86,31 @@ export default function UserListScreen() {
                         return user;
                     });
                     return updatedUsers.sort((a, b) => new Date(b.last_message_time) - new Date(a.last_message_time));
+=======
+                socket = io('https://letsmeet-backend-47lv.onrender.com/', {
+                    auth: { token },
+                    transports: ['websocket'],
+>>>>>>> Stashed changes
                 });
-            });
 
+                socket.on('receive_message', (msg) => {
+                    setUsers(prevUsers => {
+                        const updatedUsers = prevUsers.map(user => {
+                            if (user.id === msg.sender_id) {
+                                return {
+                                    ...user,
+                                    last_message: msg.content,
+                                    last_message_time: msg.sent_at,
+                                    unread_count: (user.unread_count || 0) + 1,
+                                };
+                            }
+                            return user;
+                        });
+                        return updatedUsers.sort((a, b) => new Date(b.last_message_time) - new Date(a.last_message_time));
+                    });
+                });
 
+<<<<<<< Updated upstream
             socket.on('messages_marked_read', ({ chat_id }) => {
                 setUsers(prevUsers =>
                     prevUsers.map(user =>
@@ -93,14 +119,28 @@ export default function UserListScreen() {
                         .sort((a, b) => new Date(b.last_message_time) - new Date(a.last_message_time)) // ✅ Keep sorted
                 );
             });
+=======
+                socket.on('messages_marked_read', ({ chat_id }) => {
+                    setUsers(prevUsers =>
+                        prevUsers.map(user =>
+                            user.chat_id === chat_id ? { ...user, unread_count: 0 } : user
+                        ).sort((a, b) => new Date(b.last_message_time) - new Date(a.last_message_time))
+                    );
+                });
+            };
+>>>>>>> Stashed changes
 
-        };
+            setupSocket();
 
-        setupSocket();
-        return () => {
-            if (socket) { socket.disconnect(); }
-        };
-    }, []);
+            return () => {
+                if (socket) {
+                    socket.off('receive_message');
+                    socket.off('messages_marked_read');
+                    socket.disconnect();
+                }
+            };
+        }, [])
+    );
 
     const filteredUsers = users.filter(user =>
         user.first_name.toLowerCase().includes(searchQuery.toLowerCase()) ||
@@ -113,13 +153,14 @@ export default function UserListScreen() {
         const handleDeleteChat = async () => {
             try {
                 const token = await AsyncStorage.getItem('token');
-                const res = await fetch(`${API_URL}/user-chat/delete/${item.id}`, {
+                const userIdToDelete = item.id;
+                const res = await fetch(`${API_URL}/user-chat/delete/${userIdToDelete}`, {
                     method: 'DELETE',
                     headers: { Authorization: `Bearer ${token}` },
                 });
                 const result = await res.json();
                 if (res.ok) {
-                    setUsers(prev => prev.filter(user => user.id !== item.id));
+                    setUsers(prev => prev.filter(user => user.id !== userIdToDelete));
                     alert('Chat deleted successfully');
                 } else {
                     alert(result.message || 'Failed to delete chat');
@@ -242,23 +283,15 @@ export default function UserListScreen() {
 }
 
 const styles = StyleSheet.create({
-    container: {
-        flex: 1,
-        backgroundColor: '#f9fafe',
-        paddingHorizontal: 16,
-        paddingTop: Platform.OS === 'android' ? 40 : 16,
-    },
     safeContainer: {
         flex: 1,
         backgroundColor: '#f9fafe',
     },
-
     headingContainer: {
         backgroundColor: '#34495E',
         paddingVertical: 12,
         paddingHorizontal: 16,
     },
-
     headerRow: {
         flexDirection: 'row',
         alignItems: 'center',
@@ -266,7 +299,6 @@ const styles = StyleSheet.create({
         position: 'relative',
         height: 40,
     },
-
     backButton: {
         position: 'absolute',
         left: 0,
@@ -275,7 +307,11 @@ const styles = StyleSheet.create({
         justifyContent: 'center',
         paddingRight: 12,
     },
-    title: { fontSize: 22, fontWeight: 'bold', color: '#ffffff' },
+    title: {
+        fontSize: 22,
+        fontWeight: 'bold',
+        color: '#ffffff',
+    },
     searchBar: {
         margin: 15,
         paddingHorizontal: 10,
@@ -290,9 +326,10 @@ const styles = StyleSheet.create({
         backgroundColor: '#fff',
         padding: 16,
         borderRadius: 16,
-        marginBottom: 12,
+        marginBottom: 5,
         shadowColor: '#000',
         shadowOffset: { width: 0, height: 3 },
+        marginHorizontal: 12,
         shadowOpacity: 0.1,
         shadowRadius: 6,
         elevation: 4,
@@ -363,5 +400,4 @@ const styles = StyleSheet.create({
         shadowRadius: 5,
         elevation: 6,
     },
-
 });

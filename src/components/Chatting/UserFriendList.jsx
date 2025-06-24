@@ -1,4 +1,4 @@
-import React, { useEffect, useState, useCallback } from 'react';
+import React, { useState, useCallback, useEffect } from 'react';
 import {
     View, Text, FlatList, TouchableOpacity, StyleSheet,
     TextInput, ActivityIndicator, Image, Platform
@@ -20,13 +20,11 @@ export default function UserListScreen() {
     const [searchQuery, setSearchQuery] = useState('');
     const [loading, setLoading] = useState(true);
 
-    useEffect(() => {
-        fetchConnections();
-    }, []);
-
-    useFocusEffect(useCallback(() => {
-        fetchConnections();
-    }, []));
+    useFocusEffect(
+        useCallback(() => {
+            fetchConnections();
+        }, [])
+    );
 
     const fetchConnections = async () => {
         try {
@@ -35,8 +33,13 @@ export default function UserListScreen() {
                 headers: { Authorization: `Bearer ${token}` },
             });
             const data = await response.json();
+<<<<<<< Updated upstream
             const updatedUsers = (data.connections || []).sort((a, b) => new Date(b.last_message_time) - new Date(a.last_message_time));
             setUsers(updatedUsers);
+=======
+            const allUsers = data.connections || [];
+            setUsers(allUsers);
+>>>>>>> Stashed changes
         } catch (error) {
             console.error('Error fetching connections:', error);
         } finally {
@@ -69,22 +72,33 @@ export default function UserListScreen() {
                         }
                         return user;
                     });
-                    return updatedUsers.sort((a, b) => new Date(b.last_message_time) - new Date(a.last_message_time));
+                    return updatedUsers.sort((a, b) =>
+                        new Date(b.last_message_time) - new Date(a.last_message_time)
+                    );
                 });
             });
 
             socket.on('messages_marked_read', ({ chat_id }) => {
                 setUsers(prevUsers =>
                     prevUsers.map(user =>
-                        user.chat_id === chat_id ? { ...user, unread_count: 0 } : user
-                    ).sort((a, b) => new Date(b.last_message_time) - new Date(a.last_message_time))
+                        user.chat_id === chat_id
+                            ? { ...user, unread_count: 0 }
+                            : user
+                    ).sort((a, b) =>
+                        new Date(b.last_message_time) - new Date(a.last_message_time)
+                    )
                 );
             });
         };
 
         setupSocket();
+
         return () => {
-            if (socket) socket.disconnect();
+            if (socket) {
+                socket.off('receive_message');
+                socket.off('messages_marked_read');
+                socket.disconnect();
+            }
         };
     }, []);
 
@@ -95,10 +109,9 @@ export default function UserListScreen() {
     const renderItem = ({ item }) => (
         <TouchableOpacity
             style={styles.userCard}
-            onPress={() => navigation.navigate('ChatPage', { peer: item })}
+            onPress={() => navigation.navigate('ChatPage', { peer: item, from: 'UserFriendList' })}
         >
             <View style={styles.row}>
-
                 <Image
                     source={
                         item.photo
@@ -127,7 +140,12 @@ export default function UserListScreen() {
         <SafeAreaView style={styles.safeContainer}>
             <View style={styles.headingContainer}>
                 <View style={styles.headerRow}>
-                    <TouchableOpacity onPress={() => navigation.goBack()} style={styles.backButton}>
+                    <TouchableOpacity
+                        onPress={() => {
+                            if (navigation.canGoBack()) navigation.goBack();
+                        }}
+                        style={styles.backButton}
+                    >
                         <Ionicons name="arrow-back-outline" size={24} color="white" />
                     </TouchableOpacity>
                     <Text style={styles.title}>My Network</Text>
@@ -136,7 +154,6 @@ export default function UserListScreen() {
             <View style={styles.searchBar}>
                 <Entypo name="magnifying-glass" size={24} color="black" />
                 <TextInput
-                    style={styles.searchInput}
                     placeholder="Search users..."
                     onChangeText={setSearchQuery}
                     value={searchQuery}
@@ -212,7 +229,8 @@ const styles = StyleSheet.create({
         backgroundColor: '#fff',
         padding: 16,
         borderRadius: 16,
-        marginBottom: 12,
+        marginBottom: 5,
+        marginHorizontal: 12,
         shadowColor: '#000',
         shadowOffset: { width: 0, height: 3 },
         shadowOpacity: 0.1,

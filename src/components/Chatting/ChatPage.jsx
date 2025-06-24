@@ -1,35 +1,44 @@
+<<<<<<< Updated upstream
 '';// ✅ Enhanced ChatPage with Read Receipt Support + Date Grouping + Auto Scroll + Focus-aware Read
 
 import React, { useEffect, useState, useRef } from 'react';
+=======
+// '';// ✅ Enhanced ChatPage with Read Receipt Support + Date Grouping + Auto Scroll + Focus-aware Read
+
+import AsyncStorage from '@react-native-async-storage/async-storage';
+import { BlurView } from '@react-native-community/blur';
+import { CommonActions, useIsFocused, useNavigation } from '@react-navigation/native';
+import { jwtDecode } from 'jwt-decode';
+import moment from 'moment';
+import React, { useEffect, useRef, useState } from 'react';
+>>>>>>> Stashed changes
 import {
-    View,
+    ActivityIndicator,
+    Image,
+    Keyboard,
+    Modal,
+    Platform,
+    SafeAreaView,
+    StatusBar,
+    StyleSheet,
     Text,
     TextInput,
     TouchableOpacity,
-    FlatList,
-    StyleSheet,
-    SafeAreaView,
-    KeyboardAvoidingView,
-    StatusBar,
-    Platform,
-    Image,
-    Modal,
-    ActivityIndicator,
+    View,
 } from 'react-native';
-import AsyncStorage from '@react-native-async-storage/async-storage';
-import { io } from 'socket.io-client';
-import { jwtDecode } from 'jwt-decode';
+import FontAwesome from 'react-native-vector-icons/FontAwesome';
 import Ionicons from 'react-native-vector-icons/Ionicons';
-import { useNavigation, useIsFocused } from '@react-navigation/native';
-import { BlurView } from '@react-native-community/blur';
-import moment from 'moment';
+import { io } from 'socket.io-client';
 import profile from '../../assets/profile.png';
+import { FlashList } from '@shopify/flash-list';
+
 
 const ChatPage = ({ route }) => {
     const { peer } = route.params;
     const peer_id = peer.id;
     const peerAvatar = peer.photo;
-
+    const [keyboardHeight, setKeyboardHeight] = useState(0);
+    const [isKeyboardVisible, setIsKeyboardVisible] = useState(false);
     const [currentUserId, setCurrentUserId] = useState(null);
     const [currentUserAvatar, setCurrentUserAvatar] = useState(null);
     const [messages, setMessages] = useState([]);
@@ -39,11 +48,31 @@ const ChatPage = ({ route }) => {
     const [isModalVisible, setModalVisible] = useState(false);
     const [chatId, setChatId] = useState(null);
     const [loading, setLoading] = useState(true);
-
     const socketRef = useRef(null);
     const flatListRef = useRef(null);
     const navigation = useNavigation();
     const isFocused = useIsFocused();
+    const [loadingOlder, setLoadingOlder] = useState(false);
+
+
+
+    useEffect(() => {
+        const keyboardDidShow = Keyboard.addListener('keyboardDidShow', (e) => {
+            setKeyboardHeight(e.endCoordinates.height);
+            setIsKeyboardVisible(true);
+        });
+
+        const keyboardDidHide = Keyboard.addListener('keyboardDidHide', () => {
+            setKeyboardHeight(0);
+            setIsKeyboardVisible(false);
+        });
+
+        return () => {
+            keyboardDidShow.remove();
+            keyboardDidHide.remove();
+        };
+    }, []);
+
 
     const groupMessagesByDate = (messages) => {
         const grouped = [];
@@ -167,15 +196,8 @@ const ChatPage = ({ route }) => {
             isMounted = false;
             if (socketRef.current) { socketRef.current.disconnect(); }
         };
+        // eslint-disable-next-line react-hooks/exhaustive-deps
     }, [peer_id]);
-
-    useEffect(() => {
-        if (flatListRef.current && groupedMessages.length > 0) {
-            setTimeout(() => {
-                flatListRef.current.scrollToOffset({ offset: 0, animated: false });
-            }, 100);
-        }
-    }, [groupedMessages]);
 
     useEffect(() => {
         if (isFocused && chatId && socketRef.current) {
@@ -195,11 +217,13 @@ const ChatPage = ({ route }) => {
         }
     }, [messages, isFocused, chatId, peer_id]);
 
-    const scrollToBottom = () => {
+
+    const scrollToBottom = (animated = false) => {
         requestAnimationFrame(() => {
-            flatListRef.current?.scrollToEnd({ animated: false });
+            flatListRef.current?.scrollToOffset({ offset: 0, animated });
         });
     };
+
 
     const sendMessage = () => {
         if (inputText && socketRef.current && currentUserId) {
@@ -232,12 +256,15 @@ const ChatPage = ({ route }) => {
                     from: msg.sender_id,
                     isRead: msg.is_read,
                 };
+
                 setMessages((prev) => {
-                    const filtered = prev.filter(m => m.id !== tempId);
-                    const updated = [...filtered, newMsg];
+                    const updated = prev.map((m) =>
+                        m.id === tempId ? newMsg : m
+                    );
                     setGroupedMessages(groupMessagesByDate(updated));
                     return updated;
                 });
+
                 scrollToBottom();
             };
             socketRef.current.once('message_sent', handler);
@@ -257,20 +284,16 @@ const ChatPage = ({ route }) => {
                 </View>
             );
         }
-
         const isMe = item.from === currentUserId;
         const avatarUrl = isMe
             ? currentUserAvatar || Image.resolveAssetSource(profile).uri
             : peerAvatar || Image.resolveAssetSource(profile).uri;
-
         let tickIcon = null;
         let tickColor = '#000';
-
         if (isMe) {
             tickIcon = item.isRead ? 'checkmark-done' : 'checkmark';
             tickColor = item.isRead ? '#007aff' : '#000';
         }
-
         return (
             <View style={[styles.messageRow, isMe ? styles.rightRow : styles.leftRow]}>
                 {!isMe && <Image source={{ uri: avatarUrl }} style={styles.avatar} />}
@@ -288,19 +311,77 @@ const ChatPage = ({ route }) => {
         );
     };
 
-    return (
-        <KeyboardAvoidingView
-            style={{ flex: 1 }}
-            behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
-            keyboardVerticalOffset={Platform.OS === 'ios' ? 80 : 0}
-        >
-            <SafeAreaView style={styles.container}>
-                <StatusBar
-                    translucent
-                    backgroundColor="transparent"
-                    barStyle={Platform.OS === 'ios' ? 'default' : 'dark-content'}
-                />
+    const fromScreen = route.params?.from;
+    const handleBack = () => {
+        if (fromScreen === 'UserFriendList') {
+            navigation.dispatch(
+                CommonActions.reset({
+                    index: 1,
+                    routes: [
+                        { name: 'Layout' },
+                        { name: 'UserListScreen' },
+                    ],
+                })
+            );
+        } else {
+            if (navigation.canGoBack()) {
+                navigation.goBack();
+            } else {
+                navigation.navigate('UserListScreen');
+            }
+        }
+    };
 
+    const scrollOffsetY = useRef(0);
+    const handleScroll = (event) => {
+        const offsetY = event.nativeEvent.contentOffset.y;
+        scrollOffsetY.current = offsetY;
+
+        // Check if near top (inverted = true → top = offsetY < threshold)
+        if (offsetY < 100 && !loadingOlder) {
+            loadOlderMessages();
+        }
+    };
+
+
+
+    const loadOlderMessages = () => {
+        if (loadingOlder) return;
+        setLoadingOlder(true);
+
+        setTimeout(() => {
+            const older = [...Array(5)].map((_, i) => ({
+                id: `old-${Date.now()}-${i}`,
+                text: `Old message ${i + 1}`,
+                createdAt: new Date(Date.now() - (i + 1) * 60000),
+                from: peer_id,
+                isRead: true,
+            }));
+
+            setMessages((prev) => {
+                const combined = [...older, ...prev];
+                setGroupedMessages(groupMessagesByDate(combined));
+                return combined;
+            });
+
+            // Delay ending spinner until messages rendered
+            setTimeout(() => {
+                setLoadingOlder(false);
+            }, 50);
+        }, 800); // Simulate network delay
+    };
+
+
+
+    return (
+        <SafeAreaView style={styles.container}>
+            <StatusBar
+                translucent
+                backgroundColor="transparent"
+                barStyle={Platform.OS === 'ios' ? 'default' : 'dark-content'}
+            />
+
+            <View style={{ flex: 1 }}>
                 {loading ? (
                     <View style={{ flex: 1, justifyContent: 'center', alignItems: 'center' }}>
                         <ActivityIndicator size="large" color="#007aff" />
@@ -311,7 +392,7 @@ const ChatPage = ({ route }) => {
                 ) : (
                     <>
                         <View style={styles.chatHeader}>
-                            <TouchableOpacity onPress={() => navigation.goBack()} style={styles.backButton}>
+                            <TouchableOpacity onPress={handleBack} style={styles.backButton}>
                                 <Ionicons name="arrow-back" size={24} color="#ffffff" />
                             </TouchableOpacity>
                             <TouchableOpacity onPress={() => setModalVisible(true)}>
@@ -326,63 +407,92 @@ const ChatPage = ({ route }) => {
                         </View>
 
                         <View style={{ flex: 1 }}>
-                            <FlatList
+                            {loadingOlder && (
+                                <View style={{ alignItems: 'center', paddingVertical: 6 }}>
+                                    <ActivityIndicator size="large" color="#007aff" />
+                                </View>
+                            )}
+                            <FlashList
                                 ref={flatListRef}
                                 data={[...groupedMessages].reverse()}
                                 renderItem={renderItem}
                                 keyExtractor={(item, index) =>
                                     item.id ? item.id.toString() : `date-${index}`
                                 }
-                                contentContainerStyle={[styles.messagesContainer ]}
-                                inverted={true}
+                                contentContainerStyle={styles.messagesContainer}
+                                estimatedItemSize={80}
+                                inverted
+                                initialNumToRender={20}
+                                maxToRenderPerBatch={10}
+                                windowSize={7}
+                                removeClippedSubviews={false}
+                                keyboardShouldPersistTaps="handled"
+                                scrollEventThrottle={16}
+                                onScroll={handleScroll}
+                                extraData={loadingOlder}
                             />
-                            {isTyping && <Text style={styles.typingText}>Typing...</Text>}
-                        </View>
 
-                        <View style={styles.inputContainer}>
-                            <View style={{ flexDirection: 'row', alignItems: 'center' }}>
-                                <View style={styles.inputWrapper}>
-                                    <TextInput
-                                        style={styles.input}
-                                        value={inputText}
-                                        onChangeText={handleTyping}
-                                        placeholder="Type a message..."
-                                        placeholderTextColor="#888"
-                                    />
+                            {/* ✅ Floating input animated independently */}
+                            <View
+                                style={[
+                                    styles.floatingInputContainer,
+                                    {
+                                        paddingBottom: isKeyboardVisible
+                                            ? keyboardHeight + (Platform.OS === 'ios' ? 0 : 10)
+                                            : Platform.OS === 'ios'
+                                                ? 20
+                                                : 10,
+                                    },
+                                ]}
+                            >
+                                {isTyping && <Text style={styles.typingText}>Typing...</Text>}
+                                <View style={{ flexDirection: 'row', alignItems: 'center' }}>
+                                    <View style={styles.inputWrapper}>
+                                        <TextInput
+                                            style={styles.input}
+                                            value={inputText}
+                                            onChangeText={handleTyping}
+                                            placeholder="Type a message..."
+                                            placeholderTextColor="#888"
+                                            multiline
+                                        />
+                                    </View>
+                                    <TouchableOpacity onPress={sendMessage} style={styles.sendButton}>
+                                        <FontAwesome name="send" size={22} color="#fff" />
+                                    </TouchableOpacity>
                                 </View>
-                                <TouchableOpacity onPress={sendMessage} style={styles.sendButton}>
-                                    <Text style={styles.sendButtonText}>Send</Text>
-                                </TouchableOpacity>
                             </View>
                         </View>
+
                     </>
                 )}
-
-                <Modal
-                    transparent
-                    visible={isModalVisible}
-                    animationType="fade"
-                    onRequestClose={() => setModalVisible(false)}
-                >
-                    <View style={styles.modalOverlay}>
-                        <BlurView
-                            style={StyleSheet.absoluteFill}
-                            blurType="light"
-                            blurAmount={10}
-                            reducedTransparencyFallbackColor="white"
+            </View>
+            {/* Modal stays same */}
+            <Modal
+                transparent
+                visible={isModalVisible}
+                animationType="fade"
+                onRequestClose={() => setModalVisible(false)}
+            >
+                <View style={styles.modalOverlay}>
+                    <BlurView
+                        style={StyleSheet.absoluteFill}
+                        blurType="light"
+                        blurAmount={10}
+                        reducedTransparencyFallbackColor="white"
+                    />
+                    <TouchableOpacity onPress={() => setModalVisible(false)} style={styles.modalContent}>
+                        <Image
+                            source={peerAvatar ? { uri: peerAvatar } : profile}
+                            style={styles.zoomedImage}
+                            resizeMode="contain"
                         />
-                        <TouchableOpacity onPress={() => setModalVisible(false)} style={styles.modalContent}>
-                            <Image
-                                source={peerAvatar ? { uri: peerAvatar } : profile}
-                                style={styles.zoomedImage}
-                                resizeMode="contain"
-                            />
-                        </TouchableOpacity>
-                    </View>
-                </Modal>
-            </SafeAreaView>
-        </KeyboardAvoidingView>
+                    </TouchableOpacity>
+                </View>
+            </Modal>
+        </SafeAreaView >
     );
+
 
 };
 
@@ -418,8 +528,6 @@ const styles = StyleSheet.create({
         color: '#ffffff',
     },
     messagesContainer: {
-        flexGrow: 1,
-        justifyContent: 'flex-end',
         paddingTop: 8,
         paddingBottom: 0,
     },
@@ -464,10 +572,18 @@ const styles = StyleSheet.create({
         color: '#ffffff',
     },
     typingText: {
-        paddingLeft: 54,
+        paddingLeft: 14, // Adjusted from 54
         paddingBottom: 4,
         fontStyle: 'italic',
         color: '#444',
+    },
+    floatingInputContainer: {
+        position: 'relative',
+        left: 0,
+        right: 0,
+        paddingHorizontal: 10,
+        paddingBottom: Platform.OS === 'ios' ? 20 : 10,
+        paddingTop: 5,
     },
     inputContainer: {
         padding: 10,
@@ -493,7 +609,7 @@ const styles = StyleSheet.create({
         marginLeft: 8,
         paddingVertical: 8,
         paddingHorizontal: 16,
-        backgroundColor: '#007aff',
+        backgroundColor: '#34495e',
         borderRadius: 20,
     },
     sendButtonText: {
@@ -522,3 +638,4 @@ const styles = StyleSheet.create({
 });
 
 export default ChatPage;
+
