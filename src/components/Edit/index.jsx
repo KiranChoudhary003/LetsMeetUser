@@ -40,7 +40,7 @@ const Edit = ({ route, navigation }) => {
                     headers: { 'Content-Type': 'application/json' },
                 });
 
-                console.log('Roles response:', response.data); // Add this
+                console.log('Roles response:', response.data);
 
                 if (response.data.roles && Array.isArray(response.data.roles)) {
                     setRoles(response.data.roles);
@@ -56,7 +56,7 @@ const Edit = ({ route, navigation }) => {
     }, []);
 
     const handleEdit = async () => {
-        if (isSaving) {return;} // Prevent duplicate taps
+        if (isSaving) { return; }
         setIsSaving(true);
 
         try {
@@ -91,7 +91,6 @@ const Edit = ({ route, navigation }) => {
         }
     };
 
-
     useEffect(() => {
         console.log('Initial selected preferences:', preference);
     }, []);
@@ -103,10 +102,10 @@ const Edit = ({ route, navigation }) => {
                     <Text style={styles.backArrow}><MaterialIcons name="arrow-back" size={24} color="#000" /></Text>
                 </TouchableOpacity>
                 <Text style={styles.text}>Edit Account</Text>
-                <TextInput style={styles.input} placeholder="First Name" value={newFirstName} onChangeText={setNewFirstName} />
-                <TextInput style={styles.input} placeholder="Last Name" value={newLastName} onChangeText={setNewLastName} />
-                <TextInput style={styles.input} placeholder="E-mail" value={newEmail} onChangeText={setNewEmail} />
-                <TextInput style={styles.input} placeholder="LinkedIn URL" value={newLinkedin} onChangeText={setNewLinkedin} />
+                <TextInput style={styles.input} placeholder="First Name" placeholderTextColor="#888" value={newFirstName} onChangeText={setNewFirstName} />
+                <TextInput style={styles.input} placeholder="Last Name" placeholderTextColor="#888" value={newLastName} onChangeText={setNewLastName} />
+                <TextInput style={styles.input} placeholder="E-mail" placeholderTextColor="#888" value={newEmail} onChangeText={setNewEmail} />
+                <TextInput style={styles.input} placeholder="LinkedIn URL" placeholderTextColor="#888" value={newLinkedin} onChangeText={setNewLinkedin} />
 
                 <Menu
                     visible={visible}
@@ -141,7 +140,7 @@ const Edit = ({ route, navigation }) => {
                                 {roles.map((role, index) => (
                                     <TouchableOpacity key={index} style={styles.checkboxRow} onPress={() => toggleRole(role)}>
                                         <Text style={styles.roleText}>{role}</Text>
-                                        <Checkbox.Android status={selectedRoles.includes(role) ? 'checked' : 'unchecked'} color="#7680DE" />
+                                        <Checkbox.Android status={selectedRoles.includes(role) ? 'checked' : 'unchecked'} color="#34495e" />
                                     </TouchableOpacity>
                                 ))}
                             </ScrollView>
@@ -152,30 +151,38 @@ const Edit = ({ route, navigation }) => {
                     </View>
                 </Modal>
 
-                <View style={styles.selectedWrapper}>
-                    {selectedRoles.map((role, index) => (
-                        <View key={index} style={styles.tag}>
-                            <Text style={styles.tagText}>{role}</Text>
-                            <IconButton
-                                icon={() => <Text style={styles.crossIcon}>✕</Text>}
-                                onPress={() => removeRole(role)}
-                                style={styles.closeIcon}
-                            />
-                        </View>
-                    ))}
+                <View style={{ marginBottom: 10 }}>
+                    <ScrollView
+                        horizontal
+                        showsHorizontalScrollIndicator={false}
+                        contentContainerStyle={styles.selectedWrapper}
+                    >
+                        {selectedRoles.map((role, index) => (
+                            <View key={index} style={styles.tag}>
+                                <Text style={styles.tagText}>{role}</Text>
+                                <TouchableOpacity onPress={() => removeRole(role)}>
+                                    <MaterialIcons name="close" size={16} color="#888" />
+                                </TouchableOpacity>
+                            </View>
+                        ))}
+                    </ScrollView>
+
+                    {/* Button with 50px gap */}
+                    <TouchableOpacity
+                        style={[styles.button, { marginTop: 50 }]}
+                        onPress={handleEdit}
+                        disabled={isSaving}
+                    >
+                        {isSaving ? (
+                            <View style={{ flexDirection: 'row', alignItems: 'center' }}>
+                                <ActivityIndicator size="small" color="#fff" style={{ marginRight: 8 }} />
+                                <Text style={styles.buttonText}>Saving...</Text>
+                            </View>
+                        ) : (
+                            <Text style={styles.buttonText}>Save</Text>
+                        )}
+                    </TouchableOpacity>
                 </View>
-
-                <TouchableOpacity style={styles.button} onPress={handleEdit} disabled={isSaving}>
-                    {isSaving ? (
-                        <View style={{ flexDirection: 'row', alignItems: 'center' }}>
-                            <ActivityIndicator size="small" color="#fff" style={{ marginRight: 8 }} />
-                            <Text style={styles.buttonText}>Saving...</Text>
-                        </View>
-                    ) : (
-                        <Text style={styles.buttonText}>Save</Text>
-                    )}
-
-                </TouchableOpacity>
 
             </View>
         </Provider>
@@ -209,7 +216,7 @@ const styles = StyleSheet.create({
         padding: 12,
         borderRadius: 8,
         marginBottom: 30,
-        marginLeft: 50,
+        marginLeft: 40,
         width: 313,
         height: 43,
         backgroundColor: '#f7faff',
@@ -261,8 +268,9 @@ const styles = StyleSheet.create({
     },
     selectedWrapper: {
         flexDirection: 'row',
-        flexWrap: 'wrap',
-        marginTop: 10,
+        paddingHorizontal: 10,
+        paddingTop: 4,
+        paddingBottom: 4,
     },
     tag: {
         backgroundColor: '#ddd',
@@ -273,8 +281,8 @@ const styles = StyleSheet.create({
         flexDirection: 'row',
         alignItems: 'center',
         alignSelf: 'flex-start',
-        maxWidth: '30%',
-        height: 20,
+        maxWidth: 'auto',
+        height: 25,
     },
     tagText: {
         marginRight: 8,
@@ -285,17 +293,19 @@ const styles = StyleSheet.create({
     },
     button: {
         backgroundColor: '#34495e',
-        paddingVertical: 8,
-        borderRadius: 8,
+        borderRadius: 10,
+        justifyContent: 'center',
+        alignItems: 'center',
         alignItems: 'center',
         marginTop: 50,
-        marginLeft: 120,
+        marginLeft: 105,
         width: 194,
         height: 39,
     },
     buttonText: {
-        color: '#fff',
-        fontSize: 16,
+        fontSize: 20,
+        fontWeight: 'bold',
+        color: 'white',
     },
     backArrow: {
         marginTop: 20,
