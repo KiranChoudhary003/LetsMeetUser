@@ -1,0 +1,29 @@
+{
+  "project_info": {
+    "project_number": "330043211372",
+    "project_id": "letsmeet-b2460",
+    "storage_bucket": "letsmeet-b2460.firebasestorage.app"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:330043211372:android:d9755b1ce6ba879c98e249",
+        "android_client_info": {
+          "package_name": "com.letsmeet"
+        }
+      },
+      "oauth_client": [],
+      "api_key": [
+        {
+          "current_key": "AIzaSyAEzbPEpssyz4bahPWrV74_g0palqIXokU"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": []
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}

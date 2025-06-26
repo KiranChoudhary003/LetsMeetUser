@@ -1,4 +1,4 @@
-import React, { useEffect, useRef, useContext } from 'react';
+import React, { useEffect, useRef, useContext, useState } from 'react';
 import {
   View,
   Text,
@@ -9,11 +9,13 @@ import {
   Alert,
   TouchableOpacity,
   Platform,
+  PermissionsAndroid,
 } from 'react-native';
 import logo from '../../assets/logo.png';
 import { PERMISSIONS, check, request, RESULTS, openSettings } from 'react-native-permissions';
 import Geolocation from 'react-native-geolocation-service';
-import { LocationContext } from '../../components/LocationContext/LocationContext'; // ✅ Import the context
+import { LocationContext } from '../../components/LocationContext/LocationContext';
+import messaging from '@react-native-firebase/messaging';
 
 const { width, height } = Dimensions.get('window');
 
@@ -21,23 +23,24 @@ const Welcome = ({ navigation }) => {
   const colorAnim = useRef(new Animated.Value(0)).current;
   const textFadeAnim = useRef(new Animated.Value(0)).current;
 
-  const { setLocation } = useContext(LocationContext); // ✅ Use context to store location
+  const { setLocation } = useContext(LocationContext);
+  const [deviceToken, setDeviceToken] = useState(null);
 
   useEffect(() => {
-    const checkRequestPermission = async () => {
-      const permissionGranted = await requestLocationPermissions();
-      if (permissionGranted) {
+    const initialize = async () => {
+      const locationGranted = await requestLocationPermissions();
+      if (locationGranted) {
         getCurrentLocation();
-      } else {
-        Alert.alert(
-          'Location Permission Required',
-          'This app needs access to your location. Please allow it to continue.',
-          [{ text: 'OK' }]
-        );
+      }
+
+      const token = await requestNotificationPermission();
+      if (token) {
+        setDeviceToken(token);
+        console.log('✅ FCM Device Token:', token);
       }
     };
 
-    checkRequestPermission();
+    initialize();
   }, []);
 
   useEffect(() => {
@@ -56,47 +59,36 @@ const Welcome = ({ navigation }) => {
     });
   }, []);
 
-  async function requestLocationPermissions() {
+  const requestLocationPermissions = async () => {
     const permission = Platform.OS === 'android'
       ? PERMISSIONS.ANDROID.ACCESS_FINE_LOCATION
       : PERMISSIONS.IOS.LOCATION_WHEN_IN_USE;
 
     const result = await check(permission);
-
-    if (result === RESULTS.GRANTED) {
-      return true;
-    }
+    if (result === RESULTS.GRANTED) return true;
 
     const newStatus = await request(permission);
+    if (newStatus === RESULTS.GRANTED) return true;
 
-    if (newStatus === RESULTS.GRANTED) {
-      return true;
-    } else if (newStatus === RESULTS.BLOCKED) {
-      Alert.alert(
-        'Enable Location Permission',
-        'Please enable location access for this app in settings → Permissions → Location.',
-        [
-          { text: 'Cancel', style: 'cancel' },
-          { text: 'Open Settings', onPress: () => openSettings() },
-        ]
-      );
-      return false;
+    if (newStatus === RESULTS.BLOCKED) {
+      Alert.alert('Enable Location Permission', 'Please enable location in app settings.', [
+        { text: 'Cancel', style: 'cancel' },
+        { text: 'Open Settings', onPress: () => openSettings() },
+      ]);
     } else {
-      Alert.alert('Permission Denied', 'Location permission is required for this feature.');
-      return false;
+      Alert.alert('Permission Denied', 'Location permission is required.');
     }
-  }
+    return false;
+  };
 
-  const getCurrentLocation = async () => {
+  const getCurrentLocation = () => {
     Geolocation.getCurrentPosition(
       (position) => {
         const { latitude, longitude } = position.coords;
-        console.log('User Location:', latitude, longitude);
-        setLocation({ latitude, longitude }); // ✅ Set in context
-        // Alert.alert('Location Received', `Lat: ${latitude}, Lon: ${longitude}`);
+        setLocation({ latitude, longitude });
       },
       (error) => {
-        console.error('Error getting location:', error);
+        console.error('Location error:', error);
         Alert.alert('Location Error', error.message);
       },
       {
@@ -109,11 +101,51 @@ const Welcome = ({ navigation }) => {
     );
   };
 
+  const requestNotificationPermission = async () => {
+    if (Platform.OS === 'android' && Platform.Version >= 33) {
+      const result = await PermissionsAndroid.request(
+        PermissionsAndroid.PERMISSIONS.POST_NOTIFICATIONS
+      );
+
+      if (result !== PermissionsAndroid.RESULTS.GRANTED) {
+        Alert.alert('Permission Denied', 'Push Notification permission is required.');
+        return null;
+      }
+    }
+
+    const authStatus = await messaging().requestPermission();
+    const enabled =
+      authStatus === messaging.AuthorizationStatus.AUTHORIZED ||
+      authStatus === messaging.AuthorizationStatus.PROVISIONAL;
+
+    if (enabled) {
+      try {
+        const token = await messaging().getToken();
+        return token;
+      } catch (error) {
+        console.log('❌ Error getting FCM token:', error);
+        Alert.alert('Notification Error', 'Unable to get notification token');
+      }
+    } else {
+      Alert.alert('Permission Denied', 'Push Notification permission is required.');
+    }
+
+    return null;
+  };
+
+  const handleContinue = () => {
+    if (!deviceToken) {
+      Alert.alert('Please Wait', 'Device token is still being generated...');
+      return;
+    }
+    navigation.navigate('Login', { deviceToken });
+  };
+
   return (
     <TouchableOpacity
       style={styles.container}
       activeOpacity={1}
-      onPress={() => navigation.navigate('Login')}
+      onPress={handleContinue} // ✅ use correct handler
     >
       <Animated.View
         style={[
@@ -126,11 +158,9 @@ const Welcome = ({ navigation }) => {
           },
         ]}
       />
-
       <View style={styles.logoContainer}>
         <Image source={logo} style={styles.logo} />
       </View>
-
       <Animated.Text style={[styles.text, { opacity: textFadeAnim }]}>
         WELCOME
       </Animated.Text>

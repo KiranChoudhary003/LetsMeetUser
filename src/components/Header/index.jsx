@@ -1,17 +1,19 @@
 import { useNavigation } from '@react-navigation/native';
-import React from 'react';
+import React, { useEffect, useState } from 'react';
 import {
     Image, StyleSheet, TouchableOpacity, View, Alert,
+    Platform,
+    StatusBar,
 } from 'react-native';
-import connection from '../../assets/connection.png';
 import profile from '../../assets/profile.png';
-import scanner from '../../assets/scanner.png';
 import Ionicons from 'react-native-vector-icons/Ionicons';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import axios from 'axios';
 
 const Header = () => {
     const navigation = useNavigation();
+
+    const [userProfile, setUserProfile] = useState(null);
 
     const handleQRCode = () => {
         navigation.navigate('QRCode');
@@ -21,11 +23,10 @@ const Header = () => {
         navigation.navigate('UserProfile');
     };
 
-    // 🔄 Fetch user profile and store in AsyncStorage
     const fetchUserProfile = async () => {
         try {
             const token = await AsyncStorage.getItem('token');
-            if (!token) {return;}
+            if (!token) { return; }
 
             const response = await axios.get('https://letsmeet-backend-47lv.onrender.com/api/user-profile', {
                 headers: {
@@ -35,6 +36,7 @@ const Header = () => {
             });
 
             const user = response.data.user;
+            setUserProfile(user);
             await AsyncStorage.setItem('userProfile', JSON.stringify(user));
         } catch (err) {
             console.error('Failed to fetch user profile:', err);
@@ -42,25 +44,44 @@ const Header = () => {
         }
     };
 
+    useEffect(() => {
+        fetchUserProfile();
+    }, []);
+
+    const getProfileImageSource = () => {
+        const photo = userProfile?.photo?.trim();
+        if (!photo) return profile;
+
+        if (photo.startsWith('data:image') || photo.startsWith('http')) {
+            return { uri: photo };
+        }
+
+        return { uri: `https://letsmeet-backend-47lv.onrender.com/${photo}` };
+    };
+
     const handleChatPress = async () => {
-        await fetchUserProfile(); // 👈 fetch profile and cache before navigating
+        await fetchUserProfile();
         navigation.navigate('UserListScreen');
     };
 
     return (
         <View style={styles.customHeader}>
-            <View style={{ flexDirection: 'row', gap: 10 }}>
+            <View style={{ flexDirection: 'row', gap: 20 }}>
                 <TouchableOpacity onPress={handleProfile}>
-                    <Image source={profile} style={styles.profile} />
+                    <Image
+                        source={getProfileImageSource()}
+                        style={styles.profile}
+                        resizeMode="cover"
+                    />
                 </TouchableOpacity>
                 <TouchableOpacity onPress={handleQRCode}>
-                    <Image source={scanner} style={styles.headerstyle} />
+                    <Ionicons name="scan-outline" size={30} color="#f9efef" style={styles.Chatstyle} />
                 </TouchableOpacity>
             </View>
 
-            <View style={styles.headerRight}>
+            <View style={{ flexDirection: 'row', gap: 20 }}>
                 <TouchableOpacity onPress={() => navigation.navigate('Connection')}>
-                    <Image source={connection} style={styles.headerstyle} />
+                    <Ionicons name="people-outline" size={30} color="#f9efef" style={styles.Chatstyle} />
                 </TouchableOpacity>
                 <TouchableOpacity onPress={handleChatPress}>
                     <Ionicons name="chatbubbles-outline" size={30} color="#f9efef" style={styles.Chatstyle} />
@@ -81,22 +102,19 @@ const styles = StyleSheet.create({
         paddingHorizontal: 16,
         paddingVertical: 8,
         width: '100%',
+        height: 60,
+        // paddingTop: Platform.OS === 'android' ? StatusBar.currentHeight : 0,
     },
 
     profile: {
-        width: 35,
-        height: 35,
-    },
-    headerstyle: {
-        width: 45,
-        height: 45,
-    },
-    headerRight: {
-        flexDirection: 'row',
+        width: 30,
+        height: 30,
+        borderRadius: 15
     },
     Chatstyle: {
         justifyContent: 'center',
         marginVertical: 'auto',
+
     },
 
 });

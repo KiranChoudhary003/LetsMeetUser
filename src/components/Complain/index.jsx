@@ -15,7 +15,7 @@ const ComplainCard = ({ description, status, updatedAt }) => {
         backgroundColor = 'rgba(157, 9, 11, 0.96 )';
     } else if (status === 'in_progress') {
         statusColor = '#333';
-        backgroundColor = 'rgba(221, 177, 31)';
+        backgroundColor = 'rgb(221, 177, 31)';
     } else if (status === 'complete') {
         backgroundColor = ' #28a745';
     }
@@ -27,9 +27,12 @@ const ComplainCard = ({ description, status, updatedAt }) => {
                     <Text style={styles.description}>{description}</Text>
                 </View>
                 <View style={styles.date}>
-                    <Text style={{ paddingVertical: 3 }}>
-                        {new Date(updatedAt).toLocaleDateString()}
-                    </Text>
+                    <View>
+                        <Text style={styles.updatedDate}>Updated Date</Text>
+                        <Text style={styles.lastDate}>
+                            {new Date(updatedAt).toLocaleDateString()}
+                        </Text>
+                    </View>
 
                     <View style={[styles.complainStatus, { backgroundColor: backgroundColor }]}>
                         <Text style={[styles.updateStatus, { color: statusColor, fontWeight: 'bold' }]}>
@@ -56,7 +59,7 @@ const Complain = ({ navigation }) => {
 
     useEffect(() => {
         const fetchComplain = async () => {
-            setLoading(true); // 🟡 start spinner
+            setLoading(true);
             try {
                 const token = await AsyncStorage.getItem('token');
                 const response = await axios.get(
@@ -88,7 +91,7 @@ const Complain = ({ navigation }) => {
         }
 
         try {
-            setSaving(true); // 🟢 start spinner
+            setSaving(true);
 
             const token = await AsyncStorage.getItem('token');
             await axios.post(
@@ -120,7 +123,7 @@ const Complain = ({ navigation }) => {
             console.log(err);
             Alert.alert('Error', 'Something went wrong while submitting your complaint.');
         } finally {
-            setSaving(false); // 🔴 stop spinner
+            setSaving(false);
         }
     };
 
@@ -211,7 +214,6 @@ const Complain = ({ navigation }) => {
                     </Modal>
                 )}
 
-                {/* Complaint Modal */}
                 {showModal && (
                     <Modal animationType="slide" transparent onRequestClose={() => setShowModal(false)}>
                         <TouchableOpacity
@@ -328,7 +330,7 @@ const styles = StyleSheet.create({
     },
     modalOverlay: {
         flex: 1,
-        backgroundColor: 'rgba(0,0,0,0.6)', // Semi-transparent black background
+        backgroundColor: 'rgba(0,0,0,0.6)',
         justifyContent: 'center',
         alignItems: 'center',
     },
@@ -386,7 +388,6 @@ const styles = StyleSheet.create({
         flexDirection: 'row',
         justifyContent: 'space-between',
         alignItems: 'center',
-        marginTop: 8,
         width: '100%',
     },
 
@@ -394,7 +395,7 @@ const styles = StyleSheet.create({
         flex: 1,
         justifyContent: 'flex-start',
         alignItems: 'flex-end',
-        top: 160,
+        top: 100,
     },
     filterOptions: {
         backgroundColor: '#34495E',
@@ -413,7 +414,8 @@ const styles = StyleSheet.create({
         backgroundColor: 'rgba(255,255,255,.29)',
         width: 100,
         paddingVertical: 10,
-        borderRadius: 5,
+        paddingLeft : 5,
+        borderRadius: 10,
     },
     filterText: { fontSize: 14, color: '#fff' },
 
@@ -430,5 +432,12 @@ const styles = StyleSheet.create({
         alignItems: 'center',
         marginTop: 50,
     },
-
+    updatedDate: {
+        fontSize: 12,
+        color: "#888"
+    },
+    lastDate: {
+        fontSize: 12,
+        color: "#888"
+    }
 });
