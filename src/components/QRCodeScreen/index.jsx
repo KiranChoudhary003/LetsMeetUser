@@ -1,35 +1,33 @@
-import React, { useEffect, useState } from 'react';
-import { View, Text, StyleSheet, TouchableOpacity, Share, Image } from 'react-native';
+import React, { useEffect, useRef, useState } from 'react';
+import { View, Text, StyleSheet, TouchableOpacity, Image, ActivityIndicator, StatusBar } from 'react-native';
 import QRCode from 'react-native-qrcode-svg';
 import axios from 'axios';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import scanner from '../../assets/vector.png';
+import MaterialIcons from 'react-native-vector-icons/MaterialIcons';
+import RNFS from 'react-native-fs';
+import Share from 'react-native-share';
 
 const QRCodeScreen = ({ navigation }) => {
-
   const [userData, setUserData] = useState({});
+  const [loading, setLoading] = useState(true);
+  const qrCodeRef = useRef();
 
   useEffect(() => {
     const fetchUserData = async () => {
-      console.log('User Data:', userData);
-
       try {
-        console.log('Sending request to login API...');
         const token = await AsyncStorage.getItem('token');
-        console.log('Token from AsyncStorage:', token);
         const response = await axios.get('https://letsmeet-backend-47lv.onrender.com/api/user-profile', {
           headers: {
             'Content-Type': 'application/json',
             'Authorization': `Bearer ${token}`,
           },
-        }
-        );
-        console.log('Login successful, token received:', response.data.token); // ✅ Debug
+        });
 
         const user = response.data.user;
 
         setUserData({
-          // id : user.id,
+          id: user.id,
           firstName: user.first_name,
           lastName: user.last_name,
           email: user.email,
@@ -38,7 +36,8 @@ const QRCodeScreen = ({ navigation }) => {
           preferences: Array.isArray(user.preference) ? user.preference.join(', ') : 'None',
         });
       } catch (error) {
-        console.log(`Error fetching the user data ${error}`);
+      } finally {
+        setLoading(false);
       }
     };
     fetchUserData();
@@ -47,51 +46,69 @@ const QRCodeScreen = ({ navigation }) => {
   const qrValue = userData ? JSON.stringify(userData) : '';
 
   const handleShare = async () => {
-    try {
-      await Share.share({
-        message: qrValue,
-      });
-    } catch (error) {
-      console.log('Share error:', error.message);
-    }
+    if (!qrCodeRef.current) return;
+
+    qrCodeRef.current.toDataURL(async (data) => {
+      try {
+        const path = `${RNFS.CachesDirectoryPath}/qrcode.png`;
+        await RNFS.writeFile(path, data, 'base64');
+
+        const shareOptions = {
+          title: 'Share QR Code',
+          message: 'Here is my QR Code!',
+          url: 'file://' + path,
+          type: 'image/png',
+          failOnCancel: false,
+        };
+
+        await Share.open(shareOptions);
+      } catch (error) {
+      }
+    });
   };
 
   return (
-    <View style={styles.container}>
-      {/* Top Navigation */}
-      <View style={styles.header}>
-        <TouchableOpacity onPress={() => navigation.goBack()}>
-          <Text style={styles.headerBackText}>←</Text>
-        </TouchableOpacity>
-        {/* <TouchableOpacity style={styles.headerTitle} onPress={() => navigation.navigate("Scanner")}> */}
-          <Image source={scanner} />
-          <Text style={{ fontSize: 20, paddingLeft: 10 }}>Scan</Text>
-        {/* </TouchableOpacity> */}
-        <View style={{ width: 24 }} /> {/* Placeholder to center title */}
-      </View>
-
-      {/* QR Card */}
-      <View style={styles.card}>
-        <Text style={styles.cardTitle}>Scan QR</Text>
-        <View style={styles.qrBox}>
-          {userData ? (
-            <QRCode value={qrValue} size={180} />
-          ) : (
-            <Text style={{ color: '#fff' }}>Loading...</Text>
-          )}
+    <>
+      <StatusBar barStyle="light-content" backgroundColor="#34495e" translucent={false} />
+      <View style={styles.container}>
+        <View style={styles.header}>
+          <TouchableOpacity onPress={() => navigation.goBack()}>
+            <Text style={styles.headerBackText}>
+              <MaterialIcons name="arrow-back" size={24} color="#000" />
+            </Text>
+          </TouchableOpacity>
+          <TouchableOpacity
+            style={styles.headerTitle}
+            onPress={() => navigation.replace("Scanner")}
+          >
+            <Image source={scanner} />
+            <Text style={{ fontSize: 20, paddingLeft: 10, color: "#000" }}>Scan</Text>
+          </TouchableOpacity>
+          <View style={{ width: 24 }} />
         </View>
 
-        <View style={styles.buttonRow}>
-          <TouchableOpacity style={styles.button} onPress={() => navigation.goBack()}>
-            <Text style={styles.buttonText}>Done</Text>
-          </TouchableOpacity>
-          <TouchableOpacity style={styles.button} onPress={handleShare}>
-            {/* Replace icon with text */}
-            <Text style={styles.buttonText}>Share</Text>
-          </TouchableOpacity>
+        <View style={styles.card}>
+          <Text style={styles.cardTitle}>Scan QR</Text>
+          <View style={styles.qrBox}>
+            {loading ? (
+              <ActivityIndicator size="large" color="#7680DE" />
+            ) : (
+              <QRCode
+                value={qrValue}
+                size={180}
+                getRef={(c) => (qrCodeRef.current = c)}
+              />
+            )}
+          </View>
+
+          <View style={styles.buttonRow}>
+            <TouchableOpacity style={styles.button} onPress={handleShare}>
+              <Text style={styles.buttonText}>Share</Text>
+            </TouchableOpacity>
+          </View>
         </View>
       </View>
-    </View>
+    </>
   );
 };
 
@@ -121,7 +138,7 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     position: 'fixed',
     top: -40,
-    right: -140,
+    right: -130,
   },
   headerBackText: {
     fontSize: 35,
@@ -129,7 +146,7 @@ const styles = StyleSheet.create({
     color: '#000',
     position: 'fixed',
     top: -45,
-    left: -120,
+    left: -110,
   },
   card: {
     marginTop: 100,
@@ -151,12 +168,16 @@ const styles = StyleSheet.create({
     backgroundColor: '#fff',
     padding: 15,
     borderRadius: 15,
+    alignItems: 'center',
+    justifyContent: 'center',
+    minHeight: 200,
+    minWidth: 200
   },
   buttonRow: {
     flexDirection: 'row',
     marginTop: 110,
     justifyContent: 'space-between',
-    width: '100%',
+    width: '60%',
     gap: 10,
   },
   button: {

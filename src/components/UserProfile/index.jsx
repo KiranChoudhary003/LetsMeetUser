@@ -1,8 +1,8 @@
 import React, { useCallback, useEffect, useState } from 'react';
 import {
     Image, Modal, StyleSheet, Text, TouchableOpacity, View, Alert, Linking,
-    Platform, PermissionsAndroid,
-    Dimensions,
+    Platform, PermissionsAndroid, ScrollView, SafeAreaView, Dimensions,
+    ActivityIndicator,
 } from 'react-native';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import MaterialIcons from 'react-native-vector-icons/MaterialIcons';
@@ -11,21 +11,22 @@ import axios from 'axios';
 import { BlurView } from '@react-native-community/blur';
 import { launchImageLibrary } from 'react-native-image-picker';
 import { useFocusEffect } from '@react-navigation/native';
-import { ActivityIndicator } from 'react-native-paper';
+import FontAwesome from 'react-native-vector-icons/FontAwesome';
+import messaging from '@react-native-firebase/messaging';
+import { CommonActions } from '@react-navigation/native';
 
-const { width: SCREEN_WIDTH } = Dimensions.get('window');
+const { width } = Dimensions.get('window');
 
 const UserProfile = ({ navigation, route }) => {
     const [userProfile, setUserProfile] = useState({});
     const [profileView, setProfileView] = useState(false);
     const [loading, setLoading] = useState(true);
-
     const passedUser = route?.params?.user;
     const isViewingOwnProfile = !passedUser;
 
     const fetchProfileData = async () => {
         try {
-            setLoading(true);
+            setLoading(true)
             const token = await AsyncStorage.getItem('token');
             const response = await axios.get('https://letsmeet-backend-47lv.onrender.com/api/user-profile', {
                 headers: {
@@ -43,7 +44,6 @@ const UserProfile = ({ navigation, route }) => {
                 await AsyncStorage.setItem('user_photo', photoUri);
             }
         } catch (err) {
-            console.error('Error fetching profile:', err);
         }
         finally {
             setLoading(false);
@@ -124,11 +124,30 @@ const UserProfile = ({ navigation, route }) => {
 
     const handleLogout = async () => {
         try {
+            const token = await AsyncStorage.getItem('token');
+
+            await axios.put(
+                'https://letsmeet-backend-47lv.onrender.com/api/user-profile/logout',
+                {},
+                {
+                    headers: {
+                        Authorization: `Bearer ${token}`,
+                    },
+                }
+            );
+
+            await messaging().deleteToken();
             await AsyncStorage.removeItem('token');
             await AsyncStorage.removeItem('user_photo');
-            navigation.replace('Login');
+
+            navigation.dispatch(
+                CommonActions.reset({
+                    index: 0,
+                    routes: [{ name: 'Welcome' }],
+                })
+            );
         } catch (err) {
-            console.log('Logout error:', err);
+            Alert.alert('Error', 'Logout failed. Try again.');
         }
     };
 
@@ -158,100 +177,119 @@ const UserProfile = ({ navigation, route }) => {
     };
 
     return (
-        <View style={styles.container}>
-            <View style={styles.headerContainer}>
-                <View style={styles.header}>
-                    <TouchableOpacity onPress={() => navigation.goBack()}>
-                        <MaterialIcons name="arrow-back" size={24} color="#fff" />
-                    </TouchableOpacity>
-                    <Text style={styles.profileHeader}>Profile</Text>
-                    {isViewingOwnProfile && (
-                        <TouchableOpacity style={styles.profileEdit} onPress={handleProfileEdit}>
-                            <MaterialIcons name="edit" size={24} color="#fff" />
+        <SafeAreaView style={styles.container}>
+            <ScrollView contentContainerStyle={{ flexGrow: 1 }}>
+                <View style={styles.headerContainer}>
+                    <View style={styles.header}>
+                        <TouchableOpacity onPress={() => navigation.goBack()}>
+                            <MaterialIcons name="arrow-back" size={24} color="#fff" />
                         </TouchableOpacity>
-                    )}
-                </View>
-                <View style={styles.userName}>
-                    <Text style={styles.userDetail}>{userProfile.first_name}</Text>
-                    <Text style={styles.userDetail}> {userProfile.last_name}</Text>
-                </View>
-                <View style={styles.userRole}>
-                    <Text style={styles.userDetail}>{userProfile.attendees_role}</Text>
-                </View>
-            </View>
 
-            <TouchableOpacity onPress={() => setProfileView(true)}>
-                <Image source={getProfileImageSource()} style={styles.profile} />
-            </TouchableOpacity>
+                        <Text style={styles.profileHeader}>Profile</Text>
 
-            <Modal visible={profileView} transparent animationType="fade">
-                <BlurView
-                    style={styles.blur}
-                    blurType="light"
-                    blurAmount={15}
-                    reducedTransparencyFallbackColor="white"
-                />
-                <TouchableOpacity style={styles.modalOverlay} onPressOut={() => setProfileView(false)}>
-                    <View style={styles.modalContent}>
-                        <Image
-                            source={getProfileImageSource()}
-                            style={styles.fullImage}
-                            resizeMode="contain"
-                        />
-                        {isViewingOwnProfile && (
-                            <TouchableOpacity style={styles.editIcon} onPress={handleEditPhoto}>
+                        {isViewingOwnProfile ? (
+                            <TouchableOpacity style={styles.profileEdit} onPress={handleProfileEdit}>
                                 <MaterialIcons name="edit" size={24} color="#fff" />
+                            </TouchableOpacity>
+                        ) : (
+                            <View style={{ width: 24 }} />
+                        )}
+                    </View>
+
+                    <View style={styles.userName}>
+                        <Text style={styles.userDetail}>{userProfile.first_name}</Text>
+                        <Text style={styles.userDetail}> {userProfile.last_name}</Text>
+                    </View>
+                    <View style={styles.userRole}>
+                        <Text style={styles.userDetail}>{userProfile.attendees_role}</Text>
+                    </View>
+                </View>
+
+                <View style={styles.profileWrapper}>
+                    <TouchableOpacity onPress={() => setProfileView(true)}>
+                        <Image source={getProfileImageSource()} style={styles.profile} />
+                    </TouchableOpacity>
+                </View>
+
+                <Modal visible={profileView} transparent animationType="fade">
+                    <BlurView style={styles.blur} blurType="light" blurAmount={15} />
+                    <TouchableOpacity style={styles.modalOverlay} onPressOut={() => setProfileView(false)}>
+                        <View style={styles.modalContent}>
+                            <Image
+                                source={getProfileImageSource()}
+                                style={styles.fullImage}
+                                resizeMode="contain"
+                            />
+                            {isViewingOwnProfile && (
+                                <TouchableOpacity style={styles.editIcon} onPress={handleEditPhoto}>
+                                    <MaterialIcons name="edit" size={24} color="#fff" />
+                                </TouchableOpacity>
+                            )}
+                        </View>
+                    </TouchableOpacity>
+                </Modal>
+                {isViewingOwnProfile && loading ? (
+                    <View style={{ marginTop: 150, alignItems: 'center' }}>
+                        <ActivityIndicator size="large" color="#34495e" />
+                        <Text style={{ marginTop: 10, color: '#34495e', fontWeight: '600' }}>Loading Profile...</Text>
+                    </View>
+                ) : (
+                    <View style={styles.user}>
+                        <View style={styles.iconRow}>
+                            {userProfile.email && (
+                                <TouchableOpacity
+                                    onPress={() => Linking.openURL(`mailto:${userProfile.email}`)}
+                                    activeOpacity={0.7}
+                                    style={styles.iconButton}
+                                >
+                                    <MaterialIcons name="email" size={24} color="#34495e" />
+                                </TouchableOpacity>
+                            )}
+
+                            {userProfile.linkedin_url && (
+                                <TouchableOpacity
+                                    onPress={() => Linking.openURL(userProfile.linkedin_url)}
+                                    activeOpacity={0.7}
+                                    style={styles.iconButton}
+                                >
+                                    <FontAwesome name="linkedin" size={24} color="#0A66C2" />
+                                </TouchableOpacity>
+                            )}
+                        </View>
+
+                        <View style={styles.preferenceSection}>
+                            <View style={styles.preferenceRow}>
+                                <Text style={styles.preferenceLabel}>Preferences:</Text>
+
+                                {userProfile.preference?.length > 0 ? null : (
+                                    <Text style={styles.noneText}>None</Text>
+                                )}
+                            </View>
+
+                            {userProfile.preference?.length > 0 && (
+                                <ScrollView
+                                    style={styles.preferenceScroll}
+                                    contentContainerStyle={styles.tagContainer}
+                                    showsVerticalScrollIndicator={false}
+                                >
+                                    {userProfile.preference.map((item, index) => (
+                                        <View key={index} style={styles.tag}>
+                                            <Text style={styles.tagText}>{item}</Text>
+                                        </View>
+                                    ))}
+                                </ScrollView>
+                            )}
+                        </View>
+
+                        {isViewingOwnProfile && (
+                            <TouchableOpacity onPress={handleLogout}>
+                                <Text style={styles.logout}>Logout</Text>
                             </TouchableOpacity>
                         )}
                     </View>
-                </TouchableOpacity>
-            </Modal>
-
-            {isViewingOwnProfile && loading ? (
-                <View style={{ marginTop: 150, alignItems: 'center' }}>
-                    <ActivityIndicator size="large" color="#34495e" />
-                    <Text style={{ marginTop: 10, color: '#34495e', fontWeight: '600' }}>Loading Profile...</Text>
-                </View>
-            ) : (<View style={styles.user}>
-                <View style={styles.userDetails}>
-                    <Text style={styles.data}>E-mail: </Text>
-                    <Text style={styles.details}>{userProfile.email}</Text>
-                </View>
-                <View style={styles.userDetails}>
-                    <Text style={styles.data}>LinkedIn: </Text>
-                    {userProfile.linkedin_url ? (
-                        <TouchableOpacity
-                            onPress={() => {
-                                let url = userProfile.linkedin_url;
-                                if (!url.startsWith('http')) {
-                                    url = 'https://' + url;
-                                }
-                                Linking.openURL(url).catch(err =>
-                                    Alert.alert('Error', 'Failed to open the link.')
-                                );
-                            }}
-                        >
-                            <Text style={styles.linkText}>{userProfile.linkedin_url}</Text>
-                        </TouchableOpacity>
-                    ) : (
-                        <Text style={styles.details}>N/A</Text>
-                    )}
-                </View>
-                <View style={styles.userDetails}>
-                    <Text style={styles.data}>Preferences: </Text>
-                    <Text style={styles.details}>
-                        {userProfile.preference?.length > 0 ? userProfile.preference.join(', ') : 'None'}
-                    </Text>
-                </View>
-
-                {isViewingOwnProfile && (
-                    <TouchableOpacity onPress={handleLogout}>
-                        <Text style={styles.logout}>Logout</Text>
-                    </TouchableOpacity>
                 )}
-            </View>
-            )}
-        </View>
+            </ScrollView>
+        </SafeAreaView>
     );
 };
 
@@ -260,23 +298,147 @@ const styles = StyleSheet.create({
         flex: 1,
         backgroundColor: '#e8effc',
     },
-    profileEdit: {
+    profileWrapper: {
+        alignItems: 'center',
+        marginTop: -50,
+    },
+    profile: {
+        width: width * 0.4,
+        height: width * 0.4,
+        borderRadius: (width * 0.4) / 2,
+        borderWidth: 3,
+        borderColor: '#fff',
+        backgroundColor: '#fff',
+    },
+    headerContainer: {
+        backgroundColor: '#34495e',
+        paddingBottom: 60,
+        borderBottomLeftRadius: 20,
+        borderBottomRightRadius: 20,
+    },
+    header: {
+        flexDirection: 'row',
+        alignItems: 'center',
+        justifyContent: 'space-between',
+        paddingHorizontal: 10,
+        paddingTop: 15,
+        height: 60,
+        position: 'relative',
+    },
+
+    profileHeader: {
         position: 'absolute',
-        right: 20,
+        left: 0,
+        right: 0,
+        textAlign: 'center',
+        fontSize: 24,
+        fontWeight: 'bold',
+        color: '#fff',
+        marginTop: 15
+    },
+    profileEdit: {
+        padding: 4,
+    },
+    userName: {
+        flexDirection: 'row',
+        justifyContent: 'center',
+        paddingTop: 35,
+        flexWrap: 'wrap',
+    },
+    userDetail: {
+        color: '#fff',
+        textAlign: 'center',
+        fontSize: 18,
+        fontWeight: '500',
+    },
+    userRole: {
+        alignItems: 'center',
+        marginTop: 8,
+    },
+    user: {
+        marginTop: 30,
+        paddingHorizontal: 20,
+    },
+    userDetails: {
+        flexDirection: 'row',
+        marginBottom: 15,
+        flexWrap: 'wrap',
+    },
+    data: {
+        fontWeight: 'bold',
+        fontSize: 15,
+        color: '#222',
+    },
+    details: {
+        fontSize: 15,
+        color: '#333',
+        flexShrink: 1,
+    },
+    linkedinCard: {
+        flexDirection: 'row',
+        alignItems: 'center',
+        backgroundColor: '#f0f4fa',
+        paddingVertical: 10,
+        paddingHorizontal: 15,
+        borderRadius: 10,
+        marginBottom: 15,
+        gap: 10,
+        elevation: 1,
+    },
+    linkedinText: {
+        color: '#0A66C2',
+        fontSize: 15,
+        fontWeight: '500',
+        textDecorationLine: 'underline',
+    },
+    infoCard: {
+        flexDirection: 'row',
+        alignItems: 'center',
+        backgroundColor: '#fff',
+        borderRadius: 10,
+        padding: 15,
+        marginBottom: 15,
+        elevation: 2,
+        shadowColor: '#000',
+        shadowOpacity: 0.1,
+        shadowRadius: 5,
+        shadowOffset: { width: 0, height: 2 },
+        gap: 15,
+    },
+    infoText: {
+        flex: 1,
+    },
+    infoLabel: {
+        fontSize: 14,
+        color: '#555',
+        fontWeight: '600',
+        marginBottom: 4,
+    },
+    infoValue: {
+        fontSize: 15,
+        color: '#34495e',
+    },
+    linkedinValue: {
+        fontSize: 15,
+        color: '#0A66C2',
+        textDecorationLine: 'underline',
+        fontWeight: '500',
+    },
+    logout: {
+        backgroundColor: '#34495e',
+        borderRadius: 8,
+        color: 'white',
+        textAlign: 'center',
+        fontSize: 17,
+        paddingVertical: 10,
+        marginTop: 30,
+        alignSelf: 'center',
+        width: 150,
     },
     fullImage: {
         width: 300,
         height: 300,
         borderRadius: 150,
-    },
-    editIcon: {
-        position: 'absolute',
-        bottom: 25,
-        right: 25,
-        backgroundColor: '#333',
-        borderRadius: 20,
-        padding: 6,
-        elevation: 3,
     },
     modalOverlay: {
         flex: 1,
@@ -304,86 +466,83 @@ const styles = StyleSheet.create({
         height: 300,
         borderRadius: 150,
     },
-    headerContainer: {
-        backgroundColor: '#34495e',
-        height: 318,
-        borderBottomLeftRadius: 20,
-        borderBottomRightRadius: 20,
+    editIcon: {
+        position: 'absolute',
+        bottom: 25,
+        right: 25,
+        backgroundColor: '#333',
+        borderRadius: 20,
+        padding: 6,
+        elevation: 3,
     },
-    userName: {
+    iconRow: {
         flexDirection: 'row',
         justifyContent: 'center',
-        paddingTop: 80,
+        gap: 20,
+        marginBottom: 20,
     },
-    userDetail: {
-        color: '#fff',
-        textAlign: 'center',
-        marginTop: 10,
-        fontSize: 18,
-    },
-    userRole: {
+
+    iconButton: {
+        width: 50,
+        height: 50,
+        borderRadius: 25,
+        backgroundColor: '#fff',
+        justifyContent: 'center',
         alignItems: 'center',
+        shadowColor: '#000',
+        shadowOffset: { width: 0, height: 2 },
+        shadowOpacity: 0.1,
+        shadowRadius: 4,
+        elevation: 4,
     },
-    profile: {
-        width: 150,
-        height: 150,
-        borderRadius: 75,
-        position: 'absolute',
-        top: -70,
-        left: SCREEN_WIDTH / 2 - 75,
+
+    preferenceSection: {
+        marginTop: 10,
     },
-    userDetails: {
+
+    preferenceRow: {
         flexDirection: 'row',
-        paddingLeft: 30,
-        paddingTop: 20,
+        alignItems: 'center',
+        flexWrap: 'wrap',
+        marginBottom: 8,
+    },
+
+    preferenceLabel: {
+        fontSize: 15,
+        fontWeight: 'bold',
+        color: '#222',
+    },
+
+    noneText: {
+        fontSize: 15,
+        color: '#555',
+        marginLeft: 6,
+    },
+
+    preferenceScroll: {
+        maxHeight: 150,
+    },
+
+    tagContainer: {
+        flexDirection: 'row',
         flexWrap: 'wrap',
     },
-    details: {
-        color: '#333',
-        fontSize: 15,
-        flexShrink: 1,
-        flex: 1,
+
+    tag: {
+        backgroundColor: '#dbeafe',
+        paddingHorizontal: 12,
+        paddingVertical: 6,
+        borderRadius: 20,
+        marginRight: 8,
+        marginBottom: 8,
     },
-    data: {
-        fontWeight: 'bold',
-        fontSize: 15,
-        marginRight: 5,
-    },
-    logout: {
-        width: SCREEN_WIDTH * 0.5,
-        height: 39,
-        backgroundColor: '#34495e',
-        borderRadius: 10,
-        color: 'white',
-        textAlign: 'center',
-        fontSize: 20,
-        fontWeight: 'bold',
-        alignSelf: 'center',
-        marginTop: 50,
-        paddingVertical: 5,
-    },
-    user: {
-        marginTop: 100,
-    },
-    header: {
-        flexDirection: 'row',
-        alignItems: 'center',
-        marginTop: 20,
-        marginHorizontal: 10,
-        justifyContent: 'space-between',
-    },
-    linkText: {
-        color: '#007BFF',
-        textDecorationLine: 'underline',
+
+    tagText: {
+        color: '#1e3a8a',
         fontSize: 14,
-        width : 280
+        fontWeight: '500',
     },
-    profileHeader: {
-        color: 'white',
-        fontSize: 25,
-        marginLeft: 10,
-        flex: 1,
-    },
+
 });
 
 export default UserProfile;

@@ -1,14 +1,34 @@
 import React, { useEffect, useState } from 'react';
-import { ActivityIndicator, Alert, Image, Modal, StyleSheet, Text, TextInput, TouchableOpacity, View } from 'react-native';
+import {
+    ActivityIndicator,
+    Alert,
+    Image,
+    Keyboard,
+    KeyboardAvoidingView,
+    Modal,
+    StyleSheet,
+    Text,
+    TextInput,
+    TouchableOpacity,
+    TouchableWithoutFeedback,
+    View,
+    Platform,
+    Linking,
+    StatusBar,
+    Dimensions,
+} from 'react-native';
 import logo from '../../assets/logo.png';
 import axios from 'axios';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import MaterialIcons from 'react-native-vector-icons/MaterialIcons';
 
+const { width } = Dimensions.get('window');
+const INPUT_WIDTH = width * 0.85;
+
 const Login = ({ navigation, route }) => {
+
     const { deviceToken } = route.params || {};
 
-    const [error, setError] = useState('');
     const [login, setLogin] = useState({ email: '', password: '' });
     const [loading, setLoading] = useState(false);
     const [forgotModalVisible, setForgotModalVisible] = useState(false);
@@ -20,63 +40,32 @@ const Login = ({ navigation, route }) => {
         const checkToken = async () => {
             const token = await AsyncStorage.getItem('token');
             if (token) {
-                navigation.navigate('Layout', { screen: 'Home' });
-                return;
+                navigation.replace('Layout', { screen: 'Home' });
             }
         };
-
         checkToken();
     }, []);
 
     const handleSubmit = async () => {
         setLoading(true);
-        console.log('Login attempt with:', login);
-
-        if (!deviceToken) {
-            Alert.alert('Missing Device Token', 'Please restart the app and try again.');
-            setLoading(false);
-            return;
-        }
 
         try {
-            console.log('Sending request to login API...');
-            console.log("🔐 Sending login payload:", {
-                email: login.email,
-                password: login.password,
-                deviceToken,
-            });
             const response = await axios.post(
                 'https://letsmeet-backend-47lv.onrender.com/api/user-profile/login',
                 {
                     email: login.email,
                     password: login.password,
-                    device_token: deviceToken
+                    device_token: deviceToken ?? '', 
                 },
                 {
-                    headers: {
-                        'Content-Type': 'application/json',
-                    },
+                    headers: { 'Content-Type': 'application/json' },
                     timeout: 10000,
                 }
             );
 
-            console.log('Login successful, token received:', response.data.token);
             await AsyncStorage.setItem('token', response.data.token);
-            console.log('Token saved to AsyncStorage');
-            console.log('Device token received:', deviceToken);
-            navigation.navigate('Layout', { screen: 'Home' });
+            navigation.replace('Layout', { screen: 'Home' });
         } catch (error) {
-            if (error.response) {
-                console.log('Server responded with status:', error.response.status);
-                console.log('Response data:', error.response.data);
-            } else if (error.request) {
-                console.log('Request made but no response received:', error.request);
-            } else {
-                console.log('Something else went wrong:', error.message);
-            }
-            console.log('Full error:', error);
-
-            setError('Login failed. Check email or password.');
             Alert.alert('Error', 'Login failed. Check email or password');
         } finally {
             setLoading(false);
@@ -89,142 +78,160 @@ const Login = ({ navigation, route }) => {
             return;
         }
 
+        const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+        if (!emailRegex.test(forgotEmail.toLowerCase())) {
+            Alert.alert('Invalid Email', 'Please enter a valid email address.');
+            return;
+        }
+
         setForgotLoading(true);
         try {
-            const response = await axios.post(
+            await axios.post(
                 'https://letsmeet-backend-47lv.onrender.com/api/user-profile/forgot-password',
-                { email: forgotEmail },
-                {
-                    headers: {
-                        'Content-Type': 'application/json',
-                    },
-                }
+                { email: forgotEmail.toLowerCase() },
+                { headers: { 'Content-Type': 'application/json' } }
             );
 
             Alert.alert('Success', 'Password reset link sent to your email.');
             setForgotModalVisible(false);
             setForgotEmail('');
-        } catch (err) {
-            console.log("Forgot Password Error:", err);
-            Alert.alert('Error', 'Failed to send reset link.');
+        } catch (error) {
+            Alert.alert('Error', 'No account found with this email.');
         } finally {
             setForgotLoading(false);
         }
-    }
+    };
 
     return (
-        <View style={styles.container}>
-            <Image source={logo} style={styles.logo} />
-            <Text style={styles.text}>Let's Meet</Text>
-
-            <TextInput
-                style={styles.input}
-                placeholder="E-mail"
-                placeholderTextColor="#888"
-                keyboardType="email-address"
-                autoCapitalize="none"
-                value={login.email}
-                onChangeText={(text) => setLogin({ ...login, email: text })}
-            />
-
-            <View style={styles.passwordInputContainer}>
-                <TextInput
-                    style={styles.passwordInput}
-                    placeholder="Password"
-                    placeholderTextColor="#888"
-                    secureTextEntry={!showPassword}
-                    value={login.password}
-                    onChangeText={(text) => setLogin({ ...login, password: text })}
-                />
-                <TouchableOpacity onPress={() => setShowPassword(!showPassword)} style={styles.eyeIcon}>
-                    <MaterialIcons
-                        name={showPassword ? 'visibility-off' : 'visibility'}
-                        size={22}
-                        color="#888"
-                    />
-                </TouchableOpacity>
-            </View>
-
-            <View style={styles.password}>
-                <View style={styles.checkContainer}>
-                    {/* <CheckBox
-                        value={agree}
-                        onValueChange={setAgree}
-                        tintColors={{ true: '#7680DE', false: 'gray' }}
-                    /> */}
-                    {/* <Text style={styles.remember}>Remember me</Text> */}
-                    {/* <TouchableOpacity onPress={() => setShowPassword(!showPassword)}>
-                        {showPassword ? <FaEyeSlash /> : <FaEye />}
-                    </TouchableOpacity> */}
-                </View>
-
-                <TouchableOpacity onPress={() => setForgotModalVisible(true)}>
-                    <Text style={styles.forgotPassword}>Forgot password?</Text>
-                </TouchableOpacity>
-
-            </View>
-
-            {loading ? (
-                <ActivityIndicator size="large" color="#7680DE" />
-            ) : (
-                <TouchableOpacity style={styles.button} onPress={handleSubmit}>
-                    <Text style={styles.buttonText}>Log-in</Text>
-                </TouchableOpacity>
-            )}
-
-            <View style={styles.signUpSection}>
-                <Text style={styles.account}>Don't have an account?</Text>
-                <TouchableOpacity onPress={() => navigation.navigate('SignUp')}>
-                    <Text style={styles.signUp}>sign up</Text>
-                </TouchableOpacity>
-            </View>
-            <Modal
-                animationType="slide"
-                transparent
-                visible={forgotModalVisible}
-                onRequestClose={() => setForgotModalVisible(false)}
+        <>
+            <StatusBar barStyle="light-content" backgroundColor="#34495e" translucent={false} />
+            <KeyboardAvoidingView
+                style={styles.container}
+                behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
             >
-                <View style={styles.modalContainer}>
-                    <View style={styles.modalBox}>
-                        <Text style={styles.modalTitle}>Reset Password</Text>
+                <TouchableWithoutFeedback onPress={Keyboard.dismiss}>
+                    <View style={styles.inner}>
+                        <Image source={logo} style={styles.logo} />
+                        <Text style={styles.text}>Let's Meet</Text>
+
                         <TextInput
                             style={styles.input}
-                            placeholder="Enter your email"
+                            placeholder="E-mail"
                             placeholderTextColor="#888"
                             keyboardType="email-address"
                             autoCapitalize="none"
-                            value={forgotEmail}
-                            onChangeText={setForgotEmail}
-                        />
-                        {forgotLoading ? (
-                            <ActivityIndicator size="small" color="#7680DE" />
+                            value={login.email}
+                            onChangeText={(text) =>
+                                setLogin({ ...login, email: text.toLowerCase() })
+                            } />
+
+                        <View style={styles.passwordInputContainer}>
+                            <TextInput
+                                style={styles.passwordInput}
+                                placeholder="Password"
+                                placeholderTextColor="#888"
+                                secureTextEntry={!showPassword}
+                                value={login.password}
+                                onChangeText={(text) => setLogin({ ...login, password: text })}
+                            />
+                            <TouchableOpacity onPress={() => setShowPassword(!showPassword)} style={styles.eyeIcon}>
+                                <MaterialIcons
+                                    name={showPassword ? 'visibility-off' : 'visibility'}
+                                    size={22}
+                                    color="#888"
+                                />
+                            </TouchableOpacity>
+                        </View>
+
+                        <View style={styles.password}>
+                            <TouchableOpacity onPress={() => setForgotModalVisible(true)}>
+                                <Text style={styles.forgotPassword}>Forgot password?</Text>
+                            </TouchableOpacity>
+                        </View>
+
+                        {loading ? (
+                            <ActivityIndicator size="large" color="#7680DE" />
                         ) : (
-                            <TouchableOpacity style={styles.button} onPress={handleForgotPassword}>
-                                <Text style={styles.buttonText}>Submit</Text>
+                            <TouchableOpacity style={styles.button} onPress={handleSubmit}>
+                                <Text style={styles.buttonText}>Log-in</Text>
                             </TouchableOpacity>
                         )}
-                        <TouchableOpacity onPress={() => setForgotModalVisible(false)}>
-                            <Text style={{ marginTop: 10, color: 'gray' }}>Cancel</Text>
-                        </TouchableOpacity>
+
+                        <View style={styles.signUpSection}>
+                            <Text style={styles.account}>Don't have an account?</Text>
+                            <TouchableOpacity onPress={() => navigation.navigate('SignUp', { deviceToken })}>
+                                <Text style={styles.signUp}>sign up</Text>
+                            </TouchableOpacity>
+                        </View>
+
+                        <Modal
+                            animationType="slide"
+                            transparent
+                            visible={forgotModalVisible}
+                            onRequestClose={() => setForgotModalVisible(false)}
+                        >
+                            <View style={styles.modalContainer}>
+                                <View style={styles.modalBox}>
+                                    <Text style={styles.modalTitle}>Reset Password</Text>
+                                    <TextInput
+                                        style={styles.input}
+                                        placeholder="Enter your email"
+                                        placeholderTextColor="#888"
+                                        keyboardType="email-address"
+                                        autoCapitalize="none"
+                                        value={forgotEmail}
+                                        onChangeText={(text) => setForgotEmail(text.toLowerCase())}
+                                    />
+                                    {forgotLoading ? (
+                                        <ActivityIndicator size="small" color="#7680DE" />
+                                    ) : (
+                                        <TouchableOpacity style={styles.button} onPress={handleForgotPassword}>
+                                            <Text style={styles.buttonText}>Submit</Text>
+                                        </TouchableOpacity>
+                                    )}
+                                    <TouchableOpacity onPress={() => setForgotModalVisible(false)}>
+                                        <Text style={{ marginTop: 10, color: 'gray' }}>Cancel</Text>
+                                    </TouchableOpacity>
+                                </View>
+                            </View>
+                        </Modal>
                     </View>
+                </TouchableWithoutFeedback>
+
+                <View style={styles.contactContainer}>
+                    <Text style={styles.contactText}>
+                        Having trouble?
+                        <Text
+                            style={styles.contactLink}
+                            onPress={() =>
+                                Linking.openURL(
+                                    'mailto:kiranchoudhary9180@gmail.com?subject=Login Issue'
+                                )
+                            }
+                        >
+                            {' '}Contact Us
+                        </Text>
+                    </Text>
                 </View>
-            </Modal>
-        </View>
+            </KeyboardAvoidingView>
+        </>
     );
-}
+};
 
 const styles = StyleSheet.create({
     container: {
         flex: 1,
-        alignItems: 'center',
         backgroundColor: '#e8effc',
-        position: 'relative',
+        justifyContent: 'space-between',
+    },
+    inner: {
+        alignItems: 'center',
     },
     logo: {
-        width: 210,
-        height: 209,
+        width: width * 0.55,
+        height: width * 0.55,
         resizeMode: 'contain',
-        borderRadius: 105,
+        borderRadius: (width * 0.55) / 2,
         marginTop: 80,
         marginBottom: 30,
     },
@@ -235,8 +242,8 @@ const styles = StyleSheet.create({
         marginBottom: 10,
     },
     input: {
-        width: 313,
-        height: 43,
+        width: INPUT_WIDTH,
+        height: 45,
         backgroundColor: '#f7faff',
         margin: 10,
         borderRadius: 5,
@@ -246,29 +253,18 @@ const styles = StyleSheet.create({
         borderWidth: 1,
     },
     password: {
-        width: '75%',
-    },
-    checkContainer: {
-        flexDirection: 'row',
-        alignItems: 'center',
-        alignSelf: 'flex-start',
-    },
-
-    remember: {
-        fontSize: 12,
-        color: '#000',
+        width: '100%',
     },
     forgotPassword: {
         fontSize: 13,
         color: '#7f8c8d',
-        marginLeft: "60%"
+        marginLeft: '60%',
     },
     button: {
-        width: 194,
-        height: 39,
+        width: width * 0.5,
+        height: 45,
         backgroundColor: '#34495e',
         borderRadius: 10,
-        display: 'flex',
         justifyContent: 'center',
         alignItems: 'center',
         marginTop: 40,
@@ -280,8 +276,8 @@ const styles = StyleSheet.create({
     },
     signUpSection: {
         marginTop: 10,
-        display: 'flex',
         flexDirection: 'row',
+        color: "#000"
     },
     signUp: {
         fontSize: 14,
@@ -296,8 +292,8 @@ const styles = StyleSheet.create({
     passwordInputContainer: {
         flexDirection: 'row',
         alignItems: 'center',
-        width: 313,
-        height: 43,
+        width: INPUT_WIDTH,
+        height: 45,
         backgroundColor: '#f7faff',
         margin: 10,
         borderRadius: 5,
@@ -319,7 +315,7 @@ const styles = StyleSheet.create({
         alignItems: 'center',
     },
     modalBox: {
-        width: '85%',
+        width: '90%',
         backgroundColor: '#fff',
         padding: 24,
         borderRadius: 12,
@@ -331,6 +327,18 @@ const styles = StyleSheet.create({
         marginBottom: 12,
         fontWeight: 'bold',
         color: '#34495e',
+    },
+    contactContainer: {
+        alignItems: 'center',
+        marginBottom: 10,
+    },
+    contactText: {
+        color: '#555',
+        fontSize: 14,
+    },
+    contactLink: {
+        color: '#7680DE',
+        fontWeight: 'bold',
     },
 });
 

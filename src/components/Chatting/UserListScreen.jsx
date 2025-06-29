@@ -7,18 +7,19 @@ import {
     Alert,
     FlatList,
     Image, Platform,
+    StatusBar,
     StyleSheet,
     Text,
     TextInput,
     TouchableOpacity,
     View,
 } from 'react-native';
-import { SafeAreaView } from 'react-native-safe-area-context'; // ✅ added
+import { SafeAreaView } from 'react-native-safe-area-context';
 import Entypo from 'react-native-vector-icons/Entypo';
 import Ionicons from 'react-native-vector-icons/Ionicons';
 import { io } from 'socket.io-client';
 import profile from '../../assets/profile.png';
-
+import MaterialIcons from 'react-native-vector-icons/MaterialIcons';
 
 const API_URL = 'https://letsmeet-backend-47lv.onrender.com/api';
 
@@ -51,7 +52,6 @@ export default function UserListScreen() {
                 .sort((a, b) => new Date(b.last_message_time) - new Date(a.last_message_time));
             setUsers(filtered);
         } catch (error) {
-            console.error('Error fetching connections:', error);
         } finally {
             setLoading(false);
         }
@@ -79,7 +79,7 @@ export default function UserListScreen() {
                             return {
                                 ...user,
                                 last_message: msg.content,
-                                last_message_time: msg.sent_at, // Make sure this is a valid date string
+                                last_message_time: msg.sent_at,
                                 unread_count: (user.unread_count || 0) + 1,
                             };
                         }
@@ -95,7 +95,7 @@ export default function UserListScreen() {
                     prevUsers.map(user =>
                         user.chat_id === chat_id ? { ...user, unread_count: 0 } : user
                     )
-                        .sort((a, b) => new Date(b.last_message_time) - new Date(a.last_message_time)) // ✅ Keep sorted
+                        .sort((a, b) => new Date(b.last_message_time) - new Date(a.last_message_time))
                 );
             });
 
@@ -125,13 +125,12 @@ export default function UserListScreen() {
                 const result = await res.json();
                 if (res.ok) {
                     setUsers(prev => prev.filter(user => user.id !== item.id));
-                    alert('Chat deleted successfully');
+                    Alert.alert('Chat deleted successfully');
                 } else {
-                    alert(result.message || 'Failed to delete chat');
+                    Alert.alert(result.message || 'Failed to delete chat');
                 }
             } catch (err) {
-                console.error('Delete error:', err);
-                alert('Error deleting chat');
+                Alert.alert('Error deleting chat');
             }
         };
 
@@ -192,57 +191,60 @@ export default function UserListScreen() {
     };
 
     return (
-        <SafeAreaView style={styles.safeContainer}>
-            <View style={styles.headingContainer}>
-                <View style={styles.headerRow}>
-                    <TouchableOpacity onPress={() => navigation.goBack()} style={styles.backButton}>
-                        <Ionicons name="arrow-back-outline" size={24} color="white" />
-                    </TouchableOpacity>
-                    <Text style={styles.title}>Connections</Text>
+        <>
+            <StatusBar barStyle="light-content" backgroundColor="#34495e" />
+            <SafeAreaView style={styles.safeContainer}>
+                <View style={styles.headingContainer}>
+                    <View style={styles.headerRow}>
+                        <TouchableOpacity onPress={() => navigation.goBack()} style={styles.backButton}>
+                            <Ionicons name="arrow-back-outline" size={24} color="white" />
+                        </TouchableOpacity>
+                        <Text style={styles.title}>Connections</Text>
+                    </View>
                 </View>
-            </View>
-            <View style={styles.searchBar}>
-                <Entypo name="magnifying-glass" size={24} color="black" />
-                <TextInput
-                    placeholder="Search users..."
-                    onChangeText={setSearchQuery}
-                    value={searchQuery}
-                    placeholderTextColor="#888"
-                />
-            </View>
-            {loading ? (
-                <View style={{ alignItems: 'center', marginTop: 30 }}>
-                    <ActivityIndicator size="large" color="#007AFF" />
-                    <Text style={{ marginTop: 10, color: '#555', fontSize: 14 }}>
-                        Loading your connections...
-                    </Text>
+                <View style={styles.searchBar}>
+                    <Entypo name="magnifying-glass" size={24} color="black" />
+                    <TextInput
+                        placeholder="Search users..."
+                        onChangeText={setSearchQuery}
+                        value={searchQuery}
+                        placeholderTextColor="#888"
+                    />
                 </View>
-            ) : filteredUsers.length === 0 ? (
-                <Text style={styles.noUsersText}>No users found</Text>
-            ) : (
-                <FlatList
-                    data={filteredUsers}
-                    keyExtractor={(item) => item.id.toString()}
-                    renderItem={renderItem}
-                    contentContainerStyle={{ paddingBottom: 20 }}
-                    extraData={users} // ✅ Ensures FlatList re-renders on state update
-                    keyboardShouldPersistTaps="handled" // ✅ Allows input + touch to work smoothly
-                    ListEmptyComponent={
-                        !loading && (
-                            <Text style={styles.noUsersText}>No users found</Text>
-                        )
-                    }
-                />
+                {loading ? (
+                    <View style={{ alignItems: 'center', marginTop: 30 }}>
+                        <ActivityIndicator size="large" color="#007AFF" />
+                        <Text style={{ marginTop: 10, color: '#555', fontSize: 14 }}>
+                            Loading your connections...
+                        </Text>
+                    </View>
+                ) : filteredUsers.length === 0 ? (
+                    <Text style={styles.noUsersText}>No users found</Text>
+                ) : (
+                    <FlatList
+                        data={filteredUsers}
+                        keyExtractor={(item) => item.id.toString()}
+                        renderItem={renderItem}
+                        contentContainerStyle={{ paddingBottom: 20 }}
+                        extraData={users}
+                        keyboardShouldPersistTaps="handled"
+                        ListEmptyComponent={
+                            !loading && (
+                                <Text style={styles.noUsersText}>No users found</Text>
+                            )
+                        }
+                    />
 
-            )}
+                )}
 
-            <TouchableOpacity
-                style={styles.floatingButton}
-                onPress={() => navigation.navigate('UserFriendList')}
-            >
-                <Ionicons name="add" size={30} color="#fff" />
-            </TouchableOpacity>
-        </SafeAreaView>
+                <TouchableOpacity
+                    style={styles.floatingButton}
+                    onPress={() => navigation.navigate('UserFriendList')}
+                >
+                    <MaterialIcons name="add" size={30} color="#fff" />
+                </TouchableOpacity>
+            </SafeAreaView>
+        </>
     );
 }
 
@@ -255,13 +257,15 @@ const styles = StyleSheet.create({
     },
     safeContainer: {
         flex: 1,
-        backgroundColor: '#f9fafe',
+        backgroundColor: '#e8effc',
+        height: 70
     },
 
     headingContainer: {
         backgroundColor: '#34495E',
         paddingVertical: 12,
         paddingHorizontal: 16,
+        height: 70
     },
 
     headerRow: {
@@ -295,7 +299,8 @@ const styles = StyleSheet.create({
         backgroundColor: '#fff',
         padding: 16,
         borderRadius: 16,
-        marginBottom: 12,
+        marginBottom: 5,
+        marginHorizontal: 12,
         shadowColor: '#000',
         shadowOffset: { width: 0, height: 3 },
         shadowOpacity: 0.1,
@@ -356,7 +361,7 @@ const styles = StyleSheet.create({
         position: 'absolute',
         bottom: 30,
         right: 20,
-        backgroundColor: '#007AFF',
+        backgroundColor: '#34495e',
         width: 60,
         height: 60,
         borderRadius: 30,

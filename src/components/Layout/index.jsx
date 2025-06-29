@@ -14,12 +14,10 @@ const Layout = () => {
   return (
     <SafeAreaView style={styles.safeArea} edges={['top', 'bottom']}>
       <View style={styles.container}>
-        {/* ✅ Header is inside safe area now */}
         <View style={styles.header}>
           <Header />
         </View>
 
-        {/* ✅ Body with stack navigation */}
         <View style={styles.body}>
           <InnerStack.Navigator screenOptions={{ headerShown: false }}>
             <InnerStack.Screen name="Home" component={Home} />
@@ -28,7 +26,6 @@ const Layout = () => {
           </InnerStack.Navigator>
         </View>
 
-        {/* ✅ Footer also respects safe area */}
         <View style={styles.footer}>
           <BottomTab />
         </View>
@@ -42,7 +39,7 @@ export default Layout;
 const styles = StyleSheet.create({
   safeArea: {
     flex: 1,
-    backgroundColor: '#fff', // match your app's background
+    backgroundColor: '#fff', 
   },
   container: {
     flex: 1,

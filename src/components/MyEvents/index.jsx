@@ -1,6 +1,5 @@
 import React, { useRef, useEffect, useState, useContext } from 'react';
-import { Easing, Image } from 'react-native';
-
+import { Alert } from 'react-native';
 import {
   ScrollView,
   Text,
@@ -9,46 +8,15 @@ import {
   StatusBar,
   TouchableOpacity,
   StyleSheet,
-  ImageBackground,
   Animated,
-  ToastAndroid,
   Pressable,
   ActivityIndicator,
 } from 'react-native';
-import profile from '../../assets/profile.png';
-import scanner from '../../assets/scanner.png';
-import connection from '../../assets/connection.png';
-import chat from '../../assets/chat.png';
 import { LocationContext } from '../LocationContext/LocationContext';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import axios from 'axios';
 
 const backgroundImage = require('../../assets/bgg.png');
-
-const Card = ({ children, style }) => (
-  <View style={[styles.card, style]}>{children}</View>
-);
-
-const Button = ({ children, onPress, variant }) => {
-  return (
-    <TouchableOpacity
-      onPress={onPress}
-      style={[
-        styles.button,
-        variant === 'ghost' ? styles.ghostButton : styles.filledButton,
-      ]}
-    >
-      <Text
-        style={[
-          styles.buttonText,
-          variant === 'ghost' ? styles.ghostText : styles.filledText,
-        ]}
-      >
-        {children}
-      </Text>
-    </TouchableOpacity>
-  );
-};
 
 const EventCard = ({
   id,
@@ -94,7 +62,7 @@ const EventCard = ({
       Math.cos(lat2 * Math.PI / 180) *
       Math.sin(dLon / 2) ** 2;
     const c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a));
-    return R * c; // distance in KM
+    return R * c;
   };
 
   const checkProximityAndDate = () => {
@@ -104,7 +72,7 @@ const EventCard = ({
 
     if (userLat != null && userLon != null && lat != null && lon != null) {
       const distance = calculateDistance(userLat, userLon, lat, lon);
-      setWithinRange(distance <= 0.5); // Within 500 meters
+      setWithinRange(distance <= 0.5);
     } else {
       setWithinRange(false);
     }
@@ -143,7 +111,7 @@ const EventCard = ({
               alignItems: 'center',
               justifyContent: 'center',
             }}>
-              <Text style={{ color: '#fff', fontWeight: 'bold', fontSize: 12 }}>✔ Checked In</Text>
+              <Text style={{ color: '#fff', fontWeight: 'bold', fontSize: 12 }}>Checked In</Text>
             </View>
           ) : isFutureEvent ? (
             <TouchableOpacity
@@ -151,7 +119,11 @@ const EventCard = ({
                 if (withinRange) {
                   onCheckIn();
                 } else {
-                  ToastAndroid.show('You are outside the check-in range', ToastAndroid.SHORT);
+                  Alert.alert(
+                    'Out of Range',
+                    'You are outside the check-in range. Please move closer to the event location to check in.',
+                    [{ text: 'OK' }]
+                  );
                 }
               }}
               style={{
@@ -165,7 +137,18 @@ const EventCard = ({
             >
               <Text style={{ color: '#fff', fontWeight: 'bold', fontSize: 12 }}>Check-In</Text>
             </TouchableOpacity>
-          ) : null}
+          ) : (
+            <View style={{
+              backgroundColor: '#e74c3c',
+              paddingHorizontal: 12,
+              paddingVertical: 4,
+              borderRadius: 20,
+              alignItems: 'center',
+              justifyContent: 'center',
+            }}>
+              <Text style={{ color: '#fff', fontWeight: 'bold', fontSize: 12 }}>Not Checked In</Text>
+            </View>
+          )}
         </View>
       </Animated.View>
     </Pressable>
@@ -221,28 +204,8 @@ const EventsScreen = ({ navigation }) => {
 
   const [eventData, setEventData] = useState([]);
   const [loading, setLoading] = useState(true);
-
   const { location } = useContext(LocationContext);
-
   const events = groupEventsByMonth(eventData);
-  const animatedPosition = useRef(new Animated.Value(0)).current;
-
-  const handleQRCode = () => {
-    navigation.navigate('QRCode');
-  };
-
-  const handleProfile = () => {
-    navigation.navigate('UserProfile');
-  };
-
-  const moveToRight = () => {
-    Animated.timing(animatedPosition, {
-      toValue: 120,
-      duration: 500,
-      easing: Easing.out(Easing.exp),
-      useNativeDriver: true,
-    }).start();
-  };
 
   const handleCheckIn = async (eventId) => {
     try {
@@ -257,18 +220,23 @@ const EventsScreen = ({ navigation }) => {
           },
         }
       );
-      ToastAndroid.show('Checked-In Successfully!', ToastAndroid.SHORT);
-
-      // Optionally refetch events to update UI
+      Alert.alert(
+        'Check-In Successful',
+        'You have successfully checked in to the event.',
+        [{ text: 'OK' }]
+      );
       fetchUpcomingEvents();
     } catch (error) {
-      console.error('Check-in error:', error.response?.data || error.message || error);
-      ToastAndroid.show(error.response?.data?.message || 'Check-In failed!', ToastAndroid.SHORT);
+      Alert.alert(
+        'Check-In Failed',
+        error.response?.data?.message || 'Something went wrong. Please try again.',
+        [{ text: 'OK' }]
+      );
     }
   };
 
   const fetchUpcomingEvents = async () => {
-    setLoading(true); // Show spinner
+    setLoading(true);
     try {
       const token = await AsyncStorage.getItem('token');
       const response = await axios.post(
@@ -307,81 +275,103 @@ const EventsScreen = ({ navigation }) => {
       }));
 
       setEventData(formattedEvents);
+
+      await AsyncStorage.setItem('eventsData', JSON.stringify(formattedEvents));
+
     } catch (error) {
-      console.error('Error fetching events:', error.message || error);
     } finally {
-      setLoading(false); // Hide spinner
+      setLoading(false);
     }
   };
 
 
+
   useEffect(() => {
-    fetchUpcomingEvents();
+    const loadData = async () => {
+      try {
+        const cached = await AsyncStorage.getItem('eventsData');
+        if (cached) {
+          const data = JSON.parse(cached);
+          setEventData(data);
+          setLoading(false);
+        }
+
+        fetchUpcomingEvents();
+      } catch (error) {
+        fetchUpcomingEvents();
+      }
+    };
+
+    loadData();
   }, []);
+
 
   return (
     <View source={backgroundImage} style={styles.background} resizeMode="cover">
       <SafeAreaView style={styles.container}>
 
         <StatusBar barStyle="dark-content" />
-        {loading ? (
-          <View style={{ flex: 1, justifyContent: 'center', alignItems: 'center' }}>
-            <Text style={{ marginBottom: 10, fontSize: 16, color: '#555' }}>Loading your events...</Text>
-            <ActivityIndicator size="large" color="#34495e" />
+        <View style={styles.header}>
+          <View style={styles.eventsLabel}>
+            <Text style={styles.eventsLabelText}>My Events</Text>
           </View>
-        ) : (
-          <ScrollView contentContainerStyle={styles.scrollView}>
-            <View style={styles.header}>
-              <View style={styles.eventsLabel}>
-                <Text style={styles.eventsLabelText}>My Events</Text>
-              </View>
+        </View>
+        <ScrollView contentContainerStyle={styles.scrollView}>
+          {loading ? (
+            <View style={{ flex: 1, justifyContent: 'center', alignItems: 'center' }}>
+              <Text style={{ marginBottom: 10, fontSize: 16, color: '#555' }}>Loading your events...</Text>
+              <ActivityIndicator size="large" color="#34495e" />
             </View>
+          ) : (
+            <>
+              {
+                Object.entries(events).map(([month, data]) => (
+                  <View key={month} style={styles.monthSection}>
+                    <Text style={styles.monthTitle}>{`${data.monthName} ${data.year}`}</Text>
 
-            {Object.entries(events).map(([month, data]) => (
-              <View key={month} style={styles.monthSection}>
-                <Text style={styles.monthTitle}>{`${data.monthName} ${data.year}`}</Text>
+                    {data.events.map((event) => (
+                      <EventCard
+                        key={event.id}
+                        id={event.id}
+                        name={event.name}
+                        organizer={event.organizer}
+                        start_date={event.start_date}
+                        end_date={event.end_date}
+                        lat={event.lat}
+                        lon={event.lon}
+                        already_checked_in={event.already_checked_in}
+                        userLat={location?.latitude}
+                        userLon={location?.longitude}
+                        onCheckIn={() => handleCheckIn(event.id)}
+                        onPress={() =>
+                          navigation.navigate('MyEventsDescription', {
+                            id: event.id,
+                            name: event.name,
+                            organizer: event.organizer,
+                            description: event.description,
+                            start_date: event.start_date,
+                            end_date: event.end_date,
+                            lat: event.lat,
+                            lon: event.lon,
+                            webUrl: event.webUrl,
+                            banner: event.banner,
+                            isRegistered: event.is_registered,
+                            checkInAvailable: event.check_in_available,
+                            already_checked_in: event.already_checked_in,
+                            totalConnections: event.total_connections,
+                            approvedRequests: event.approved_requests,
+                            pendingRequests: event.pending_requests,
+                            fetchUpcomingEvents,
+                          })}
+                      />
+                    ))}
+                  </View>
+                ))
 
-                {data.events.map((event) => (
-                  <EventCard
-                    key={event.id}
-                    id={event.id}
-                    name={event.name}
-                    organizer={event.organizer}
-                    start_date={event.start_date}
-                    end_date={event.end_date}
-                    lat={event.lat}
-                    lon={event.lon}
-                    already_checked_in={event.already_checked_in}
-                    userLat={location?.latitude}
-                    userLon={location?.longitude}
-                    onCheckIn={() => handleCheckIn(event.id)}
-                    onPress={() =>
-                      navigation.navigate('MyEventsDescription', {
-                        id: event.id,
-                        name: event.name,
-                        organizer: event.organizer,
-                        description: event.description,
-                        start_date: event.start_date,
-                        end_date: event.end_date,
-                        lat: event.lat,
-                        lon: event.lon,
-                        webUrl: event.webUrl,
-                        banner: event.banner,
-                        isRegistered: event.is_registered,
-                        checkInAvailable: event.check_in_available,
-                        already_checked_in: event.already_checked_in,
-                        totalConnections: event.total_connections,
-                        approvedRequests: event.approved_requests,
-                        pendingRequests: event.pending_requests,
-                        fetchUpcomingEvents,
-                      })}
-                  />
-                ))}
-              </View>
-            ))}
-
-          </ScrollView>
-        )}
+              }
+            </>
+          )}
+        </ScrollView>
       </SafeAreaView>
 
     </View>
@@ -432,32 +422,28 @@ const styles = StyleSheet.create({
   eventsLabel: {
     paddingHorizontal: 16,
     paddingVertical: 6,
-    width: 156,
-    height: 41,
-    marginLeft: 85,
     borderWidth: 1,
     borderColor: '#888',
     borderRadius: 20,
     backgroundColor: '#34495e',
-    alignSelf: 'center',
     shadowColor: '#000',
     shadowOffset: { width: 0, height: 2 },
     shadowOpacity: 0.1,
     shadowRadius: 4,
     elevation: 3,
-    marginBottom: 16,
   },
   eventsLabelText: {
     fontSize: 18,
-    marginLeft: 20,
     fontWeight: 'bold',
     color: '#fff',
   },
   header: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
+    width: '100%',
     alignItems: 'center',
-    marginBottom: 16,
+    justifyContent: 'center',
+    paddingTop: 16,
+    paddingBottom: 8,
+    paddingHorizontal: 16,
   },
   button: {
     paddingHorizontal: 12,
@@ -467,12 +453,8 @@ const styles = StyleSheet.create({
   monthTitle: {
     fontSize: 25,
     fontWeight: 'bold',
-    // fontStyle: "italic",
     color: '#333',
     marginBottom: 8,
-  },
-  filledButton: {
-    backgroundColor: '#4F46E5S',
   },
   ghostButton: {
     backgroundColor: 'transparent',
@@ -490,8 +472,8 @@ const styles = StyleSheet.create({
     marginBottom: 24,
   },
   card: {
-    width: '100%',       // ✅ Full width of parent
-    minHeight: 90,       // ✅ Use minHeight instead of fixed height
+    width: '100%',
+    minHeight: 90,
     marginVertical: 6,
     borderBottomWidth: 0.5,
   },
@@ -523,8 +505,6 @@ const styles = StyleSheet.create({
     justifyContent: 'space-around',
     alignItems: 'center',
     paddingHorizontal: 20,
-    // borderTopLeftRadius: 20,
-    // borderTopRightRadius: 20,
     overflow: 'visible',
   },
   centerCircle: {

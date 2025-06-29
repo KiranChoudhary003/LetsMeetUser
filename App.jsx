@@ -4,15 +4,13 @@ import { createStackNavigator } from '@react-navigation/stack';
 import { enableScreens } from 'react-native-screens';
 import { SafeAreaProvider } from 'react-native-safe-area-context';
 import { StatusBar } from 'react-native';
-
 import Welcome from './src/components/Welcome';
 import Login from './src/components/Login';
 import SignUp from './src/components/SignUp';
-// import Profile from './src/components/Profile';
 import Edit from './src/components/Edit';
 import QRCodeScreen from './src/components/QRCodeScreen';
 import Description from './src/components/Description';
-import Connection from './src/components/Connection';
+import Connection from './src/components/Connections';
 import UserProfile from './src/components/UserProfile';
 import MyEventsDesciption from './src/components/MyEventsDesciption';
 import Layout from './src/components/Layout';

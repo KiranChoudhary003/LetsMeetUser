@@ -1,5 +1,3 @@
-// ✅ Enhanced ChatPage with Read Receipt Support + Date Grouping + Auto Scroll + Focus-aware Read
-
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { BlurView } from '@react-native-community/blur';
 import { CommonActions, useIsFocused, useNavigation } from '@react-navigation/native';
@@ -190,7 +188,6 @@ const ChatPage = ({ route }) => {
             isMounted = false;
             if (socketRef.current) { socketRef.current.disconnect(); }
         };
-        // eslint-disable-next-line react-hooks/exhaustive-deps
     }, [peer_id]);
 
     useEffect(() => {
@@ -331,13 +328,10 @@ const ChatPage = ({ route }) => {
         const offsetY = event.nativeEvent.contentOffset.y;
         scrollOffsetY.current = offsetY;
 
-        // Check if near top (inverted = true → top = offsetY < threshold)
         if (offsetY < 100 && !loadingOlder) {
             loadOlderMessages();
         }
     };
-
-
 
     const loadOlderMessages = () => {
         if (loadingOlder) return;
@@ -358,136 +352,131 @@ const ChatPage = ({ route }) => {
                 return combined;
             });
 
-            // Delay ending spinner until messages rendered
             setTimeout(() => {
                 setLoadingOlder(false);
             }, 50);
-        }, 800); // Simulate network delay
+        }, 800); 
     };
 
-
-
     return (
-        <SafeAreaView style={styles.container}>
+        <>
             <StatusBar
                 translucent
-                backgroundColor="transparent"
+                backgroundColor="#34495e"
                 barStyle={Platform.OS === 'ios' ? 'default' : 'dark-content'}
             />
+            <SafeAreaView style={styles.container}>
 
-            <View style={{ flex: 1 }}>
-                {loading ? (
-                    <View style={{ flex: 1, justifyContent: 'center', alignItems: 'center' }}>
-                        <ActivityIndicator size="large" color="#007aff" />
-                        <Text style={{ color: '#555', fontSize: 16, marginTop: 10 }}>
-                            Loading chat messages...
-                        </Text>
-                    </View>
-                ) : (
-                    <>
-                        <View style={styles.chatHeader}>
-                            <TouchableOpacity onPress={handleBack} style={styles.backButton}>
-                                <Ionicons name="arrow-back" size={24} color="#ffffff" />
-                            </TouchableOpacity>
-                            <TouchableOpacity onPress={() => setModalVisible(true)}>
-                                <Image
-                                    source={peerAvatar ? { uri: peerAvatar } : profile}
-                                    style={styles.headerAvatar}
-                                />
-                            </TouchableOpacity>
-                            <Text style={styles.headerName}>
-                                {`${peer.first_name} ${peer.last_name}`}
+                <View style={{ flex: 1 }}>
+                    {loading ? (
+                        <View style={{ flex: 1, justifyContent: 'center', alignItems: 'center' }}>
+                            <ActivityIndicator size="large" color="#007aff" />
+                            <Text style={{ color: '#555', fontSize: 16, marginTop: 10 }}>
+                                Loading chat messages...
                             </Text>
                         </View>
+                    ) : (
+                        <>
+                            <View style={styles.chatHeader}>
+                                <TouchableOpacity onPress={handleBack} style={styles.backButton}>
+                                    <Ionicons name="arrow-back" size={24} color="#ffffff" />
+                                </TouchableOpacity>
+                                <TouchableOpacity onPress={() => setModalVisible(true)}>
+                                    <Image
+                                        source={peerAvatar ? { uri: peerAvatar } : profile}
+                                        style={styles.headerAvatar}
+                                    />
+                                </TouchableOpacity>
+                                <Text style={styles.headerName}>
+                                    {`${peer.first_name} ${peer.last_name}`}
+                                </Text>
+                            </View>
 
-                        <View style={{ flex: 1 }}>
-                            {loadingOlder && (
-                                <View style={{ alignItems: 'center', paddingVertical: 6 }}>
-                                    <ActivityIndicator size="large" color="#007aff" />
-                                </View>
-                            )}
-                            <FlashList
-                                ref={flatListRef}
-                                data={[...groupedMessages].reverse()}
-                                renderItem={renderItem}
-                                keyExtractor={(item, index) =>
-                                    item.id ? item.id.toString() : `date-${index}`
-                                }
-                                contentContainerStyle={styles.messagesContainer}
-                                estimatedItemSize={80}
-                                inverted
-                                initialNumToRender={20}
-                                maxToRenderPerBatch={10}
-                                windowSize={7}
-                                removeClippedSubviews={false}
-                                keyboardShouldPersistTaps="handled"
-                                scrollEventThrottle={16}
-                                onScroll={handleScroll}
-                                extraData={loadingOlder}
-                            />
-
-                            {/* ✅ Floating input animated independently */}
-                            <View
-                                style={[
-                                    styles.floatingInputContainer,
-                                    {
-                                        paddingBottom: isKeyboardVisible
-                                            ? keyboardHeight + (Platform.OS === 'ios' ? 0 : 10)
-                                            : Platform.OS === 'ios'
-                                                ? 20
-                                                : 10,
-                                    },
-                                ]}
-                            >
-                                {isTyping && <Text style={styles.typingText}>Typing...</Text>}
-                                <View style={{ flexDirection: 'row', alignItems: 'center' }}>
-                                    <View style={styles.inputWrapper}>
-                                        <TextInput
-                                            style={styles.input}
-                                            value={inputText}
-                                            onChangeText={handleTyping}
-                                            placeholder="Type a message..."
-                                            placeholderTextColor="#888"
-                                            multiline
-                                        />
+                            <View style={{ flex: 1 }}>
+                                {loadingOlder && (
+                                    <View style={{ alignItems: 'center', paddingVertical: 6 }}>
+                                        <ActivityIndicator size="large" color="#007aff" />
                                     </View>
-                                    <TouchableOpacity onPress={sendMessage} style={styles.sendButton}>
-                                        <FontAwesome name="send" size={22} color="#fff" />
-                                    </TouchableOpacity>
+                                )}
+                                <FlashList
+                                    ref={flatListRef}
+                                    data={[...groupedMessages].reverse()}
+                                    renderItem={renderItem}
+                                    keyExtractor={(item, index) =>
+                                        item.id ? item.id.toString() : `date-${index}`
+                                    }
+                                    contentContainerStyle={styles.messagesContainer}
+                                    estimatedItemSize={80}
+                                    inverted
+                                    initialNumToRender={20}
+                                    maxToRenderPerBatch={10}
+                                    windowSize={7}
+                                    removeClippedSubviews={false}
+                                    keyboardShouldPersistTaps="handled"
+                                    scrollEventThrottle={16}
+                                    onScroll={handleScroll}
+                                    extraData={loadingOlder}
+                                />
+
+                                <View
+                                    style={[
+                                        styles.floatingInputContainer,
+                                        {
+                                            paddingBottom: isKeyboardVisible
+                                                ? keyboardHeight + (Platform.OS === 'ios' ? 0 : 10)
+                                                : Platform.OS === 'ios'
+                                                    ? 20
+                                                    : 10,
+                                        },
+                                    ]}
+                                >
+                                    {isTyping && <Text style={styles.typingText}>Typing...</Text>}
+                                    <View style={{ flexDirection: 'row', alignItems: 'center' }}>
+                                        <View style={styles.inputWrapper}>
+                                            <TextInput
+                                                style={styles.input}
+                                                value={inputText}
+                                                onChangeText={handleTyping}
+                                                placeholder="Type a message..."
+                                                placeholderTextColor="#888"
+                                                multiline
+                                            />
+                                        </View>
+                                        <TouchableOpacity onPress={sendMessage} style={styles.sendButton}>
+                                            <FontAwesome name="send" size={22} color="#fff" />
+                                        </TouchableOpacity>
+                                    </View>
                                 </View>
                             </View>
-                        </View>
 
-                    </>
-                )}
-            </View>
-            {/* Modal stays same */}
-            <Modal
-                transparent
-                visible={isModalVisible}
-                animationType="fade"
-                onRequestClose={() => setModalVisible(false)}
-            >
-                <View style={styles.modalOverlay}>
-                    <BlurView
-                        style={StyleSheet.absoluteFill}
-                        blurType="light"
-                        blurAmount={10}
-                        reducedTransparencyFallbackColor="white"
-                    />
-                    <TouchableOpacity onPress={() => setModalVisible(false)} style={styles.modalContent}>
-                        <Image
-                            source={peerAvatar ? { uri: peerAvatar } : profile}
-                            style={styles.zoomedImage}
-                            resizeMode="contain"
-                        />
-                    </TouchableOpacity>
+                        </>
+                    )}
                 </View>
-            </Modal>
-        </SafeAreaView >
+                <Modal
+                    transparent
+                    visible={isModalVisible}
+                    animationType="fade"
+                    onRequestClose={() => setModalVisible(false)}
+                >
+                    <View style={styles.modalOverlay}>
+                        <BlurView
+                            style={StyleSheet.absoluteFill}
+                            blurType="light"
+                            blurAmount={10}
+                            reducedTransparencyFallbackColor="white"
+                        />
+                        <TouchableOpacity onPress={() => setModalVisible(false)} style={styles.modalContent}>
+                            <Image
+                                source={peerAvatar ? { uri: peerAvatar } : profile}
+                                style={styles.zoomedImage}
+                                resizeMode="contain"
+                            />
+                        </TouchableOpacity>
+                    </View>
+                </Modal>
+            </SafeAreaView >
+        </>
     );
-
-
 };
 
 const styles = StyleSheet.create({
@@ -500,11 +489,11 @@ const styles = StyleSheet.create({
     chatHeader: {
         flexDirection: 'row',
         alignItems: 'center',
-        paddingVertical: 10,
         paddingHorizontal: 16,
         backgroundColor: '#34495e',
         borderBottomWidth: 1,
         borderColor: '#e6e6e6',
+        height : 70
     },
     backButton: {
         marginRight: 10,
@@ -566,7 +555,7 @@ const styles = StyleSheet.create({
         color: '#ffffff',
     },
     typingText: {
-        paddingLeft: 14, // Adjusted from 54
+        paddingLeft: 14, 
         paddingBottom: 4,
         fontStyle: 'italic',
         color: '#444',
@@ -606,11 +595,6 @@ const styles = StyleSheet.create({
         backgroundColor: '#34495e',
         borderRadius: 20,
     },
-    sendButtonText: {
-        color: '#fff',
-        fontSize: 16,
-        fontWeight: 'bold',
-    },
     modalOverlay: {
         flex: 1,
         justifyContent: 'center',
@@ -632,4 +616,3 @@ const styles = StyleSheet.create({
 });
 
 export default ChatPage;
-

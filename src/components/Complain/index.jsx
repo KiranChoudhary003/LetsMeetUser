@@ -8,16 +8,20 @@ import MaterialIcons from 'react-native-vector-icons/MaterialIcons';
 
 const ComplainCard = ({ description, status, updatedAt }) => {
 
-    let statusColor = '#ddd';
+    const formattedStatus = status.replace(/_/g, ' ').toUpperCase();
+    let statusColor = '#000';
     let backgroundColor = '#fff';
+    let borderColor = "#e74c3c"
 
     if (status === 'pending') {
-        backgroundColor = 'rgba(157, 9, 11, 0.96 )';
+        backgroundColor = '#f8c8c1';
     } else if (status === 'in_progress') {
         statusColor = '#333';
-        backgroundColor = 'rgb(221, 177, 31)';
+        backgroundColor = '#fcf3cf';
+        borderColor = "#f1c40f"
     } else if (status === 'complete') {
-        backgroundColor = ' #28a745';
+        backgroundColor = '#bdf4c1';
+        borderColor = "#07bc0c"
     }
 
     return (
@@ -34,9 +38,9 @@ const ComplainCard = ({ description, status, updatedAt }) => {
                         </Text>
                     </View>
 
-                    <View style={[styles.complainStatus, { backgroundColor: backgroundColor }]}>
+                    <View style={[styles.complainStatus, { backgroundColor: backgroundColor }, { borderColor: borderColor }]}>
                         <Text style={[styles.updateStatus, { color: statusColor, fontWeight: 'bold' }]}>
-                            {status.toUpperCase()}
+                            {formattedStatus}
                         </Text>
                     </View>
                 </View>
@@ -56,33 +60,43 @@ const Complain = ({ navigation }) => {
     const [loading, setLoading] = useState(true);
     const [saving, setSaving] = useState(false);
 
-
     useEffect(() => {
-        const fetchComplain = async () => {
-            setLoading(true);
-            try {
-                const token = await AsyncStorage.getItem('token');
-                const response = await axios.get(
-                    'https://letsmeet-backend-47lv.onrender.com/api/user-profile/reports',
-                    {
-                        headers: {
-                            Authorization: `Bearer ${token}`,
-                            'Content-Type': 'application/json',
-                        },
-                    }
-                );
-                const data = response.data.reports;
+        const loadData = async () => {
+            const cached = await AsyncStorage.getItem('complaintsData');
+            if (cached) {
+                const data = JSON.parse(cached);
                 setAllComplains(data);
                 applyFilter(data, selectedFilter);
-            } catch (error) {
-                console.log(error);
-            } finally {
-                setLoading(false);
             }
+            fetchComplains();
         };
-        fetchComplain();
+        loadData();
     }, []);
 
+
+
+    const fetchComplains = async () => {
+        setLoading(true);
+        try {
+            const token = await AsyncStorage.getItem('token');
+            const response = await axios.get(
+                'https://letsmeet-backend-47lv.onrender.com/api/user-profile/reports',
+                {
+                    headers: {
+                        Authorization: `Bearer ${token}`,
+                        'Content-Type': 'application/json',
+                    },
+                }
+            );
+            const data = response.data.reports;
+            setAllComplains(data);
+            applyFilter(data, selectedFilter);
+            await AsyncStorage.setItem('complaintsData', JSON.stringify(data));
+        } catch (error) {
+        } finally {
+            setLoading(false);
+        }
+    };
 
     const submitComplain = async () => {
         if (!newComplain.trim()) {
@@ -92,8 +106,8 @@ const Complain = ({ navigation }) => {
 
         try {
             setSaving(true);
-
             const token = await AsyncStorage.getItem('token');
+
             await axios.post(
                 'https://letsmeet-backend-47lv.onrender.com/api/user-profile/submit-report',
                 { Description: newComplain },
@@ -109,18 +123,8 @@ const Complain = ({ navigation }) => {
             setNewComplain('');
             setShowModal(false);
 
-            const response = await axios.get(
-                'https://letsmeet-backend-47lv.onrender.com/api/user-profile/reports',
-                {
-                    headers: {
-                        Authorization: `Bearer ${token}`,
-                        'Content-Type': 'application/json',
-                    },
-                }
-            );
-            setComplains(response.data.reports);
+            await fetchComplains();
         } catch (err) {
-            console.log(err);
             Alert.alert('Error', 'Something went wrong while submitting your complaint.');
         } finally {
             setSaving(false);
@@ -128,9 +132,11 @@ const Complain = ({ navigation }) => {
     };
 
 
+
     useEffect(() => {
         applyFilter(allComplains, selectedFilter);
-    }, [selectedFilter]);
+    }, [selectedFilter, allComplains]);
+
 
     const applyFilter = (data, filterStatus) => {
         if (!filterStatus) {
@@ -150,6 +156,16 @@ const Complain = ({ navigation }) => {
     return (
         <View style={styles.background}>
             <SafeAreaView style={styles.container}>
+                <View style={styles.header}>
+                    <Text style={styles.desk}>Complain Desk</Text>
+                </View>
+
+                <View style={styles.complain}>
+                    <Text style={styles.myComplain}>My Complain</Text>
+                    <TouchableOpacity onPress={() => setFilter(true)}>
+                        <Ionicons name="filter" size={16} color="#000" />
+                    </TouchableOpacity>
+                </View>
 
                 {loading ? (
                     <View style={styles.loaderContainer}>
@@ -158,26 +174,22 @@ const Complain = ({ navigation }) => {
                     </View>
                 ) : (
                     <ScrollView contentContainerStyle={styles.scrollView}>
-                        <View style={styles.header}>
-                            <Text style={styles.desk}>Complain Desk</Text>
-                        </View>
-
-                        <View style={styles.complain}>
-                            <Text style={styles.myComplain}>My Complain</Text>
-                            <TouchableOpacity onPress={() => setFilter(true)}>
-                                <Ionicons name="filter" size={16} color="#000" />
-                            </TouchableOpacity>
-                        </View>
 
                         <View style={styles.complainCard}>
-                            {complains.map((complain) => (
-                                <ComplainCard
-                                    key={complain.id}
-                                    description={complain.description}
-                                    status={complain.status}
-                                    updatedAt={complain.updated_at}
-                                />
-                            ))}
+                            {complains.length === 0 ? (
+                                <Text style={{ textAlign: 'center', color: '#666', marginTop: 20 }}>
+                                    No complaints found.
+                                </Text>
+                            ) : (
+                                complains.map((complain) => (
+                                    <ComplainCard
+                                        key={complain.id}
+                                        description={complain.description}
+                                        status={complain.status}
+                                        updatedAt={complain.updated_at}
+                                    />
+                                ))
+                            )}
                         </View>
                     </ScrollView>
                 )}
@@ -186,7 +198,6 @@ const Complain = ({ navigation }) => {
                     <MaterialIcons name="add" size={40} color="#fff" style={styles.add} />
                 </TouchableOpacity>
 
-                {/* Filter Modal */}
                 {filter && (
                     <Modal animationType="slide" transparent visible={filter} onRequestClose={() => setFilter(false)}>
                         <TouchableOpacity
@@ -226,6 +237,7 @@ const Complain = ({ navigation }) => {
                                 <TextInput
                                     style={styles.input}
                                     placeholder="Enter the complaint"
+                                    placeholderTextColor="#888"
                                     value={newComplain}
                                     onChangeText={setNewComplain}
                                 />
@@ -261,19 +273,35 @@ const styles = StyleSheet.create({
         padding: 16,
     },
     header: {
-        display: 'flex',
+        paddingTop: 16,
+        paddingBottom: 8,
+        paddingHorizontal: 16,
+        position: 'relative',
         alignItems: 'center',
-        marginBottom: 20,
     },
     desk: {
-        fontSize: 25,
+        fontSize: 18,
         fontWeight: 'bold',
+        color: "#fff",
+        backgroundColor: "#34495e",
+        paddingHorizontal: 16,
+        paddingVertical: 6,
+        borderWidth: 1,
+        borderColor: '#888',
+        borderRadius: 20,
+        backgroundColor: '#34495e',
+        shadowColor: '#000',
+        shadowOffset: { width: 0, height: 2 },
+        shadowOpacity: 0.1,
+        shadowRadius: 4,
+        elevation: 3,
     },
     complain: {
         display: 'flex',
         flexDirection: 'row',
         justifyContent: 'space-between',
         marginVertical: 10,
+        marginHorizontal: 20,
     },
     myComplain: {
         fontSize: 20,
@@ -346,15 +374,17 @@ const styles = StyleSheet.create({
         fontSize: 18,
         fontWeight: '600',
         marginBottom: 10,
+        color: "#34495e"
     },
     input: {
-        height: 100,
+        height: 45,
         borderColor: '#ccc',
         borderWidth: 1,
         borderRadius: 10,
         textAlignVertical: 'top',
         padding: 10,
         marginBottom: 15,
+        color: "#000"
     },
     saveButton: {
         backgroundColor: '#34495e',
@@ -395,7 +425,7 @@ const styles = StyleSheet.create({
         flex: 1,
         justifyContent: 'flex-start',
         alignItems: 'flex-end',
-        top: 100,
+        top: 160,
     },
     filterOptions: {
         backgroundColor: '#34495E',
@@ -404,6 +434,7 @@ const styles = StyleSheet.create({
         paddingHorizontal: 12,
         marginHorizontal: 16,
         elevation: 50,
+        width : 150
     },
     filterOption: {
         paddingVertical: 10,
@@ -412,7 +443,7 @@ const styles = StyleSheet.create({
     },
     filterActive: {
         backgroundColor: 'rgba(255,255,255,.29)',
-        width: 100,
+        width: "100%",
         paddingVertical: 10,
         paddingLeft : 5,
         borderRadius: 10,

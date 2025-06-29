@@ -1,10 +1,16 @@
-import React, { useEffect, useState } from 'react';
-import { StyleSheet, Text, TextInput, TouchableOpacity, View, ActivityIndicator } from 'react-native';
-import { Checkbox, IconButton, Menu, Modal, Provider } from 'react-native-paper';
-import { ScrollView } from 'react-native-gesture-handler';
+import React, { useEffect, useState, useRef } from 'react';
+import {
+    StyleSheet, Text, TextInput, TouchableOpacity, View,
+    ActivityIndicator, StatusBar, ScrollView,
+    KeyboardAvoidingView,
+    Platform,
+    Alert
+} from 'react-native';
+import { Checkbox, Menu, Modal, Provider } from 'react-native-paper';
 import axios from 'axios';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import MaterialIcons from 'react-native-vector-icons/MaterialIcons';
+import Ionicons from 'react-native-vector-icons/Ionicons';
 
 const Edit = ({ route, navigation }) => {
     const { first_name, last_name, email, linkedin_url, attendees_role, preference } = route.params;
@@ -16,10 +22,30 @@ const Edit = ({ route, navigation }) => {
     const [newJobRole, setNewJobRole] = useState(attendees_role);
     const [selectedRoles, setSelectedRoles] = useState(Array.isArray(preference) ? preference : []);
     const [roles, setRoles] = useState([]);
+
     const [visible, setVisible] = useState(false);
     const [modalVisible, setModalVisible] = useState(false);
     const [isSaving, setIsSaving] = useState(false);
+    const [anchorLayout, setAnchorLayout] = useState(null);
+    const [inputWidth, setInputWidth] = useState(0);
 
+    const roleRef = useRef();
+
+    useEffect(() => {
+        const fetchRoles = async () => {
+            try {
+                const response = await axios.get(
+                    'https://letsmeet-backend-47lv.onrender.com/api/user-profile/roles',
+                    { headers: { 'Content-Type': 'application/json' } }
+                );
+                if (response.data.roles && Array.isArray(response.data.roles)) {
+                    setRoles(response.data.roles);
+                }
+            } catch (error) {
+            }
+        };
+        fetchRoles();
+    }, []);
 
     const toggleRole = (role) => {
         setSelectedRoles((prevSelectedRoles) =>
@@ -33,32 +59,9 @@ const Edit = ({ route, navigation }) => {
         setSelectedRoles(selectedRoles.filter((r) => r !== role));
     };
 
-    useEffect(() => {
-        const fetchRoles = async () => {
-            try {
-                const response = await axios.get('https://letsmeet-backend-47lv.onrender.com/api/user-profile/roles', {
-                    headers: { 'Content-Type': 'application/json' },
-                });
-
-                console.log('Roles response:', response.data);
-
-                if (response.data.roles && Array.isArray(response.data.roles)) {
-                    setRoles(response.data.roles);
-                } else {
-                    console.warn('Roles response not in expected format.');
-                }
-            } catch (error) {
-                console.error('Failed to fetch roles:', error);
-            }
-        };
-
-        fetchRoles();
-    }, []);
-
     const handleEdit = async () => {
-        if (isSaving) { return; }
+        if (isSaving || modalVisible) return;
         setIsSaving(true);
-
         try {
             const token = await AsyncStorage.getItem('token');
             const response = await axios.put(
@@ -80,83 +83,125 @@ const Edit = ({ route, navigation }) => {
             );
 
             if (response.status === 200) {
-                alert('Profile updated successfully');
+                Alert.alert('Profile updated successfully');
                 navigation.goBack();
             }
         } catch (error) {
-            console.log('Error updating profile:', error.response?.data || error.message);
-            alert('Failed to update profile');
+            Alert.alert('Failed to update profile');
         } finally {
             setIsSaving(false);
         }
     };
 
-    useEffect(() => {
-        console.log('Initial selected preferences:', preference);
-    }, []);
-
     return (
         <Provider>
-            <View style={styles.container}>
-                <TouchableOpacity onPress={() => navigation.goBack()}>
-                    <Text style={styles.backArrow}><MaterialIcons name="arrow-back" size={24} color="#000" /></Text>
-                </TouchableOpacity>
-                <Text style={styles.text}>Edit Account</Text>
-                <TextInput style={styles.input} placeholder="First Name" placeholderTextColor="#888" value={newFirstName} onChangeText={setNewFirstName} />
-                <TextInput style={styles.input} placeholder="Last Name" placeholderTextColor="#888" value={newLastName} onChangeText={setNewLastName} />
-                <TextInput style={styles.input} placeholder="E-mail" placeholderTextColor="#888" value={newEmail} onChangeText={setNewEmail} />
-                <TextInput style={styles.input} placeholder="LinkedIn URL" placeholderTextColor="#888" value={newLinkedin} onChangeText={setNewLinkedin} />
-
-                <Menu
-                    visible={visible}
-                    onDismiss={() => setVisible(false)}
-                    anchor={
-                        <TouchableOpacity onPress={() => setVisible(true)} style={styles.input}>
-                            <Text style={styles.anchorText}>{newJobRole || 'Select Role'}</Text>
+            <StatusBar barStyle="dark-content" backgroundColor="#34495e" />
+            <KeyboardAvoidingView
+                style={{ flex: 1 }}
+                behavior={Platform.OS === 'ios' ? 'padding' : undefined}
+                keyboardVerticalOffset={Platform.OS === 'ios' ? 40 : 0}
+            >
+                <View style={styles.container}>
+                    <View style={styles.headingContainer}>
+                        <TouchableOpacity onPress={() => navigation.goBack()} style={styles.backButton}>
+                            <Ionicons name="arrow-back-outline" size={24} color="white" />
                         </TouchableOpacity>
-                    }
-                >
-                    {roles.map((role) => (
-                        <Menu.Item
-                            key={role}
-                            onPress={() => {
-                                setNewJobRole(role);
-                                setVisible(false);
+                        <Text style={styles.title}>Edit Profile</Text>
+                        <View style={styles.backButton} />
+                    </View>
+
+                    <TextInput style={styles.input} placeholder="First Name" placeholderTextColor="#888" value={newFirstName} onChangeText={setNewFirstName} />
+                    <TextInput style={styles.input} placeholder="Middle Name(Optional)" placeholderTextColor="#888" />
+                    <TextInput style={styles.input} placeholder="Last Name" placeholderTextColor="#888" value={newLastName} onChangeText={setNewLastName} />
+                    <TextInput style={styles.input} placeholder="E-mail" placeholderTextColor="#888" value={newEmail} onChangeText={setNewEmail} />
+                    <TextInput style={styles.input} placeholder="LinkedIn URL" placeholderTextColor="#888" value={newLinkedin} onChangeText={setNewLinkedin} />
+                    <TextInput style={styles.input} placeholder="Company Name" placeholderTextColor="#888" />
+
+                    <TouchableOpacity
+                        ref={roleRef}
+                        onLayout={() => {
+                            roleRef.current?.measureInWindow((x, y, width, height) => {
+                                setAnchorLayout({ x, y, width, height });
+                                setInputWidth(width);
+                            });
+                        }}
+                        onPress={() => {
+                            roleRef.current?.measureInWindow((x, y, width, height) => {
+                                setAnchorLayout({ x, y, width, height });
+                                setInputWidth(width);
+                                setVisible(true);
+                            });
+                        }}
+                        style={styles.input}
+                    >
+                        <Text style={styles.anchorText}>{newJobRole || 'Role'}</Text>
+                    </TouchableOpacity>
+
+                    {anchorLayout && (
+                        <Menu
+                            visible={visible}
+                            onDismiss={() => setVisible(false)}
+                            anchor={{ x: anchorLayout.x, y: anchorLayout.y + anchorLayout.height }}
+                            anchorPosition="top"
+                            contentStyle={{
+                                backgroundColor: 'white',
+                                width: inputWidth,
+                                maxHeight: 220,
+                                borderWidth: 1,
+                                borderColor: '#888',
                             }}
-                            title={role}
-                            titleStyle={styles.menuItemTitle}
-                        />
-                    ))}
-                </Menu>
-
-                <TouchableOpacity style={styles.input} onPress={() => setModalVisible(true)}>
-                    <Text style={styles.anchorText}>Preferences</Text>
-                </TouchableOpacity>
-
-                <Modal visible={modalVisible} transparent animationType="slide" onRequestClose={() => setModalVisible(false)}>
-                    <View style={styles.modalOverlay}>
-                        <View style={styles.modalContainer}>
-                            <ScrollView style={{ maxHeight: 250 }}>
-                                {roles.map((role, index) => (
-                                    <TouchableOpacity key={index} style={styles.checkboxRow} onPress={() => toggleRole(role)}>
-                                        <Text style={styles.roleText}>{role}</Text>
-                                        <Checkbox.Android status={selectedRoles.includes(role) ? 'checked' : 'unchecked'} color="#34495e" />
-                                    </TouchableOpacity>
+                        >
+                            <ScrollView>
+                                {roles.map((role) => (
+                                    <View
+                                        key={role}
+                                        style={{
+                                            borderBottomWidth: 1,
+                                            borderBottomColor: '#ccc',
+                                            textAlign: "center"
+                                        }}
+                                    >
+                                        <Menu.Item
+                                            onPress={() => {
+                                                setNewJobRole(role);
+                                                setVisible(false);
+                                            }}
+                                            title={role}
+                                            titleStyle={{ color: 'black' }}
+                                        />
+                                    </View>
                                 ))}
                             </ScrollView>
-                            <TouchableOpacity style={styles.doneButton} onPress={() => setModalVisible(false)}>
-                                <Text style={{ color: 'white' }}>Done</Text>
-                            </TouchableOpacity>
-                        </View>
-                    </View>
-                </Modal>
 
-                <View style={{ marginBottom: 10 }}>
-                    <ScrollView
-                        horizontal
-                        showsHorizontalScrollIndicator={false}
-                        contentContainerStyle={styles.selectedWrapper}
-                    >
+                        </Menu>
+                    )}
+
+                    <TouchableOpacity style={styles.input} onPress={() => setModalVisible(true)}>
+                        <Text style={styles.anchorText}>Preferences</Text>
+                    </TouchableOpacity>
+
+                    <Modal visible={modalVisible} transparent animationType="slide" onRequestClose={() => setModalVisible(false)}>
+                        <View style={styles.modalOverlay}>
+                            <View style={styles.modalContainer}>
+                                <ScrollView style={{ maxHeight: 250 }}>
+                                    {roles.map((role, index) => (
+                                        <TouchableOpacity key={index} style={styles.checkboxRow} onPress={() => toggleRole(role)}>
+                                            <Text style={styles.roleText}>{role}</Text>
+                                            <Checkbox.Android
+                                                status={selectedRoles.includes(role) ? 'checked' : 'unchecked'}
+                                                color="#34495e"
+                                            />
+                                        </TouchableOpacity>
+                                    ))}
+                                </ScrollView>
+                                <TouchableOpacity style={styles.doneButton} onPress={() => setModalVisible(false)}>
+                                    <Text style={styles.doneText}>Done</Text>
+                                </TouchableOpacity>
+                            </View>
+                        </View>
+                    </Modal>
+
+                    <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={styles.selectedWrapper}>
                         {selectedRoles.map((role, index) => (
                             <View key={index} style={styles.tag}>
                                 <Text style={styles.tagText}>{role}</Text>
@@ -167,24 +212,22 @@ const Edit = ({ route, navigation }) => {
                         ))}
                     </ScrollView>
 
-                    {/* Button with 50px gap */}
-                    <TouchableOpacity
-                        style={[styles.button, { marginTop: 50 }]}
-                        onPress={handleEdit}
-                        disabled={isSaving}
-                    >
-                        {isSaving ? (
-                            <View style={{ flexDirection: 'row', alignItems: 'center' }}>
-                                <ActivityIndicator size="small" color="#fff" style={{ marginRight: 8 }} />
-                                <Text style={styles.buttonText}>Saving...</Text>
-                            </View>
-                        ) : (
-                            <Text style={styles.buttonText}>Save</Text>
-                        )}
-                    </TouchableOpacity>
+                    {!modalVisible && (
+                        <View style={{ marginBottom: 50, marginTop: 10 }}>
+                            <TouchableOpacity style={styles.button} onPress={handleEdit} disabled={isSaving}>
+                                {isSaving ? (
+                                    <View style={{ flexDirection: 'row', alignItems: 'center' }}>
+                                        <ActivityIndicator size="small" color="#fff" style={{ marginRight: 8 }} />
+                                        <Text style={styles.buttonText}>Saving...</Text>
+                                    </View>
+                                ) : (
+                                    <Text style={styles.buttonText}>Save</Text>
+                                )}
+                            </TouchableOpacity>
+                        </View>
+                    )}
                 </View>
-
-            </View>
+            </KeyboardAvoidingView>
         </Provider>
     );
 };
@@ -196,36 +239,39 @@ const styles = StyleSheet.create({
         flex: 1,
         backgroundColor: '#e8effc',
     },
-    inputContainer: {
-        flexGrow: 1,
-        justifyContent: 'flex-start',
-        paddingHorizontal: 20,
-        paddingTop: 50,
+    headingContainer: {
+        flexDirection: 'row',
+        alignItems: 'center',
+        justifyContent: 'space-between',
+        padding: 16,
+        backgroundColor: '#34495e',
+        height: 70,
+        marginBottom: 30,
     },
-    text: {
+    title: {
         fontSize: 24,
+        color: 'white',
         fontWeight: 'bold',
-        marginBottom: 50,
-        color: '#34495e',
         textAlign: 'center',
-        paddingTop: 50,
+        flex: 1,
+    },
+    backButton: {
+        width: 24,
     },
     input: {
         borderWidth: 1,
         borderColor: '#ccc',
         padding: 12,
         borderRadius: 8,
-        marginBottom: 30,
-        marginLeft: 40,
-        width: 313,
-        height: 43,
+        marginBottom: 15,
+        alignSelf: 'center',
+        width: '85%',
+        height : 45,
         backgroundColor: '#f7faff',
+        color: "#000",
     },
     anchorText: {
         color: '#555',
-    },
-    menuItemTitle: {
-        color: '#333',
     },
     modalOverlay: {
         backgroundColor: 'rgba(0, 0, 0, 0.3)',
@@ -265,12 +311,12 @@ const styles = StyleSheet.create({
     doneText: {
         color: 'white',
         fontSize: 14,
+        fontWeight: 'bold',
     },
     selectedWrapper: {
         flexDirection: 'row',
         paddingHorizontal: 10,
-        paddingTop: 4,
-        paddingBottom: 4,
+        paddingVertical: 10,
     },
     tag: {
         backgroundColor: '#ddd',
@@ -280,35 +326,24 @@ const styles = StyleSheet.create({
         marginBottom: 5,
         flexDirection: 'row',
         alignItems: 'center',
-        alignSelf: 'flex-start',
-        maxWidth: 'auto',
         height: 25,
     },
     tagText: {
         marginRight: 8,
-    },
-    crossIcon: {
-        fontSize: 12,
-        color: '#888',
+        color: "#000",
     },
     button: {
         backgroundColor: '#34495e',
         borderRadius: 10,
         justifyContent: 'center',
         alignItems: 'center',
-        alignItems: 'center',
-        marginTop: 50,
-        marginLeft: 105,
-        width: 194,
+        alignSelf: 'center',
+        width: '50%',
         height: 39,
     },
     buttonText: {
         fontSize: 20,
         fontWeight: 'bold',
         color: 'white',
-    },
-    backArrow: {
-        marginTop: 20,
-        marginLeft: 10,
     },
 });

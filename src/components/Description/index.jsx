@@ -6,15 +6,16 @@ import {
     Text,
     StyleSheet,
     Image,
-    ImageBackground,
     TouchableOpacity,
     ScrollView,
     SafeAreaView,
     ActivityIndicator,
-    ToastAndroid,
+    Platform,
+    StatusBar,
+    Alert,
 } from 'react-native';
+import Ionicons from 'react-native-vector-icons/Ionicons';
 
-const backgroundImage = require('../../assets/bgg.png');
 
 const Description = ({ navigation, route }) => {
     const {
@@ -22,40 +23,25 @@ const Description = ({ navigation, route }) => {
         name,
         organizer,
         description,
-        date,
-        endDate,
-        lat,
-        lon,
-        webUrl,
         banner,
         isRegistered,
         checkInAvailable,
         already_checked_in,
-        fetchUpcomingEvents,
     } = route.params;
 
-    console.log('Route params:', route.params);
-
     const [buttonState, setButtonState] = useState(() => {
-        if (!isRegistered) {return 'register';}
-        if (already_checked_in) {return 'checkedin';}
+        if (!isRegistered) return 'register';
+        if (already_checked_in) return 'checkedin';
         return 'checkin';
     });
-    // const [isInRange, setIsInRange] = useState(false); // false = out of range, true = within 500m
-    const [isLoading, setIsLoading] = useState(false); // Loading spinner state
 
-    // // Simulate entering range (static for demo)
-    // React.useEffect(() => {
-    //     const timer = setTimeout(() => setIsInRange(true), 2000);  // Auto "enter range" after 2 sec
-    //     return () => clearTimeout(timer);
-    // }, []);
+    const [isLoading, setIsLoading] = useState(false);
 
     const handlePress = async () => {
-        if (isLoading) {return;}
+        if (isLoading) return;
 
         if (buttonState === 'register') {
             if (!id) {
-                console.warn('Missing event ID!');
                 return;
             }
 
@@ -63,14 +49,15 @@ const Description = ({ navigation, route }) => {
             try {
                 await handleRegister(id);
                 setButtonState('checkin');
-                // ToastAndroid.show("Registered successfully!", ToastAndroid.SHORT);
-            } catch (error) {
-                // handleRegister already shows toast
-            }
+            } catch (error) { }
             setIsLoading(false);
         } else if (buttonState === 'checkin') {
             if (!checkInAvailable) {
-                ToastAndroid.show('Check-in not available!', ToastAndroid.SHORT);
+                Alert.alert(
+                    'Check-In Unavailable',
+                    'Check-in is not available at the moment. Please try again later or ensure you meet the requirements.',
+                    [{ text: 'OK' }]
+                );
                 return;
             }
 
@@ -78,10 +65,7 @@ const Description = ({ navigation, route }) => {
             try {
                 await handleCheckIn(id);
                 setButtonState('checkedin');
-                // ToastAndroid.show("You are successfully checked in", ToastAndroid.SHORT);
-            } catch (error) {
-                // handleCheckIn already shows toast
-            }
+            } catch (error) { }
             setIsLoading(false);
         }
     };
@@ -89,13 +73,7 @@ const Description = ({ navigation, route }) => {
     const handleRegister = async (eventId) => {
         try {
             const token = await AsyncStorage.getItem('token');
-
-            if (!eventId) {
-                console.warn('Event ID is missing!');
-                return;
-            }
-
-            console.log('Registering for event ID:', eventId); // ✅ debug
+            if (!eventId) return;
 
             await axios.post(
                 'https://letsmeet-backend-47lv.onrender.com/api/user-events/register-event',
@@ -108,11 +86,18 @@ const Description = ({ navigation, route }) => {
                 }
             );
 
-            ToastAndroid.show('Registered Successfully!', ToastAndroid.SHORT);
-            fetchUpcomingEvents();
+            Alert.alert(
+                'Registration Successful',
+                'Check-in will be enabled when you are within the event radius on the day of the event.',
+                [{ text: 'OK' }]
+            );
+            navigation.goBack();
         } catch (error) {
-            console.error('Registration error:', error.response?.data || error.message);
-            ToastAndroid.show('Registration failed!', ToastAndroid.SHORT);
+            Alert.alert(
+                'Registration Failed',
+                'Something went wrong during registration. Please try again.',
+                [{ text: 'OK' }]
+            );
         }
     };
 
@@ -129,90 +114,108 @@ const Description = ({ navigation, route }) => {
                     },
                 }
             );
-            ToastAndroid.show('Checked-In Successfully!', ToastAndroid.SHORT);
 
-            // Optionally refetch events to update UI
-            fetchUpcomingEvents();
+            Alert.alert(
+                'Check-In Successful',
+                'You have successfully checked in to the event.',
+                [{ text: 'OK' }]
+            );
+            navigation.goBack();
         } catch (error) {
-            console.error('Check-in error:', error.response?.data || error.message || error);
-            ToastAndroid.show(error.response?.data?.message || 'Check-In failed!', ToastAndroid.SHORT);
+            Alert.alert(
+                'Check-In Failed',
+                error.response?.data?.message || 'Something went wrong. Please try again.',
+                [{ text: 'OK' }]
+            );
         }
     };
 
     return (
-        <View style={styles.background}>
-            <SafeAreaView style={styles.container}>
+        <>
+            <StatusBar
+                backgroundColor="#34495e"
+                barStyle={Platform.OS === 'ios' ? 'default' : 'dark-content'}
+            />
+            <View style={styles.background}>
+
                 <View style={styles.header}>
                     <TouchableOpacity onPress={() => navigation.goBack()}>
-                        <Text style={styles.backArrow}>←</Text>
+                        <Text style={styles.backArrow}>
+                            <Ionicons name="arrow-back-outline" size={24} color="#f9efef" />
+                        </Text>
                     </TouchableOpacity>
-                    <Text style={styles.headerTitle}> {name}</Text>
+                    <Text style={styles.headerTitle}>{name}</Text>
                 </View>
 
-                <ScrollView contentContainerStyle={styles.scrollContainer}>
-                    <Image
-                        source={{ uri: banner }} // banner is the full base64 data URI
-                        style={styles.poster}
-                        resizeMode="cover"
-                    />
-
-                    <Text style={styles.locationLabel}>📍 {organizer}</Text>
-
-                    <Text style={styles.descriptionHeading}>Description</Text>
-                    <Text style={styles.descriptionText}>{description}</Text>
-
-                    <TouchableOpacity
-                        style={[
-                            styles.attendButton,
-                            {
-                                backgroundColor:
-                                    buttonState === 'checkedin'
-                                        ? 'transparent'
-                                        : buttonState === 'checkin'
-                                            ? checkInAvailable
-                                                ? '#4CAF50'
-                                                : 'grey'
-                                            : 'white',
-                                borderColor: buttonState === 'checkedin' ? 'transparent' : '#000000',
-                            },
-                        ]}
-                        onPress={handlePress}
-                        disabled={
-                            isLoading ||
-                            (buttonState === 'checkin' && !checkInAvailable)
-                        }
-                    >
-                        {isLoading ? (
-                            <ActivityIndicator size="small" color="#0000ff" />
-                        ) : buttonState === 'checkedin' ? (
-                            <View style={styles.tickWrapper}>
-                                <Text style={styles.tickText}>✔ Checked In</Text>
-                            </View>
-                        ) : (
-                            <Text
-                                style={[
-                                    styles.attendButtonText,
-                                    {
-                                        color:
-                                            buttonState === 'checkin' && !checkInAvailable
-                                                ? 'white'
-                                                : buttonState === 'checkin'
-                                                    ? 'white'
-                                                    : 'black',
-                                    },
-                                ]}
-                            >
-                                {buttonState === 'register'
-                                    ? 'Register'
-                                    : buttonState === 'checkin'
-                                        ? 'Check-In'
-                                        : ''}
-                            </Text>
+                <SafeAreaView style={styles.container}>
+                    <ScrollView contentContainerStyle={styles.scrollContainer}>
+                        {banner && (
+                            <Image
+                                source={{ uri: banner }}
+                                style={styles.poster}
+                                resizeMode="cover"
+                            />
                         )}
-                    </TouchableOpacity>
-                </ScrollView>
-            </SafeAreaView>
-        </View>
+
+                        <View style={styles.locationLabel}>
+                            <Ionicons name="location-outline" size={16} color="#000" />
+                            <Text style={styles.locationText}> {organizer}</Text>
+                        </View>
+
+                        <Text style={styles.descriptionHeading}>Description</Text>
+                        <Text style={styles.descriptionText}>{description}</Text>
+
+                        <TouchableOpacity
+                            style={[
+                                styles.attendButton,
+                                {
+                                    backgroundColor:
+                                        buttonState === 'checkedin'
+                                            ? 'transparent'
+                                            : buttonState === 'checkin'
+                                                ? checkInAvailable
+                                                    ? '#4CAF50'
+                                                    : 'grey'
+                                                : 'white',
+                                    borderColor:
+                                        buttonState === 'checkedin' ? 'transparent' : '#000000',
+                                },
+                            ]}
+                            onPress={handlePress}
+                            disabled={isLoading || (buttonState === 'checkin' && !checkInAvailable)}
+                        >
+                            {isLoading ? (
+                                <ActivityIndicator size="small" color="#0000ff" />
+                            ) : buttonState === 'checkedin' ? (
+                                <View style={styles.tickWrapper}>
+                                    <Text style={styles.tickText}>Checked In</Text>
+                                </View>
+                            ) : (
+                                <Text
+                                    style={[
+                                        styles.attendButtonText,
+                                        {
+                                            color:
+                                                buttonState === 'checkin' && !checkInAvailable
+                                                    ? 'white'
+                                                    : buttonState === 'checkin'
+                                                        ? 'white'
+                                                        : 'black',
+                                        },
+                                    ]}
+                                >
+                                    {buttonState === 'register'
+                                        ? 'Register'
+                                        : buttonState === 'checkin'
+                                            ? 'Check-In'
+                                            : ''}
+                                </Text>
+                            )}
+                        </TouchableOpacity>
+                    </ScrollView>
+                </SafeAreaView>
+            </View>
+        </>
     );
 };
 
@@ -223,20 +226,50 @@ const styles = StyleSheet.create({
     },
     background: {
         flex: 1,
-        resizeMode: 'cover',
+        backgroundColor: '#e9effc',
     },
     header: {
+        height: 70,
         flexDirection: 'row',
         alignItems: 'center',
-        padding: 15,
+        paddingHorizontal: 15,
         backgroundColor: '#34495e',
     },
-    backArrow: { color: 'white', fontSize: 24, marginRight: 15 },
-    headerTitle: { color: 'white', fontSize: 18, fontWeight: 'bold' },
-    scrollContainer: { padding: 16 },
-    poster: { width: '100%', height: 400, borderRadius: 10, marginBottom: 20 },
-    locationLabel: { fontSize: 16, marginBottom: 10, color: '#000000' },
-    descriptionHeading: { fontWeight: 'bold', fontSize: 20, marginBottom: 8, color: '#333' },
+    headerTitle: {
+        color: 'white',
+        fontSize: 18,
+        fontWeight: 'bold',
+    },
+    backArrow: {
+        color: 'white',
+        fontSize: 24,
+        marginRight: 15,
+    },
+    scrollContainer: {
+        padding: 16,
+    },
+    poster: {
+        width: '100%',
+        height: 300,
+        borderRadius: 10,
+        marginBottom: 20,
+    },
+    locationLabel: {
+        flexDirection: 'row',
+        alignItems: 'center',
+        marginBottom: 16,
+        marginLeft: 4,
+    },
+    locationText: {
+        fontSize: 16,
+        color: '#000',
+    },
+    descriptionHeading: {
+        fontWeight: 'bold',
+        fontSize: 20,
+        marginBottom: 8,
+        color: '#333',
+    },
     descriptionText: {
         fontSize: 14,
         lineHeight: 22,
@@ -253,7 +286,6 @@ const styles = StyleSheet.create({
     attendButtonText: {
         fontWeight: 'bold',
         fontSize: 16,
-        color: '#000000',
     },
     tickWrapper: {
         justifyContent: 'center',
@@ -267,8 +299,9 @@ const styles = StyleSheet.create({
         borderRadius: 50,
         alignItems: 'center',
         justifyContent: 'center',
+        color: 'white',
+        fontWeight: 'bold',
     },
-
 });
 
 export default Description;

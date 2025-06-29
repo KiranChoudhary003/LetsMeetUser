@@ -10,34 +10,50 @@ import {
   TouchableOpacity,
   Platform,
   PermissionsAndroid,
+  StatusBar,
 } from 'react-native';
 import logo from '../../assets/logo.png';
 import { PERMISSIONS, check, request, RESULTS, openSettings } from 'react-native-permissions';
 import Geolocation from 'react-native-geolocation-service';
 import { LocationContext } from '../../components/LocationContext/LocationContext';
 import messaging from '@react-native-firebase/messaging';
-
-const { width, height } = Dimensions.get('window');
+import AsyncStorage from '@react-native-async-storage/async-storage';
 
 const Welcome = ({ navigation }) => {
   const colorAnim = useRef(new Animated.Value(0)).current;
   const textFadeAnim = useRef(new Animated.Value(0)).current;
 
   const { setLocation } = useContext(LocationContext);
-  const [deviceToken, setDeviceToken] = useState(null);
+  const [locationData, setLocationData] = useState({ latitude: null, longitude: null });
 
   useEffect(() => {
     const initialize = async () => {
       const locationGranted = await requestLocationPermissions();
+      let coords = { latitude: null, longitude: null };
+
       if (locationGranted) {
-        getCurrentLocation();
+        coords = await getCurrentLocation();
+        setLocation(coords);
+        setLocationData(coords);
       }
 
-      const token = await requestNotificationPermission();
-      if (token) {
-        setDeviceToken(token);
-        console.log('✅ FCM Device Token:', token);
+      const fcmToken = await requestNotificationPermission();
+
+      if (!fcmToken) {
+        console.warn('No FCM token available. Proceeding with null token.');
       }
+
+      setTimeout(async () => {
+        const savedToken = await AsyncStorage.getItem('token');
+
+        if (savedToken) {
+          navigation.replace('Layout', { screen: 'Home' });
+        } else {
+          navigation.replace('Login', {
+            deviceToken: fcmToken ?? null
+          });
+        }
+      }, 3000);
     };
 
     initialize();
@@ -46,13 +62,13 @@ const Welcome = ({ navigation }) => {
   useEffect(() => {
     Animated.timing(colorAnim, {
       toValue: 1,
-      duration: 1500,
-      delay: 1500,
+      duration: 1000,
+      delay: 1000,
       useNativeDriver: false,
     }).start(() => {
       Animated.timing(textFadeAnim, {
         toValue: 1,
-        duration: 1500,
+        duration: 1000,
         delay: 500,
         useNativeDriver: true,
       }).start();
@@ -64,43 +80,72 @@ const Welcome = ({ navigation }) => {
       ? PERMISSIONS.ANDROID.ACCESS_FINE_LOCATION
       : PERMISSIONS.IOS.LOCATION_WHEN_IN_USE;
 
+    const askAgain = async () => {
+      const newStatus = await request(permission);
+
+      if (newStatus === RESULTS.GRANTED) return true;
+
+      if (newStatus === RESULTS.BLOCKED) {
+        Alert.alert(
+          'Location Permission Required',
+          'Please enable location permission from settings to proceed.',
+          [
+            { text: 'Open Settings', onPress: () => openSettings() },
+          ]
+        );
+        return false;
+      }
+
+      return new Promise((resolve) => {
+        Alert.alert(
+          'Location Required',
+          'This app requires location access to continue.',
+          [
+            {
+              text: 'Try Again',
+              onPress: async () => {
+                const result = await askAgain();
+                resolve(result);
+              },
+            },
+            {
+              text: 'Cancel',
+              style: 'cancel',
+              onPress: () => resolve(false),
+            },
+          ]
+        );
+      });
+    };
+
     const result = await check(permission);
+
     if (result === RESULTS.GRANTED) return true;
 
-    const newStatus = await request(permission);
-    if (newStatus === RESULTS.GRANTED) return true;
-
-    if (newStatus === RESULTS.BLOCKED) {
-      Alert.alert('Enable Location Permission', 'Please enable location in app settings.', [
-        { text: 'Cancel', style: 'cancel' },
-        { text: 'Open Settings', onPress: () => openSettings() },
-      ]);
-    } else {
-      Alert.alert('Permission Denied', 'Location permission is required.');
-    }
-    return false;
+    return await askAgain();
   };
 
   const getCurrentLocation = () => {
-    Geolocation.getCurrentPosition(
-      (position) => {
-        const { latitude, longitude } = position.coords;
-        setLocation({ latitude, longitude });
-      },
-      (error) => {
-        console.error('Location error:', error);
-        Alert.alert('Location Error', error.message);
-      },
-      {
-        enableHighAccuracy: true,
-        timeout: 15000,
-        maximumAge: 10000,
-        forceRequestLocation: true,
-        showLocationDialog: true,
-      }
-    );
+    return new Promise((resolve, reject) => {
+      Geolocation.getCurrentPosition(
+        (position) => {
+          const { latitude, longitude } = position.coords;
+          resolve({ latitude, longitude });
+        },
+        (error) => {
+          Alert.alert('Location Error', error.message);
+          resolve({ latitude: null, longitude: null });
+        },
+        {
+          enableHighAccuracy: true,
+          timeout: 15000,
+          maximumAge: 10000,
+          forceRequestLocation: true,
+          showLocationDialog: true,
+        }
+      );
+    });
   };
-
   const requestNotificationPermission = async () => {
     if (Platform.OS === 'android' && Platform.Version >= 33) {
       const result = await PermissionsAndroid.request(
@@ -108,72 +153,63 @@ const Welcome = ({ navigation }) => {
       );
 
       if (result !== PermissionsAndroid.RESULTS.GRANTED) {
-        Alert.alert('Permission Denied', 'Push Notification permission is required.');
         return null;
       }
     }
 
-    const authStatus = await messaging().requestPermission();
-    const enabled =
-      authStatus === messaging.AuthorizationStatus.AUTHORIZED ||
-      authStatus === messaging.AuthorizationStatus.PROVISIONAL;
+    try {
+      const authStatus = await messaging().requestPermission();
 
-    if (enabled) {
-      try {
-        const token = await messaging().getToken();
-        return token;
-      } catch (error) {
-        console.log('❌ Error getting FCM token:', error);
-        Alert.alert('Notification Error', 'Unable to get notification token');
+      const enabled =
+        authStatus === messaging.AuthorizationStatus.AUTHORIZED ||
+        authStatus === messaging.AuthorizationStatus.PROVISIONAL;
+
+      if (!enabled) {
+        return null;
       }
-    } else {
-      Alert.alert('Permission Denied', 'Push Notification permission is required.');
-    }
 
-    return null;
-  };
-
-  const handleContinue = () => {
-    if (!deviceToken) {
-      Alert.alert('Please Wait', 'Device token is still being generated...');
-      return;
+      const token = await messaging().getToken();
+      return token ?? null;
+    } catch (error) {
+      console.error('FCM Token Error:', error);
+      return null;
     }
-    navigation.navigate('Login', { deviceToken });
   };
 
   return (
-    <TouchableOpacity
-      style={styles.container}
-      activeOpacity={1}
-      onPress={handleContinue} // ✅ use correct handler
-    >
-      <Animated.View
-        style={[
-          styles.animatedBg,
-          {
-            backgroundColor: colorAnim.interpolate({
-              inputRange: [0, 1],
-              outputRange: ['rgba(255, 255, 255, 1)', '#34495e'],
-            }),
-          },
-        ]}
-      />
-      <View style={styles.logoContainer}>
-        <Image source={logo} style={styles.logo} />
-      </View>
-      <Animated.Text style={[styles.text, { opacity: textFadeAnim }]}>
-        WELCOME
-      </Animated.Text>
-    </TouchableOpacity>
+    <>
+      <StatusBar barStyle="light-content" backgroundColor="#34495e" translucent={false} />
+      <TouchableOpacity style={styles.container} activeOpacity={1}>
+        <Animated.View
+          style={[
+            styles.animatedBg,
+            {
+              backgroundColor: colorAnim.interpolate({
+                inputRange: [0, 1],
+                outputRange: ['rgba(255, 255, 255, 1)', '#34495e'],
+              }),
+            },
+          ]}
+        />
+        <View style={styles.logoContainer}>
+          <Image source={logo} style={styles.logo} />
+        </View>
+        <Animated.Text style={[styles.text, { opacity: textFadeAnim }]}>
+          WELCOME
+        </Animated.Text>
+      </TouchableOpacity>
+    </>
   );
 };
+
+export default Welcome;
 
 const styles = StyleSheet.create({
   container: {
     flex: 1,
     alignItems: 'center',
     justifyContent: 'center',
-    backgroundColor: 'e8effc',
+    backgroundColor: '#e8effc',
     position: 'relative',
   },
   animatedBg: {
@@ -201,16 +237,4 @@ const styles = StyleSheet.create({
     color: 'white',
     marginTop: 20,
   },
-  ellipseTop: {
-    position: 'absolute',
-    top: 0,
-    left: 0,
-  },
-  ellipseBottom: {
-    position: 'absolute',
-    bottom: 0,
-    right: 0,
-  },
 });
-
-export default Welcome;

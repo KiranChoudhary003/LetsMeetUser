@@ -8,8 +8,10 @@ import {
     TouchableOpacity,
     ScrollView,
     SafeAreaView,
-    ToastAndroid,
+    Platform,
+    StatusBar,
 } from 'react-native';
+import Ionicons from 'react-native-vector-icons/Ionicons';
 
 const backgroundImage = require('../../assets/bgg.png');
 
@@ -34,8 +36,6 @@ const MyEventsDesciption = ({ navigation, route }) => {
         fetchUpcomingEvents,
     } = route.params;
 
-    console.log('Route params:', route.params);
-
     const [buttonState, setButtonState] = useState(() => {
         if (already_checked_in) {
             return 'checkedin';
@@ -54,11 +54,15 @@ const MyEventsDesciption = ({ navigation, route }) => {
     const [isLoading, setIsLoading] = useState(false);
 
     const handlePress = async () => {
-        if (isLoading) {return;}
+        if (isLoading) { return; }
 
         if (buttonState === 'checkin') {
             if (!checkInAvailable) {
-                ToastAndroid.show('Check-in not available!', ToastAndroid.SHORT);
+                Alert.alert(
+                    'Check-In Unavailable',
+                    'Check-in is not available at the moment. Please try again later or ensure you meet the requirements.',
+                    [{ text: 'OK' }]
+                );
                 return;
             }
 
@@ -86,128 +90,124 @@ const MyEventsDesciption = ({ navigation, route }) => {
                     },
                 }
             );
-            ToastAndroid.show('Checked-In Successfully!', ToastAndroid.SHORT);
-
-            // Optionally refetch events to update UI
+            Alert.alert(
+                'Check-In Successful',
+                'You have successfully checked in to the event.',
+                [{ text: 'OK' }]
+            );
             fetchUpcomingEvents();
         } catch (error) {
-            console.error('Check-in error:', error.response?.data || error.message || error);
-            ToastAndroid.show(error.response?.data?.message || 'Check-In failed!', ToastAndroid.SHORT);
+            Alert.alert(
+                'Check-In Failed',
+                error.response?.data?.message || 'Something went wrong. Please try again.',
+                [{ text: 'OK' }]
+            );
         }
     };
 
     return (
-        <View style={styles.background}>
-            <SafeAreaView style={styles.container}>
-                <View style={styles.header}>
-                    <TouchableOpacity onPress={() => navigation.goBack()}>
-                        <Text style={styles.backArrow}>←</Text>
-                    </TouchableOpacity>
-                    <Text style={styles.headerTitle}>{name}</Text>
-                </View>
+        <>
+            <StatusBar
+                backgroundColor="#34495e"
+                barStyle={Platform.OS === 'ios' ? 'default' : 'dark-content'}
+                translucent={false}
+            />
+            <View style={styles.background}>
+                <SafeAreaView style={styles.container}>
 
-                <ScrollView contentContainerStyle={styles.scrollContainer}>
-                    <Image
-                        source={{ uri: banner }} // banner is the full base64 data URI
-                        style={styles.poster}
-                        resizeMode="cover"
-                    />
-                    <Text style={styles.locationLabel}>📍{organizer}</Text>
-
-                    <Text style={styles.descriptionHeading}>Description</Text>
-                    <Text style={styles.descriptionText}>{description}</Text>
-
-                    {/* Attendance Banner */}
-
-                    {buttonState === 'checkedin' ? (
-                        <View style={styles.tickWrapper}>
-                            <Text style={styles.tickText}>You have Attended the Event</Text>
-                        </View>
-                    ) : buttonState === 'missed' ? (
-                        <View style={styles.tickWrapper}>
-                            <Text style={[styles.tickText, { color: 'red' }]}>You didn't attend the event</Text>
-                        </View>
-                    ) : buttonState === 'checkin' ? (
-                        <TouchableOpacity
-                            style={[
-                                styles.attendButton,
-                                {
-                                    backgroundColor: checkInAvailable ? '#4CAF50' : '#aaa',
-                                    borderColor: '#000000',
-                                },
-                            ]}
-                            onPress={handlePress}
-                            disabled={!checkInAvailable || isLoading}
-                        >
-                            {isLoading ? (
-                                <ActivityIndicator size="small" color="#ffffff" />
-                            ) : (
-                                <Text style={[styles.attendButtonText, { color: 'white' }]}>
-                                    Check In
-                                </Text>
-                            )}
+                    <View style={styles.header}>
+                        <TouchableOpacity onPress={() => navigation.goBack()}>
+                            <Text style={styles.backArrow}>
+                                <Ionicons name="arrow-back-outline" size={24} color="#f9efef" />
+                            </Text>
                         </TouchableOpacity>
-                    ) : null}
-
-                    {/* Stats Section */}
-                    <View style={styles.statsContainer}>
-                        <View style={styles.statBox}>
-                            <Text style={styles.statLabel}>Total connection made</Text>
-                            <Text style={styles.statNumber}>{totalConnections || 0}</Text>
-                        </View>
-                        <View style={styles.statBox}>
-                            <Text style={styles.statLabel}>Requested</Text>
-                            <Text style={styles.statNumber}>{pendingRequests || 0}</Text>
-                        </View>
-                        <View style={styles.statBox}>
-                            <Text style={styles.statLabel}>Accepted</Text>
-                            <Text style={styles.statNumber}>{approvedRequests || 0}</Text>
-                        </View>
+                        <Text style={styles.headerTitle}>{name}</Text>
                     </View>
 
-                </ScrollView>
-            </SafeAreaView>
-        </View>
+                    <ScrollView contentContainerStyle={styles.scrollContainer}>
+                        {banner && (
+                            <Image
+                                source={{ uri: banner }}
+                                style={styles.poster}
+                                resizeMode="cover"
+                            />
+                        )}
+
+                        <View style={styles.locationLabel}>
+                            <Ionicons name="location-outline" size={16} color="#000" />
+                            <Text style={styles.locationText}> {organizer}</Text>
+                        </View>
+
+                        <Text style={styles.descriptionHeading}>Description</Text>
+                        <Text style={styles.descriptionText}>{description}</Text>
+
+                        {buttonState === 'checkedin' ? (
+                            <View style={styles.tickWrapper}>
+                                <Text style={styles.tickText}>You have Attended the Event</Text>
+                            </View>
+                        ) : buttonState === 'missed' ? (
+                            <View style={styles.tickWrapper}>
+                                <Text style={[styles.tickText, { color: 'red' }]}>You didn't attend the event</Text>
+                            </View>
+                        ) : buttonState === 'checkin' ? (
+                            <TouchableOpacity
+                                style={[
+                                    styles.attendButton,
+                                    {
+                                        backgroundColor: checkInAvailable ? '#4CAF50' : '#aaa',
+                                        borderColor: '#000000',
+                                    },
+                                ]}
+                                onPress={handlePress}
+                                disabled={!checkInAvailable || isLoading}
+                            >
+                                {isLoading ? (
+                                    <ActivityIndicator size="small" color="#ffffff" />
+                                ) : (
+                                    <Text style={[styles.attendButtonText, { color: 'white' }]}>
+                                        Check In
+                                    </Text>
+                                )}
+                            </TouchableOpacity>
+                        ) : null}
+
+                        <View style={styles.statsContainer}>
+                            <View style={styles.statBox}>
+                                <Text style={styles.statLabel}>Total connection made</Text>
+                                <Text style={styles.statNumber}>{totalConnections || 0}</Text>
+                            </View>
+                            <View style={styles.statBox}>
+                                <Text style={styles.statLabel}>Requested</Text>
+                                <Text style={styles.statNumber}>{pendingRequests || 0}</Text>
+                            </View>
+                            <View style={styles.statBox}>
+                                <Text style={styles.statLabel}>Accepted</Text>
+                                <Text style={styles.statNumber}>{approvedRequests || 0}</Text>
+                            </View  >
+                        </View>
+                    </ScrollView>
+                </SafeAreaView>
+            </View>
+        </>
     );
 };
 
+export default MyEventsDesciption;
+
 const styles = StyleSheet.create({
-    container: {
-        flex: 1,
-        backgroundColor: '#e8effc',
-    },
-    tickWrapper: {
-        padding: 12,
-        borderRadius: 10,
-        backgroundColor: '#f0f0f0',
-        alignItems: 'center',
-        marginTop: 10,
-    },
-    tickText: {
-        fontWeight: 'bold',
-        fontSize: 14,
-        color: '#4CAF50', // default green, override in red case
-    },
     background: {
         flex: 1,
         resizeMode: 'cover',
     },
-    attendButton: {
-        alignSelf: 'center',
-        paddingHorizontal: 100,
-        paddingVertical: 10,
-        borderRadius: 20,
-        borderWidth: 1,
-    },
-    attendButtonText: {
-        fontWeight: 'bold',
-        fontSize: 16,
-        color: '#000000',
+    container: {
+        flex: 1,
+        backgroundColor: '#e8effc',
     },
     header: {
+        height : 70,
         flexDirection: 'row',
         alignItems: 'center',
-        padding: 15,
+        paddingHorizontal: 15,
         backgroundColor: '#34495e',
     },
     backArrow: {
@@ -226,13 +226,18 @@ const styles = StyleSheet.create({
     },
     poster: {
         width: '100%',
-        height: 400,
+        height: 300,
         borderRadius: 10,
         marginBottom: 20,
     },
     locationLabel: {
-        fontSize: 16,
+        flexDirection: 'row',
+        alignItems: 'center',
         marginBottom: 16,
+        marginLeft: 4,
+    },
+    locationText: {
+        fontSize: 16,
         color: '#000',
     },
     descriptionHeading: {
@@ -247,20 +252,28 @@ const styles = StyleSheet.create({
         color: '#333',
         marginBottom: 20,
     },
-    checkedInBanner: {
-        backgroundColor: '#E6FFE6',
-        paddingVertical: 10,
-        paddingHorizontal: 20,
-        borderRadius: 20,
-        alignSelf: 'center',
-        marginBottom: 20,
-        borderWidth: 1,
-        borderColor: '#4CAF50',
+    tickWrapper: {
+        padding: 12,
+        borderRadius: 10,
+        backgroundColor: '#f0f0f0',
+        alignItems: 'center',
+        marginTop: 10,
     },
-    checkedInBannerText: {
-        color: '#2E7D32',
+    tickText: {
         fontWeight: 'bold',
         fontSize: 14,
+        color: '#4CAF50',
+    },
+    attendButton: {
+        alignSelf: 'center',
+        paddingHorizontal: 100,
+        paddingVertical: 10,
+        borderRadius: 20,
+        borderWidth: 1,
+    },
+    attendButtonText: {
+        fontWeight: 'bold',
+        fontSize: 16,
     },
     statsContainer: {
         flexDirection: 'row',
@@ -268,19 +281,17 @@ const styles = StyleSheet.create({
         marginTop: 30,
         paddingHorizontal: 5,
     },
-
     statBox: {
         flex: 1,
         marginHorizontal: 5,
         paddingVertical: 14,
         paddingHorizontal: 8,
         borderWidth: 1.5,
-        borderColor: '#3A5BFF',  // Changed to a stronger blue
+        borderColor: '#3A5BFF',
         borderRadius: 12,
         backgroundColor: 'transparent',
         alignItems: 'center',
     },
-
     statLabel: {
         fontSize: 12,
         fontWeight: '500',
@@ -288,13 +299,9 @@ const styles = StyleSheet.create({
         textAlign: 'center',
         marginBottom: 4,
     },
-
     statNumber: {
         fontSize: 18,
         fontWeight: 'bold',
         color: '#000',
     },
-
 });
-
-export default MyEventsDesciption;

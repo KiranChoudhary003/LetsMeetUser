@@ -41,7 +41,6 @@ export default function UserListScreen() {
             const allUsers = data.connections || [];
             setUsers(allUsers);
         } catch (error) {
-            console.error('Error fetching connections:', error);
         } finally {
             setLoading(false);
         }
@@ -187,12 +186,13 @@ export default function UserListScreen() {
 const styles = StyleSheet.create({
     safeContainer: {
         flex: 1,
-        backgroundColor: '#f9fafe',
+        backgroundColor: '#e8effc',
     },
     headingContainer: {
         backgroundColor: '#34495E',
         paddingVertical: 12,
         paddingHorizontal: 16,
+        height : 70
     },
     headerRow: {
         flexDirection: 'row',
