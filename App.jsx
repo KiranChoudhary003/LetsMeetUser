@@ -20,6 +20,7 @@ import UserListScreen from './src/components/Chatting/UserListScreen';
 import ChatPage from './src/components/Chatting/ChatPage';
 import UserFriendList from './src/components/Chatting/UserFriendList';
 import { KeyboardProvider } from 'react-native-keyboard-controller';
+import MeetingsScreen from './src/components/Meetings';
 
 
 enableScreens();
@@ -54,6 +55,5 @@ const App = () => {
     </KeyboardProvider>
   );
 };
-
 
 export default App;

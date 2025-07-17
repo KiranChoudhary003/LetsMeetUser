@@ -7,6 +7,7 @@ import { createStackNavigator } from '@react-navigation/stack';
 import Home from '../Home/index.jsx';
 import MyEvents from '../MyEvents/index.jsx';
 import Complain from '../Complain/index.jsx';
+import MeetingsScreen from '../Meetings/index.jsx';
 
 const InnerStack = createStackNavigator();
 
@@ -23,6 +24,7 @@ const Layout = () => {
             <InnerStack.Screen name="Home" component={Home} />
             <InnerStack.Screen name="MyEvents" component={MyEvents} />
             <InnerStack.Screen name="Complain" component={Complain} />
+            <InnerStack.Screen name="Meetings" component={MeetingsScreen} />
           </InnerStack.Navigator>
         </View>
 
@@ -39,7 +41,7 @@ export default Layout;
 const styles = StyleSheet.create({
   safeArea: {
     flex: 1,
-    backgroundColor: '#fff', 
+    backgroundColor: '#fff',
   },
   container: {
     flex: 1,
