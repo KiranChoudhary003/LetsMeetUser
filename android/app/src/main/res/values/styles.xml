@@ -1,9 +1,15 @@
 <resources>
+    <style name="AppTheme" parent="Theme.MaterialComponents.DayNight.NoActionBar">
+        <!-- Prevent system dark mode from overriding your style -->
+        <item name="android:forceDarkAllowed">false</item>
 
-    <!-- Base application theme. -->
-    <style name="AppTheme" parent="Theme.AppCompat.DayNight.NoActionBar">
-        <!-- Customize your theme here. -->
+        <!-- Set your desired status bar color -->
+        <item name="android:statusBarColor">#34495e</item>
+
+        <!-- Force white status bar icons (for dark background) -->
+        <item name="android:windowLightStatusBar">false</item>
+
+        <!-- Optional: Keep your existing edit text background -->
         <item name="android:editTextBackground">@drawable/rn_edit_text_material</item>
     </style>
-
 </resources>

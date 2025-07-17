@@ -65,7 +65,6 @@ const Header = () => {
   };
 
   const handleChatPress = async () => {
-    await fetchUserProfile();
     navigation.navigate('UserListScreen');
   };
 

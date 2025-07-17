@@ -274,17 +274,16 @@ const EventsScreen = ({ navigation }) => {
         already_checked_in: event.already_checked_in,
       }));
 
+      console.log(formattedEvents)
       setEventData(formattedEvents);
 
       await AsyncStorage.setItem('eventsData', JSON.stringify(formattedEvents));
-
+      console.log(formattedEvents)
     } catch (error) {
     } finally {
       setLoading(false);
     }
   };
-
-
 
   useEffect(() => {
     const loadData = async () => {
@@ -304,7 +303,6 @@ const EventsScreen = ({ navigation }) => {
 
     loadData();
   }, []);
-
 
   return (
     <View source={backgroundImage} style={styles.background} resizeMode="cover">
@@ -358,9 +356,9 @@ const EventsScreen = ({ navigation }) => {
                             isRegistered: event.is_registered,
                             checkInAvailable: event.check_in_available,
                             already_checked_in: event.already_checked_in,
-                            totalConnections: event.total_connections,
-                            approvedRequests: event.approved_requests,
-                            pendingRequests: event.pending_requests,
+                            totalConnections: event.totalConnections,
+                            approvedRequests: event.approvedRequests,
+                            pendingRequests: event.pendingRequests,
                             fetchUpcomingEvents,
                           })}
                       />

@@ -152,15 +152,21 @@ const Scanner = ({ navigation }) => {
           <MaterialIcons name="arrow-back" size={24} color="#000" />
         </TouchableOpacity>
 
-        <QRCodeScanner
-          ref={scannerRef}
-          onRead={onSuccess}
-          showMarker={false}
-          reactivate={false}
-          vibrate={true}
-          containerStyle={{ flex: 1 }}
-          cameraStyle={{ height: '10%' }}
-        />
+        <View style={{ flex: 1, alignItems: 'center' }}>
+          <QRCodeScanner
+            ref={scannerRef}
+            onRead={onSuccess}
+            showMarker={false}
+            reactivate={false}
+            vibrate={true}
+            containerStyle={{ width: 295 }}
+            cameraStyle={{
+              height: 485,
+              width: '100%',
+              borderRadius: 20,
+              overflow: 'hidden',
+            }} />
+        </View>
 
         <View style={styles.overlayContainer}>
           <View style={styles.scannerBox}>
@@ -180,13 +186,15 @@ const Scanner = ({ navigation }) => {
               ]}
             />
           </View>
+
+        </View>
+        <View style={styles.connect}>
           <Text style={styles.centerText}>Connect New People</Text>
         </View>
-
         {loading && (
           <View style={styles.loadingOverlay}>
             <View style={styles.loadingContent}>
-              <ActivityIndicator size="large" color="#fff" />
+              <ActivityIndicator size="large" color="#34495e" />
               <Text style={styles.loadingText}>Checking connection...</Text>
             </View>
           </View>
@@ -321,7 +329,7 @@ const styles = StyleSheet.create({
   scannerBox: {
     width: 250,
     height: 250,
-    top: -60,
+    top: 0,
     borderColor: '#34495e',
     borderWidth: 3,
     borderRadius: 16,
@@ -351,10 +359,10 @@ const styles = StyleSheet.create({
 
   loadingOverlay: {
     position: 'absolute',
-    top: 0,
+    top: 100,
     left: 0,
     right: 0,
-    bottom: 250,
+    bottom: 200,
     backgroundColor: 'rgba(0, 0, 0, 0.6)',
     justifyContent: 'center',
     alignItems: 'center',
@@ -388,9 +396,15 @@ const styles = StyleSheet.create({
     elevation: 3,
   },
   backButton: {
-    padding: 10,
+    paddingLeft: 20,
     marginTop: 20,
   },
+  connect : {
+    display : "flex",
+    alignItems : "center",
+    justifyContent : "center",
+    marginBottom : 50
+  }
 });
 
 export default Scanner;

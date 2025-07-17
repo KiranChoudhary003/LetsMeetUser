@@ -11,6 +11,7 @@ import {
   Platform,
   PermissionsAndroid,
   StatusBar,
+  BackHandler,
 } from 'react-native';
 import logo from '../../assets/logo.png';
 import { PERMISSIONS, check, request, RESULTS, openSettings } from 'react-native-permissions';
@@ -18,6 +19,7 @@ import Geolocation from 'react-native-geolocation-service';
 import { LocationContext } from '../../components/LocationContext/LocationContext';
 import messaging from '@react-native-firebase/messaging';
 import AsyncStorage from '@react-native-async-storage/async-storage';
+import { useFocusEffect } from '@react-navigation/native';
 
 const Welcome = ({ navigation }) => {
   const colorAnim = useRef(new Animated.Value(0)).current;
@@ -25,6 +27,19 @@ const Welcome = ({ navigation }) => {
 
   const { setLocation } = useContext(LocationContext);
   const [locationData, setLocationData] = useState({ latitude: null, longitude: null });
+
+  useFocusEffect(
+    React.useCallback(() => {
+      const backAction = () => {
+        BackHandler.exitApp();
+        return true;
+      };
+
+      const backHandler = BackHandler.addEventListener('hardwareBackPress', backAction);
+
+      return () => backHandler.remove();
+    }, [])
+  );
 
   useEffect(() => {
     const initialize = async () => {
@@ -38,10 +53,6 @@ const Welcome = ({ navigation }) => {
       }
 
       const fcmToken = await requestNotificationPermission();
-
-      if (!fcmToken) {
-        console.warn('No FCM token available. Proceeding with null token.');
-      }
 
       setTimeout(async () => {
         const savedToken = await AsyncStorage.getItem('token');
@@ -178,8 +189,12 @@ const Welcome = ({ navigation }) => {
 
   return (
     <>
-      <StatusBar barStyle="light-content" backgroundColor="#34495e" translucent={false} />
-      <TouchableOpacity style={styles.container} activeOpacity={1}>
+      <StatusBar
+        barStyle="light-content"
+        backgroundColor="#34495e"
+        translucent={false}
+      />
+      <View style={styles.container} activeOpacity={1}>
         <Animated.View
           style={[
             styles.animatedBg,
@@ -197,7 +212,7 @@ const Welcome = ({ navigation }) => {
         <Animated.Text style={[styles.text, { opacity: textFadeAnim }]}>
           WELCOME
         </Animated.Text>
-      </TouchableOpacity>
+      </View>
     </>
   );
 };

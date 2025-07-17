@@ -1,4 +1,3 @@
-/* eslint-disable react-native/no-inline-styles */
 import React, { useRef, useState, useEffect, useContext, useMemo, useCallback } from 'react';
 import { Modal, TouchableWithoutFeedback, ActivityIndicator, Alert } from 'react-native';
 import {
@@ -31,7 +30,7 @@ const EventCard = ({
     onPress,
     isRegistered,
     checkInAvailable,
-    already_checked_in, 
+    already_checked_in,
     onRegister,
     onCheckIn,
 }) => {
@@ -139,18 +138,17 @@ const EventCard = ({
 };
 
 const groupEventsByMonth = (events) => {
-    const now = dayjs(); // Local current date
+    const now = dayjs();
 
-    // Only keep upcoming events (today or later)
     const upcomingEvents = events.filter(event => {
-        const eventEndDate = dayjs.utc(event.endDate).local(); // ensure proper parsing
+        const eventEndDate = dayjs.utc(event.endDate).local();
         return eventEndDate.isAfter(now) || eventEndDate.isSame(now, 'day');
     });
 
     const grouped = upcomingEvents.reduce((acc, event) => {
         const eventDate = dayjs.utc(event.date).local();
         const year = eventDate.year();
-        const monthNumber = eventDate.month(); // 0 = January
+        const monthNumber = eventDate.month();
         const monthName = eventDate.format('MMMM');
 
         const key = `${year}-${monthNumber}`;
@@ -167,7 +165,6 @@ const groupEventsByMonth = (events) => {
         return acc;
     }, {});
 
-    // Sort the grouped keys
     const sortedKeys = Object.keys(grouped).sort((a, b) => {
         const [yearA, monthA] = a.split('-').map(Number);
         const [yearB, monthB] = b.split('-').map(Number);
@@ -186,15 +183,12 @@ const groupEventsByMonth = (events) => {
 const formatDate = (date) => {
     if (!date) return '';
     const IST = 'Asia/Kolkata';
-    // If it's already a Dayjs object
     if (dayjs.isDayjs(date)) {
         return date.tz(IST).format('MM-DD-YYYY');
     }
-    // If it's a string like "2025-06-27 18:30:00"
     if (typeof date === 'string') {
         return dayjs.tz(date, IST).format('MM-DD-YYYY');
     }
-    // If it's a JS Date object
     if (date instanceof Date) {
         return dayjs(date).tz(IST).format('MM-DD-YYYY');
     }
@@ -213,6 +207,7 @@ const Home = ({ navigation }) => {
     const [showDatePicker, setShowDatePicker] = useState(false);
     const [hasDateBeenPicked, setHasDateBeenPicked] = useState(false);
     const [loading, setLoading] = useState(false);
+    const [checkInDistance, setCheckInDistance] = useState(null);
 
     const formatDateToLocalYYYYMMDD = (date) => {
         const year = date.getFullYear();
@@ -264,7 +259,7 @@ const Home = ({ navigation }) => {
                         event.lat,
                         event.lon
                     );
-                    return distance <= 5; 
+                    return distance <= 5;
                 });
 
             default:
@@ -273,7 +268,7 @@ const Home = ({ navigation }) => {
     };
 
     const calculateDistance = (lat1, lon1, lat2, lon2) => {
-        const R = 6371; 
+        const R = 6371;
         const dLat = (lat2 - lat1) * Math.PI / 180;
         const dLon = (lon2 - lon1) * Math.PI / 180;
 
@@ -311,7 +306,7 @@ const Home = ({ navigation }) => {
 
             Alert.alert(
                 'Registration Successful',
-                'Check-in will be enabled when you are within the event radius on the day of the event.',
+                `Check-in will be enabled when you are within ${checkInDistance} meters of the event on the day of the event.`,
                 [{ text: 'OK' }]
             );
             fetchUpcomingEvents();
@@ -372,6 +367,10 @@ const Home = ({ navigation }) => {
             );
 
             const rawEvents = response.data.events;
+            const checkInDistance = response.data.check_in_distance;
+
+            await AsyncStorage.setItem('check_in_distance', checkInDistance.toString());
+
             const formattedEvents = rawEvents.map(event => ({
                 id: event.id,
                 name: event.name,
@@ -386,8 +385,10 @@ const Home = ({ navigation }) => {
                 is_registered: event.is_registered,
                 check_in_available: event.check_in_available,
                 already_checked_in: event.already_checked_in,
+                check_in_distance: checkInDistance,
             }));
 
+            setCheckInDistance(checkInDistance);
             setEventData(formattedEvents);
             setFilteredEvents(filterEvents(formattedEvents, selectedFilter, customDate, location));
         } catch (error) {
@@ -595,6 +596,7 @@ const Home = ({ navigation }) => {
                                             isRegistered={event.is_registered}
                                             checkInAvailable={event.check_in_available}
                                             already_checked_in={event.already_checked_in}
+                                            checkInDistance={event.check_in_distance}
                                             onRegister={() => handleRegister(event.id)}
                                             onCheckIn={() => handleCheckIn(event.id)}
                                             onPress={() =>
@@ -612,6 +614,7 @@ const Home = ({ navigation }) => {
                                                     isRegistered: event.is_registered,
                                                     checkInAvailable: event.check_in_available,
                                                     already_checked_in: event.already_checked_in,
+                                                    checkInDistance: event.check_in_distance,
                                                 })
                                             }
                                         />

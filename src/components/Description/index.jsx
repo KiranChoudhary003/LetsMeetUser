@@ -23,10 +23,13 @@ const Description = ({ navigation, route }) => {
         name,
         organizer,
         description,
+        date,
+        endDate,
         banner,
         isRegistered,
         checkInAvailable,
         already_checked_in,
+        checkInDistance,
     } = route.params;
 
     const [buttonState, setButtonState] = useState(() => {
@@ -55,7 +58,7 @@ const Description = ({ navigation, route }) => {
             if (!checkInAvailable) {
                 Alert.alert(
                     'Check-In Unavailable',
-                    'Check-in is not available at the moment. Please try again later or ensure you meet the requirements.',
+                    `Check-in is not available at the moment.\nYou must be within ${checkInDistance} meters of the event location on the day of the event.`,
                     [{ text: 'OK' }]
                 );
                 return;
@@ -88,7 +91,7 @@ const Description = ({ navigation, route }) => {
 
             Alert.alert(
                 'Registration Successful',
-                'Check-in will be enabled when you are within the event radius on the day of the event.',
+                `Check-in will be enabled when you are within ${checkInDistance} meters of the event location on the day of the event.`,
                 [{ text: 'OK' }]
             );
             navigation.goBack();
@@ -162,6 +165,30 @@ const Description = ({ navigation, route }) => {
                             <Text style={styles.locationText}> {organizer}</Text>
                         </View>
 
+                        <Text style={styles.descriptionHeading}>Start Date</Text>
+                        <Text style={styles.descriptionText}>
+                            {new Date(date).toLocaleString("en-GB", {
+                                day: '2-digit',
+                                month: 'short',
+                                year: 'numeric',
+                                hour: '2-digit',
+                                minute: '2-digit',
+                                hour12: false
+                            })}
+                        </Text>
+
+                        <Text style={styles.descriptionHeading}>End Date</Text>
+                        <Text style={styles.descriptionText}>
+                            {new Date(endDate).toLocaleString("en-GB", {
+                                day: '2-digit',
+                                month: 'short',
+                                year: 'numeric',
+                                hour: '2-digit',
+                                minute: '2-digit',
+                                hour12: false
+                            })}
+                        </Text>
+
                         <Text style={styles.descriptionHeading}>Description</Text>
                         <Text style={styles.descriptionText}>{description}</Text>
 
@@ -182,10 +209,10 @@ const Description = ({ navigation, route }) => {
                                 },
                             ]}
                             onPress={handlePress}
-                            disabled={isLoading || (buttonState === 'checkin' && !checkInAvailable)}
+                            disabled={isLoading}
                         >
                             {isLoading ? (
-                                <ActivityIndicator size="small" color="#0000ff" />
+                                <ActivityIndicator size="small" color="#34495e" />
                             ) : buttonState === 'checkedin' ? (
                                 <View style={styles.tickWrapper}>
                                     <Text style={styles.tickText}>Checked In</Text>

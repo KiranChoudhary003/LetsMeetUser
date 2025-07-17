@@ -370,7 +370,7 @@ const ChatPage = ({ route }) => {
                 <View style={{ flex: 1 }}>
                     {loading ? (
                         <View style={{ flex: 1, justifyContent: 'center', alignItems: 'center' }}>
-                            <ActivityIndicator size="large" color="#007aff" />
+                            <ActivityIndicator size="large" color="#34495e" />
                             <Text style={{ color: '#555', fontSize: 16, marginTop: 10 }}>
                                 Loading chat messages...
                             </Text>

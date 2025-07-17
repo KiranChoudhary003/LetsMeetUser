@@ -150,7 +150,7 @@ const Login = ({ navigation, route }) => {
                         </View>
 
                         {loading ? (
-                            <ActivityIndicator size="large" color="#7680DE" />
+                            <ActivityIndicator size="large" color="#34495e" />
                         ) : (
                             <TouchableOpacity style={styles.button} onPress={handleSubmit}>
                                 <Text style={styles.buttonText}>Log-in</Text>
@@ -183,7 +183,7 @@ const Login = ({ navigation, route }) => {
                                         onChangeText={(text) => setForgotEmail(text.toLowerCase())}
                                     />
                                     {forgotLoading ? (
-                                        <ActivityIndicator size="small" color="#7680DE" />
+                                        <ActivityIndicator size="small" color="#34495e" />
                                     ) : (
                                         <TouchableOpacity style={styles.button} onPress={handleForgotPassword}>
                                             <Text style={styles.buttonText}>Submit</Text>

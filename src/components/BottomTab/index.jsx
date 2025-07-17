@@ -48,7 +48,7 @@ const BottomTab = () => {
                         <MaterialCommunityIcons
                             name={isActive ? tab.iconActive : tab.iconInactive}
                             size={26}
-                            color={isActive ? '#000' : '#fff'} 
+                            color={isActive ? '#34495e' : '#fff'} 
                         />
                         <Text style={[styles.label, isActive && styles.activeLabel]}>
                             {tab.label}
@@ -87,13 +87,13 @@ const styles = StyleSheet.create({
         marginTop: 2,
     },
     activeTab: {
-        backgroundColor: '#2c3e50', 
+        backgroundColor: '#e8effc', 
         padding: 8,
         borderRadius: 8,
-        transform: [{ scale: 1.1 }],
+        // transform: [{ scale: 1.1 }],
     },
     activeLabel: {
-        color: '#000', 
+        color: '#34495e', 
         fontWeight: 'bold',
         textShadowOffset: { width: 0, height: 0 },
     },

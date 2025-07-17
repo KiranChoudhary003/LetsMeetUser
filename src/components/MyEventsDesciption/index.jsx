@@ -36,6 +36,8 @@ const MyEventsDesciption = ({ navigation, route }) => {
         fetchUpcomingEvents,
     } = route.params;
 
+    console.log("🔍 Description Screen — checkInAvailable:", checkInAvailable);
+
     const [buttonState, setButtonState] = useState(() => {
         if (already_checked_in) {
             return 'checkedin';
@@ -54,13 +56,24 @@ const MyEventsDesciption = ({ navigation, route }) => {
     const [isLoading, setIsLoading] = useState(false);
 
     const handlePress = async () => {
-        if (isLoading) { return; }
+        if (isLoading) return;
 
-        if (buttonState === 'checkin') {
+        if (buttonState === 'register') {
+            if (!id) {
+                return;
+            }
+
+            setIsLoading(true);
+            try {
+                await handleRegister(id);
+                setButtonState('checkin');
+            } catch (error) { }
+            setIsLoading(false);
+        } else if (buttonState === 'checkin') {
             if (!checkInAvailable) {
                 Alert.alert(
                     'Check-In Unavailable',
-                    'Check-in is not available at the moment. Please try again later or ensure you meet the requirements.',
+                    `Check-in is not available at the moment.\nYou must be within 1000 meters of the event location on the day of the event.`,
                     [{ text: 'OK' }]
                 );
                 return;
@@ -70,9 +83,7 @@ const MyEventsDesciption = ({ navigation, route }) => {
             try {
                 await handleCheckIn(id);
                 setButtonState('checkedin');
-            } catch (error) {
-
-            }
+            } catch (error) { }
             setIsLoading(false);
         }
     };
@@ -138,38 +149,72 @@ const MyEventsDesciption = ({ navigation, route }) => {
                             <Text style={styles.locationText}> {organizer}</Text>
                         </View>
 
+                        <Text style={styles.descriptionHeading}>Start Date</Text>
+                        <Text style={styles.descriptionText}>
+                            {new Date(start_date).toLocaleString("en-GB", {
+                                day: '2-digit',
+                                month: 'short',
+                                year: 'numeric',
+                                hour: '2-digit',
+                                minute: '2-digit',
+                                hour12: false
+                            })}
+                        </Text>
+
+                        <Text style={styles.descriptionHeading}>End Date</Text>
+                        <Text style={styles.descriptionText}>
+                            {new Date(end_date).toLocaleString("en-GB", {
+                                day: '2-digit',
+                                month: 'short',
+                                year: 'numeric',
+                                hour: '2-digit',
+                                minute: '2-digit',
+                                hour12: false
+                            })}
+                        </Text>
+
                         <Text style={styles.descriptionHeading}>Description</Text>
                         <Text style={styles.descriptionText}>{description}</Text>
 
-                        {buttonState === 'checkedin' ? (
-                            <View style={styles.tickWrapper}>
-                                <Text style={styles.tickText}>You have Attended the Event</Text>
-                            </View>
-                        ) : buttonState === 'missed' ? (
-                            <View style={styles.tickWrapper}>
-                                <Text style={[styles.tickText, { color: 'red' }]}>You didn't attend the event</Text>
-                            </View>
-                        ) : buttonState === 'checkin' ? (
-                            <TouchableOpacity
-                                style={[
-                                    styles.attendButton,
-                                    {
-                                        backgroundColor: checkInAvailable ? '#4CAF50' : '#aaa',
-                                        borderColor: '#000000',
-                                    },
-                                ]}
-                                onPress={handlePress}
-                                disabled={!checkInAvailable || isLoading}
-                            >
-                                {isLoading ? (
-                                    <ActivityIndicator size="small" color="#ffffff" />
-                                ) : (
-                                    <Text style={[styles.attendButtonText, { color: 'white' }]}>
-                                        Check In
+                        <TouchableOpacity
+                            style={[
+                                styles.attendButton,
+                                {
+                                    backgroundColor:
+                                        buttonState === 'checkedin'
+                                            ? 'transparent'
+                                            : buttonState === 'checkin'
+                                                ? checkInAvailable
+                                                    ? '#4CAF50'
+                                                    : '#aaa'
+                                                : 'white',
+                                    borderColor:
+                                        buttonState === 'checkedin' || buttonState === 'missed'
+                                            ? 'transparent'
+                                            : '#000000',
+                                },
+                            ]}
+                            onPress={handlePress}
+                            disabled={isLoading || buttonState !== 'checkin' || !checkInAvailable}
+                        >
+                            {isLoading ? (
+                                <ActivityIndicator size="small" color="#34495e" />
+                            ) : buttonState === 'checkedin' ? (
+                                <View style={styles.tickWrapper}>
+                                    <Text style={styles.tickText}>You have Attended the Event</Text>
+                                </View>
+                            ) : buttonState === 'missed' ? (
+                                <View style={styles.tickWrapper}>
+                                    <Text style={[styles.tickText, { color: 'red' }]}>
+                                        You didn't attend the event
                                     </Text>
-                                )}
-                            </TouchableOpacity>
-                        ) : null}
+                                </View>
+                            ) : (
+                                <Text style={[styles.attendButtonText, { color: 'white' }]}>
+                                    Check In
+                                </Text>
+                            )}
+                        </TouchableOpacity>
 
                         <View style={styles.statsContainer}>
                             <View style={styles.statBox}>
@@ -204,7 +249,7 @@ const styles = StyleSheet.create({
         backgroundColor: '#e8effc',
     },
     header: {
-        height : 70,
+        height: 70,
         flexDirection: 'row',
         alignItems: 'center',
         paddingHorizontal: 15,
@@ -287,7 +332,7 @@ const styles = StyleSheet.create({
         paddingVertical: 14,
         paddingHorizontal: 8,
         borderWidth: 1.5,
-        borderColor: '#3A5BFF',
+        borderColor: '#34495e',
         borderRadius: 12,
         backgroundColor: 'transparent',
         alignItems: 'center',

@@ -124,12 +124,12 @@ const SignUp = ({ navigation, route }) => {
                             keyboardShouldPersistTaps="handled"
                             showsVerticalScrollIndicator={false}
                         >
-                            <TextInput style={styles.input} placeholder="First Name" placeholderTextColor="#888" value={firstName} onChangeText={setFirstName} />
-                            <TextInput style={styles.input} placeholder="Middle Name(Optional)" placeholderTextColor="#888" value={middleName} onChangeText={setMiddleName} />
-                            <TextInput style={styles.input} placeholder="Last Name" placeholderTextColor="#888" value={lastName} onChangeText={setLastName} />
-                            <TextInput style={styles.input} placeholder="E-mail" placeholderTextColor="#888" value={email} onChangeText={(text) => setEmail(text.toLowerCase())} />
-                            <TextInput style={styles.input} placeholder="Create Password" placeholderTextColor="#888" value={password} onChangeText={setPassword} />
-                            <TextInput style={styles.input} placeholder="LinkedIn URL" placeholderTextColor="#888" value={linkedin} onChangeText={setLinkedin} />
+                            <TextInput style={styles.input} placeholder="First Name*" placeholderTextColor="#888" value={firstName} onChangeText={setFirstName} />
+                            <TextInput style={styles.input} placeholder="Middle Name" placeholderTextColor="#888" value={middleName} onChangeText={setMiddleName} />
+                            <TextInput style={styles.input} placeholder="Last Name*" placeholderTextColor="#888" value={lastName} onChangeText={setLastName} />
+                            <TextInput style={styles.input} placeholder="E-mail*" placeholderTextColor="#888" value={email} onChangeText={(text) => setEmail(text.toLowerCase())} />
+                            <TextInput style={styles.input} placeholder="Create Password*" placeholderTextColor="#888" value={password} onChangeText={setPassword} />
+                            <TextInput style={styles.input} placeholder="LinkedIn URL*" placeholderTextColor="#888" value={linkedin} onChangeText={setLinkedin} />
                             <TextInput style={styles.input} placeholder="Company Name" placeholderTextColor="#888" value={companyName} onChangeText={setCompanyName} />
 
                             <TouchableOpacity
@@ -161,9 +161,9 @@ const SignUp = ({ navigation, route }) => {
                                 >
                                     {jobRole
                                         ? typeof jobRole === 'string'
-                                            ? jobRole
-                                            : jobRole.label
-                                        : 'Role'}
+                                            ? jobRole.toUpperCase()
+                                            : jobRole.label.toUpperCase()
+                                        : 'Role*'}
                                 </Text>
                             </TouchableOpacity>
 
@@ -189,7 +189,7 @@ const SignUp = ({ navigation, route }) => {
                                                         setJobRole(role);
                                                         setVisible(false);
                                                     }}
-                                                    title={role}
+                                                    title={role.toUpperCase()}
                                                     titleStyle={{ color: 'black' }}
                                                 />
                                             </View>
@@ -199,13 +199,13 @@ const SignUp = ({ navigation, route }) => {
                             )}
 
                             <TouchableOpacity style={styles.input} onPress={() => setModalVisible(true)}>
-                                <Text style={styles.anchorText}>Preferences</Text>
+                                <Text style={styles.anchorText}>Preferences*</Text>
                             </TouchableOpacity>
 
                             <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={styles.selectedWrapper}>
                                 {selectedRoles.map((role, index) => (
                                     <View key={index} style={styles.tag}>
-                                        <Text style={styles.tagText}>{role}</Text>
+                                        <Text style={styles.tagText}>{role.toUpperCase()}</Text>
                                         <TouchableOpacity onPress={() => removeRole(role)}>
                                             <MaterialIcons name="close" size={16} color="#888" />
                                         </TouchableOpacity>
@@ -217,7 +217,7 @@ const SignUp = ({ navigation, route }) => {
 
                     <View style={{ padding: 16 }}>
                         {loading ? (
-                            <ActivityIndicator size="large" color="#7680DE" />
+                            <ActivityIndicator size="large" color="#34495e" />
                         ) : (
                             <TouchableOpacity style={styles.button} onPress={handleSubmit}>
                                 <Text style={styles.buttonText}>Sign-up</Text>
@@ -261,7 +261,7 @@ const SignUp = ({ navigation, route }) => {
                                 <ScrollView style={{ maxHeight: 250 }}>
                                     {roles.map((role, index) => (
                                         <View key={index} style={styles.checkboxRow}>
-                                            <Text style={styles.roleText}>{role}</Text>
+                                            <Text style={styles.roleText}>{role.toUpperCase()}</Text>
                                             <Checkbox.Android
                                                 status={selectedRoles.includes(role) ? 'checked' : 'unchecked'}
                                                 onPress={() => toggleRole(role)}
@@ -398,9 +398,10 @@ const styles = StyleSheet.create({
         borderColor: '#ccc',
         padding: 12,
         borderRadius: 8,
-        marginBottom: 10,
+        marginBottom: 12,
         alignSelf: 'center',
         width: '85%',
+        height: 45,
         backgroundColor: '#f7faff',
         color: "#000",
     },

@@ -1,6 +1,5 @@
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { useFocusEffect, useNavigation } from '@react-navigation/native';
-import { jwtDecode } from 'jwt-decode';
 import React, { useCallback, useEffect, useState } from 'react';
 import {
     ActivityIndicator,
@@ -14,12 +13,12 @@ import {
     TouchableOpacity,
     View,
 } from 'react-native';
-import { SafeAreaView } from 'react-native-safe-area-context';
+import { SafeAreaView } from 'react-native-safe-area-context'; // ✅ added
 import Entypo from 'react-native-vector-icons/Entypo';
 import Ionicons from 'react-native-vector-icons/Ionicons';
 import { io } from 'socket.io-client';
 import profile from '../../assets/profile.png';
-import MaterialIcons from 'react-native-vector-icons/MaterialIcons';
+
 
 const API_URL = 'https://letsmeet-backend-47lv.onrender.com/api';
 
@@ -28,10 +27,6 @@ export default function UserListScreen() {
     const [users, setUsers] = useState([]);
     const [searchQuery, setSearchQuery] = useState('');
     const [loading, setLoading] = useState(true);
-
-    useEffect(() => {
-        fetchConnections();
-    }, []);
 
     useFocusEffect(
         useCallback(() => {
@@ -52,6 +47,7 @@ export default function UserListScreen() {
                 .sort((a, b) => new Date(b.last_message_time) - new Date(a.last_message_time));
             setUsers(filtered);
         } catch (error) {
+            console.error('Error fetching connections:', error);
         } finally {
             setLoading(false);
         }
@@ -63,9 +59,6 @@ export default function UserListScreen() {
         const setupSocket = async () => {
             const token = await AsyncStorage.getItem('token');
             if (!token) { return; }
-
-            const decoded = jwtDecode(token);
-            const currentUserId = decoded.id || decoded.user_id;
 
             socket = io('https://letsmeet-backend-47lv.onrender.com/', {
                 auth: { token },
@@ -79,7 +72,7 @@ export default function UserListScreen() {
                             return {
                                 ...user,
                                 last_message: msg.content,
-                                last_message_time: msg.sent_at,
+                                last_message_time: msg.sent_at, // Make sure this is a valid date string
                                 unread_count: (user.unread_count || 0) + 1,
                             };
                         }
@@ -95,7 +88,7 @@ export default function UserListScreen() {
                     prevUsers.map(user =>
                         user.chat_id === chat_id ? { ...user, unread_count: 0 } : user
                     )
-                        .sort((a, b) => new Date(b.last_message_time) - new Date(a.last_message_time))
+                        .sort((a, b) => new Date(b.last_message_time) - new Date(a.last_message_time)) // ✅ Keep sorted
                 );
             });
 
@@ -115,48 +108,45 @@ export default function UserListScreen() {
     const renderItem = ({ item }) => {
         const unreadCount = item.unread_count || 0;
 
-        const handleDeleteChat = async () => {
-            try {
-                const token = await AsyncStorage.getItem('token');
-                const res = await fetch(`${API_URL}/user-chat/delete/${item.id}`, {
-                    method: 'DELETE',
-                    headers: { Authorization: `Bearer ${token}` },
-                });
-                const result = await res.json();
-                if (res.ok) {
-                    setUsers(prev => prev.filter(user => user.id !== item.id));
-                    Alert.alert('Chat deleted successfully');
-                } else {
-                    Alert.alert(result.message || 'Failed to delete chat');
-                }
-            } catch (err) {
-                Alert.alert('Error deleting chat');
-            }
+        const handleDeleteChat = () => {
+            Alert.alert(
+                'Delete Chat',
+                `Are you sure you want to delete chat with ${item.first_name} ${item.last_name}?`,
+                [
+                    { text: 'Cancel', style: 'cancel' },
+                    {
+                        text: 'Delete',
+                        onPress: async () => {
+                            try {
+                                const token = await AsyncStorage.getItem('token');
+                                const res = await fetch(`${API_URL}/user-chat/delete/${item.id}`, {
+                                    method: 'DELETE',
+                                    headers: { Authorization: `Bearer ${token}` },
+                                });
+                                const result = await res.json();
+                                if (res.ok) {
+                                    setUsers(prev => prev.filter(user => user.id !== item.id));
+                                    Alert.alert('Success', 'Chat deleted successfully');
+                                } else {
+                                    Alert.alert('Error', result.message || 'Failed to delete chat');
+                                }
+                            } catch (err) {
+                                console.error('Delete error:', err);
+                                Alert.alert('Error', 'Error deleting chat');
+                            }
+                        },
+                        style: 'destructive',
+                    },
+                ],
+                { cancelable: true }
+            );
         };
-
-        const confirmDelete = () => {
-            if (Platform.OS === 'web') {
-                if (window.confirm(`Delete chat with ${item.first_name}?`)) {
-                    handleDeleteChat();
-                }
-            } else {
-                Alert.alert(
-                    'Delete Chat',
-                    `Are you sure you want to delete chat with ${item.first_name}?`,
-                    [
-                        { text: 'Cancel', style: 'cancel' },
-                        { text: 'Delete', onPress: handleDeleteChat, style: 'destructive' },
-                    ]
-                );
-            }
-        };
-
 
         return (
             <TouchableOpacity
                 style={styles.userCard}
                 onPress={() => navigation.navigate('ChatPage', { peer: item })}
-                onLongPress={confirmDelete}
+                onLongPress={handleDeleteChat}
             >
                 <View style={styles.row}>
                     <Image
@@ -192,7 +182,11 @@ export default function UserListScreen() {
 
     return (
         <>
-            <StatusBar barStyle="light-content" backgroundColor="#34495e" />
+            <StatusBar
+                translucent
+                backgroundColor="#34495e"
+                barStyle={Platform.OS === 'ios' ? 'default' : 'dark-content'}
+            />
             <SafeAreaView style={styles.safeContainer}>
                 <View style={styles.headingContainer}>
                     <View style={styles.headerRow}>
@@ -213,7 +207,7 @@ export default function UserListScreen() {
                 </View>
                 {loading ? (
                     <View style={{ alignItems: 'center', marginTop: 30 }}>
-                        <ActivityIndicator size="large" color="#007AFF" />
+                        <ActivityIndicator size="large" color="#34495e" />
                         <Text style={{ marginTop: 10, color: '#555', fontSize: 14 }}>
                             Loading your connections...
                         </Text>
@@ -226,8 +220,8 @@ export default function UserListScreen() {
                         keyExtractor={(item) => item.id.toString()}
                         renderItem={renderItem}
                         contentContainerStyle={{ paddingBottom: 20 }}
-                        extraData={users}
-                        keyboardShouldPersistTaps="handled"
+                        extraData={users} // ✅ Ensures FlatList re-renders on state update
+                        keyboardShouldPersistTaps="handled" // ✅ Allows input + touch to work smoothly
                         ListEmptyComponent={
                             !loading && (
                                 <Text style={styles.noUsersText}>No users found</Text>
@@ -241,7 +235,7 @@ export default function UserListScreen() {
                     style={styles.floatingButton}
                     onPress={() => navigation.navigate('UserFriendList')}
                 >
-                    <MaterialIcons name="add" size={30} color="#fff" />
+                    <Ionicons name="add" size={30} color="#fff" />
                 </TouchableOpacity>
             </SafeAreaView>
         </>
@@ -258,14 +252,12 @@ const styles = StyleSheet.create({
     safeContainer: {
         flex: 1,
         backgroundColor: '#e8effc',
-        height: 70
     },
 
     headingContainer: {
         backgroundColor: '#34495E',
         paddingVertical: 12,
         paddingHorizontal: 16,
-        height: 70
     },
 
     headerRow: {

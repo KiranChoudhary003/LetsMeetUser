@@ -335,9 +335,14 @@ const Connections = ({ navigation }) => {
     (async () => {
       if (undoUser && pendingAccepts[undoUser.id]) {
         clearTimeout(pendingAccepts[undoUser.id]);
+        setPendingAccepts(prev => {
+          const updated = { ...prev };
+          delete updated[undoUser.id];
+          return updated;
+        });
+
         await finalizeAction(undoUser, 'accept');
       }
-
       if (undoRequestUser && pendingRequests[undoRequestUser.id]) {
         clearTimeout(pendingRequests[undoRequestUser.id]);
         await finalizeAction(undoRequestUser, 'request');
@@ -586,7 +591,7 @@ const Connections = ({ navigation }) => {
             <View style={{ width }}>
               {loading ? (
                 <View style={{ alignItems: 'center', marginTop: 40 }}>
-                  <ActivityIndicator size="large" color="#007AFF" />
+                  <ActivityIndicator size="large" color="#34495e" />
                   <Text style={{ marginTop: 10, fontSize: 16, color: '#333' }}>
                     Fetching connections...
                   </Text>
@@ -618,7 +623,7 @@ const Connections = ({ navigation }) => {
             <View style={{ width }}>
               {loading ? (
                 <View style={{ alignItems: 'center', marginTop: 40 }}>
-                  <ActivityIndicator size="large" color="#007AFF" />
+                  <ActivityIndicator size="large" color="#34495e" />
                   <Text style={{ marginTop: 10, fontSize: 16, color: '#333' }}>
                     Fetching connections...
                   </Text>

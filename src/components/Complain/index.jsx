@@ -169,7 +169,7 @@ const Complain = ({ navigation }) => {
 
                 {loading ? (
                     <View style={styles.loaderContainer}>
-                        <ActivityIndicator size="large" color="#000" />
+                        <ActivityIndicator size="large" color="#34495e" />
                         <Text style={{ marginTop: 8, color: '#444' }}>Loading complaints...</Text>
                     </View>
                 ) : (

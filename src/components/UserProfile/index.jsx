@@ -10,23 +10,24 @@ import profile from '../../assets/profile.png';
 import axios from 'axios';
 import { BlurView } from '@react-native-community/blur';
 import { launchImageLibrary } from 'react-native-image-picker';
-import { useFocusEffect } from '@react-navigation/native';
+import { CommonActions, useFocusEffect } from '@react-navigation/native';
 import FontAwesome from 'react-native-vector-icons/FontAwesome';
-import messaging from '@react-native-firebase/messaging';
-import { CommonActions } from '@react-navigation/native';
+import { getMessaging } from '@react-native-firebase/messaging';
 
 const { width } = Dimensions.get('window');
 
 const UserProfile = ({ navigation, route }) => {
     const [userProfile, setUserProfile] = useState({});
     const [profileView, setProfileView] = useState(false);
-    const [loading, setLoading] = useState(true);
+    const [loading, setloading] = useState('')
+    const [logoutLoading, setLogoutLoading] = useState('')
+
     const passedUser = route?.params?.user;
     const isViewingOwnProfile = !passedUser;
 
     const fetchProfileData = async () => {
         try {
-            setLoading(true)
+            setloading(true)
             const token = await AsyncStorage.getItem('token');
             const response = await axios.get('https://letsmeet-backend-47lv.onrender.com/api/user-profile', {
                 headers: {
@@ -44,9 +45,9 @@ const UserProfile = ({ navigation, route }) => {
                 await AsyncStorage.setItem('user_photo', photoUri);
             }
         } catch (err) {
-        }
-        finally {
-            setLoading(false);
+            console.error('Error fetching profile:', err);
+        } finally {
+            setloading(false)
         }
     };
 
@@ -124,6 +125,7 @@ const UserProfile = ({ navigation, route }) => {
 
     const handleLogout = async () => {
         try {
+            setLogoutLoading(true)
             const token = await AsyncStorage.getItem('token');
 
             await axios.put(
@@ -136,7 +138,7 @@ const UserProfile = ({ navigation, route }) => {
                 }
             );
 
-            await messaging().deleteToken();
+            await getMessaging().deleteToken();
             await AsyncStorage.removeItem('token');
             await AsyncStorage.removeItem('user_photo');
 
@@ -147,7 +149,10 @@ const UserProfile = ({ navigation, route }) => {
                 })
             );
         } catch (err) {
+            console.log(err)
             Alert.alert('Error', 'Logout failed. Try again.');
+        } finally {
+            setLogoutLoading(false)
         }
     };
 
@@ -184,18 +189,13 @@ const UserProfile = ({ navigation, route }) => {
                         <TouchableOpacity onPress={() => navigation.goBack()}>
                             <MaterialIcons name="arrow-back" size={24} color="#fff" />
                         </TouchableOpacity>
-
                         <Text style={styles.profileHeader}>Profile</Text>
-
-                        {isViewingOwnProfile ? (
+                        {isViewingOwnProfile && (
                             <TouchableOpacity style={styles.profileEdit} onPress={handleProfileEdit}>
                                 <MaterialIcons name="edit" size={24} color="#fff" />
                             </TouchableOpacity>
-                        ) : (
-                            <View style={{ width: 24 }} />
                         )}
                     </View>
-
                     <View style={styles.userName}>
                         <Text style={styles.userDetail}>{userProfile.first_name}</Text>
                         <Text style={styles.userDetail}> {userProfile.last_name}</Text>
@@ -282,10 +282,13 @@ const UserProfile = ({ navigation, route }) => {
                         </View>
 
                         {isViewingOwnProfile && (
-                            <TouchableOpacity onPress={handleLogout}>
-                                <Text style={styles.logout}>Logout</Text>
-                            </TouchableOpacity>
-                        )}
+                            logoutLoading ? (
+                                <ActivityIndicator size="large" color="#34495e" style={{ marginTop: 10 }} />
+                            ) : (
+                                <TouchableOpacity onPress={handleLogout}>
+                                    <Text style={styles.logout}>Logout</Text>
+                                </TouchableOpacity>
+                            ))}
                     </View>
                 )}
             </ScrollView>
@@ -320,21 +323,13 @@ const styles = StyleSheet.create({
         flexDirection: 'row',
         alignItems: 'center',
         justifyContent: 'space-between',
-        paddingHorizontal: 10,
+        paddingHorizontal: 20,
         paddingTop: 15,
-        height: 60,
-        position: 'relative',
     },
-
     profileHeader: {
-        position: 'absolute',
-        left: 0,
-        right: 0,
-        textAlign: 'center',
+        color: 'white',
         fontSize: 24,
-        fontWeight: 'bold',
-        color: '#fff',
-        marginTop: 15
+        fontWeight: '600',
     },
     profileEdit: {
         padding: 4,
@@ -542,6 +537,8 @@ const styles = StyleSheet.create({
         fontSize: 14,
         fontWeight: '500',
     },
+
+
 
 });
 

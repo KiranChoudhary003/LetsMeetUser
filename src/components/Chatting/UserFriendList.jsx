@@ -5,6 +5,7 @@ import {
     ActivityIndicator,
     FlatList,
     Image,
+    StatusBar,
     StyleSheet,
     Text,
     TextInput,
@@ -135,51 +136,58 @@ export default function UserListScreen() {
     );
 
     return (
-        <SafeAreaView style={styles.safeContainer}>
-            <View style={styles.headingContainer}>
-                <View style={styles.headerRow}>
-                    <TouchableOpacity
-                        onPress={() => {
-                            if (navigation.canGoBack()) navigation.goBack();
-                        }}
-                        style={styles.backButton}
-                    >
-                        <Ionicons name="arrow-back-outline" size={24} color="white" />
-                    </TouchableOpacity>
-                    <Text style={styles.title}>My Network</Text>
+        <>
+            <StatusBar
+                translucent
+                backgroundColor="#34495e"
+                barStyle={Platform.OS === 'ios' ? 'default' : 'dark-content'}
+            />
+            <SafeAreaView style={styles.safeContainer}>
+                <View style={styles.headingContainer}>
+                    <View style={styles.headerRow}>
+                        <TouchableOpacity
+                            onPress={() => {
+                                if (navigation.canGoBack()) navigation.goBack();
+                            }}
+                            style={styles.backButton}
+                        >
+                            <Ionicons name="arrow-back-outline" size={24} color="white" />
+                        </TouchableOpacity>
+                        <Text style={styles.title}>My Network</Text>
+                    </View>
                 </View>
-            </View>
-            <View style={styles.searchBar}>
-                <Entypo name="magnifying-glass" size={24} color="black" />
-                <TextInput
-                    placeholder="Search users..."
-                    onChangeText={setSearchQuery}
-                    value={searchQuery}
-                    placeholderTextColor="#888"
-                />
-            </View>
-            {loading ? (
-                <View style={styles.loadingContainer}>
-                    <ActivityIndicator size="large" color="#007AFF" />
-                    <Text style={styles.loadingText}>Fetching your connections. Please wait...</Text>
+                <View style={styles.searchBar}>
+                    <Entypo name="magnifying-glass" size={24} color="black" />
+                    <TextInput
+                        placeholder="Search users..."
+                        onChangeText={setSearchQuery}
+                        value={searchQuery}
+                        placeholderTextColor="#888"
+                    />
                 </View>
-            ) : users.length === 0 ? (
-                <View style={styles.emptyState}>
-                    <Text style={styles.emptyText}>You have no connections.</Text>
-                </View>
-            ) : filteredUsers.length === 0 ? (
-                <View style={styles.emptyState}>
-                    <Text style={styles.emptyText}>No users found.</Text>
-                </View>
-            ) : (
-                <FlatList
-                    data={filteredUsers}
-                    keyExtractor={item => item.id.toString()}
-                    renderItem={renderItem}
-                    contentContainerStyle={{ paddingBottom: 20 }}
-                />
-            )}
-        </SafeAreaView>
+                {loading ? (
+                    <View style={styles.loadingContainer}>
+                        <ActivityIndicator size="large" color="#34495e" />
+                        <Text style={styles.loadingText}>Fetching your connections. Please wait...</Text>
+                    </View>
+                ) : users.length === 0 ? (
+                    <View style={styles.emptyState}>
+                        <Text style={styles.emptyText}>You have no connections.</Text>
+                    </View>
+                ) : filteredUsers.length === 0 ? (
+                    <View style={styles.emptyState}>
+                        <Text style={styles.emptyText}>No users found.</Text>
+                    </View>
+                ) : (
+                    <FlatList
+                        data={filteredUsers}
+                        keyExtractor={item => item.id.toString()}
+                        renderItem={renderItem}
+                        contentContainerStyle={{ paddingBottom: 20 }}
+                    />
+                )}
+            </SafeAreaView>
+        </>
     );
 }
 
@@ -192,7 +200,7 @@ const styles = StyleSheet.create({
         backgroundColor: '#34495E',
         paddingVertical: 12,
         paddingHorizontal: 16,
-        height : 70
+        height: 70
     },
     headerRow: {
         flexDirection: 'row',

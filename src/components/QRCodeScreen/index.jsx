@@ -91,7 +91,7 @@ const QRCodeScreen = ({ navigation }) => {
           <Text style={styles.cardTitle}>Scan QR</Text>
           <View style={styles.qrBox}>
             {loading ? (
-              <ActivityIndicator size="large" color="#7680DE" />
+              <ActivityIndicator size="large" color="#34495e" />
             ) : (
               <QRCode
                 value={qrValue}
@@ -138,7 +138,7 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     position: 'fixed',
     top: -40,
-    right: -130,
+    right: -120,
   },
   headerBackText: {
     fontSize: 35,
@@ -146,10 +146,10 @@ const styles = StyleSheet.create({
     color: '#000',
     position: 'fixed',
     top: -45,
-    left: -110,
+    left: -100,
   },
   card: {
-    marginTop: 100,
+    marginTop: 70,
     backgroundColor: 'rgba(0, 0, 0, 0.7)',
     borderRadius: 20,
     padding: 20,
