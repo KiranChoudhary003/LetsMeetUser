@@ -1,0 +1,204 @@
+import React, { useState } from 'react';
+import {
+  View,
+  Text,
+  ScrollView,
+  StyleSheet,
+  SafeAreaView,
+  Animated,
+  Pressable,
+  TouchableOpacity,
+  TextInput,
+  Dimensions,
+} from 'react-native';
+import MaterialIcons from 'react-native-vector-icons/MaterialIcons';
+import { useNavigation } from '@react-navigation/native';
+import Entypo from 'react-native-vector-icons/Entypo';
+
+const { width } = Dimensions.get('window');
+
+const dummyUserEvents = [
+  { id: 'e1', name: 'Hackathon 2025', organizer: 'Tech Club', start_date: '2025-07-15', end_date: '2025-07-15', meetingsCount: 3 },
+  { id: 'e2', name: 'Workshop on AI', organizer: 'AI Dept', start_date: '2025-07-10', end_date: '2025-07-10', meetingsCount: 2 },
+  { id: 'e3', name: 'Seminar on Startups', organizer: 'E-Cell', start_date: '2025-06-20', end_date: '2025-06-20', meetingsCount: 4 },
+  { id: 'e4', name: 'Hackathon 2025', organizer: 'Tech Club', start_date: '2025-07-15', end_date: '2025-07-15', meetingsCount: 3 },
+  { id: 'e5', name: 'Workshop on AI', organizer: 'AI Dept', start_date: '2025-07-10', end_date: '2025-07-10', meetingsCount: 2 },
+  { id: 'e6', name: 'Seminar on Startups', organizer: 'E-Cell', start_date: '2025-06-20', end_date: '2025-06-20', meetingsCount: 4 },
+  { id: 'e7', name: 'Hackathon 2025', organizer: 'Tech Club', start_date: '2025-07-15', end_date: '2025-07-15', meetingsCount: 3 },
+  { id: 'e8', name: 'Workshop on AI', organizer: 'AI Dept', start_date: '2025-07-10', end_date: '2025-07-10', meetingsCount: 2 },
+  { id: 'e9', name: 'Seminar on Startups', organizer: 'E-Cell', start_date: '2025-06-20', end_date: '2025-06-20', meetingsCount: 4 },
+  { id: 'e10', name: 'Hackathon 2025', organizer: 'Tech Club', start_date: '2025-07-15', end_date: '2025-07-15', meetingsCount: 3 },
+  { id: 'e11', name: 'Workshop on AI', organizer: 'AI Dept', start_date: '2025-07-10', end_date: '2025-07-10', meetingsCount: 2 },
+  { id: 'e12', name: 'Seminar on Startups', organizer: 'E-Cell', start_date: '2025-06-20', end_date: '2025-06-20', meetingsCount: 4 },
+];
+
+const EventCard = ({ name, organizer, start_date, meetingsCount, eventId }) => {
+  const scale = new Animated.Value(1);
+  const navigation = useNavigation();
+
+  const handlePressIn = () => {
+    Animated.spring(scale, { toValue: 0.96, useNativeDriver: true }).start();
+  };
+
+  const handlePressOut = () => {
+    Animated.spring(scale, { toValue: 1, useNativeDriver: true }).start();
+  };
+
+  const handleNavigate = () => {
+    navigation.navigate('MeetingScreen', {
+      eventId,
+      name,
+    });
+  };
+
+  return (
+    <Pressable onPressIn={handlePressIn} onPressOut={handlePressOut} onPress={handleNavigate}>
+      <Animated.View style={[styles.card, { transform: [{ scale }] }]}>
+        <View style={{ flex: 1 }}>
+          <Text style={styles.eventName}>{name}</Text>
+          <Text style={styles.eventOrganizer}>{organizer}</Text>
+          <Text style={styles.eventDate}>
+            {new Date(start_date).toLocaleDateString()}
+          </Text>
+        </View>
+        <View style={styles.meetingsCountBox}>
+          <Text style={styles.meetingsCountText}>Meetings: {meetingsCount}</Text>
+        </View>
+      </Animated.View>
+    </Pressable>
+  );
+};
+
+export default function UserEvents({ route }) {
+  const { userName } = route.params;
+  const navigation = useNavigation();
+  const [search, setSearch] = useState('');
+
+  const filteredEvents = dummyUserEvents.filter(event =>
+    event.name.toLowerCase().includes(search.toLowerCase())
+  );
+
+  return (
+    <SafeAreaView style={styles.container}>
+      <View style={styles.header}>
+        <TouchableOpacity onPress={() => navigation.goBack()} style={styles.backButton}>
+          <MaterialIcons name="arrow-back" size={24} color="#fff" />
+        </TouchableOpacity>
+        <Text style={styles.headerText}>Events</Text>
+      </View>
+
+      <View style={styles.searchBar}>
+        <Entypo name="magnifying-glass" size={24} color="black" />
+        <TextInput
+          placeholder="Search event..."
+          value={search}
+          onChangeText={setSearch}
+          style={styles.searchInput}
+          placeholderTextColor="#888"
+        />
+      </View>
+
+      <Text style={styles.totalEventsText}>Total Events: {filteredEvents.length}</Text>
+
+      <ScrollView contentContainerStyle={styles.scrollView}>
+        {filteredEvents.map((event) => (
+          <EventCard
+            key={event.id}
+            name={event.name}
+            organizer={event.organizer}
+            start_date={event.start_date}
+            meetingsCount={event.meetingsCount}
+            eventId={event.id}
+          />
+        ))}
+      </ScrollView>
+    </SafeAreaView>
+  );
+}
+
+const styles = StyleSheet.create({
+  container: {
+    flex: 1,
+    backgroundColor: 'rgb(227, 235, 250)',
+  },
+  header: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+    backgroundColor: '#34495e',
+    paddingHorizontal: 16,
+    paddingVertical: 12,
+    height: 70,
+    position: 'relative',
+  },
+  backButton: {
+    position: 'absolute',
+    left: 16,
+    zIndex: 1,
+  },
+  headerText: {
+    fontSize: 20,
+    fontWeight: 'bold',
+    color: '#ffffff',
+    textAlign: 'center',
+  },
+  searchBar: {
+    marginTop: 10,
+    marginHorizontal: width * 0.03,
+    paddingHorizontal: width * 0.03,
+    height: 40,
+    flexDirection: 'row',
+    alignItems: 'center',
+    borderWidth: 0.3,
+    borderColor: '#333',
+    borderRadius: 25,
+    backgroundColor: '#f9f9f9f7',
+  },
+  searchInput: {
+    flex: 1,
+    fontSize: 16,
+    color: '#000',
+  },
+  scrollView: {
+    padding: 16,
+  },
+  totalEventsText: {
+    fontSize: 16,
+    fontWeight: '600',
+    marginBottom: 12,
+    color: '#34495e',
+    paddingHorizontal: 16,
+    paddingTop: 16,
+  },
+  card: {
+    width: '100%',
+    minHeight: 70,
+    marginVertical: 6,
+    borderBottomWidth: 0.5,
+    flexDirection: 'row',
+  },
+  eventName: {
+    fontSize: 16,
+    fontWeight: '600',
+    color: '#111',
+  },
+  eventOrganizer: {
+    fontSize: 13,
+    color: '#555',
+    marginTop: 2,
+  },
+  eventDate: {
+    fontSize: 12,
+    color: '#777',
+    marginTop: 2,
+  },
+  meetingsCountBox: {
+    justifyContent: 'center',
+    alignItems: 'flex-end',
+  },
+  meetingsCountText: {
+    fontSize: 13,
+    fontWeight: 'bold',
+    color: '#34495e',
+  },
+});

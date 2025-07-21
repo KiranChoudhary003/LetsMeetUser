@@ -36,6 +36,7 @@
     "react-native-image-picker": "^8.2.1",
     "react-native-keyboard-aware-scroll-view": "^0.9.5",
     "react-native-keyboard-controller": "^1.17.5",
+    "react-native-modal": "^14.0.0-rc.1",
     "react-native-paper": "^5.14.5",
     "react-native-permissions": "^5.4.1",
     "react-native-qrcode-scanner": "^1.5.5",

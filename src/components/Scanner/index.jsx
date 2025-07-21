@@ -1,4 +1,4 @@
-import React, { useState, useRef, useEffect } from 'react';
+import React, { useState, useRef, useEffect, useContext } from 'react';
 import {
   View,
   Text,
@@ -11,11 +11,13 @@ import {
   Animated,
   Easing,
   StatusBar,
+  Alert,
 } from 'react-native';
 import QRCodeScanner from 'react-native-qrcode-scanner';
-import axios from 'axios';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import MaterialIcons from 'react-native-vector-icons/MaterialIcons';
+import { LocationContext } from '../LocationContext/LocationContext';
+import { getSocket } from '../../socket';
 
 const Scanner = ({ navigation }) => {
   const [scannedData, setScannedData] = useState(null);
@@ -26,12 +28,14 @@ const Scanner = ({ navigation }) => {
   const [loading, setLoading] = useState(false);
   const scannerRef = useRef(null);
   const moveAnim = useRef(new Animated.Value(0)).current;
+
+  const { location } = useContext(LocationContext);
+  const fullName = `${scannedData?.firstName ?? ''} ${scannedData?.lastName ?? ''}`.trim();
+
   const isSuccessImage =
     connectionStatus === 'success' ||
     connectionStatus === 'already' ||
-    failureReason.toLowerCase().includes('already') ||
-    failureReason.toLowerCase().includes('connection already exists');
-  const fullName = `${scannedData?.firstName ?? ''} ${scannedData?.lastName ?? ''}`.trim();
+    failureReason.toLowerCase().includes('already');
 
   useEffect(() => {
     Animated.loop(
@@ -45,14 +49,72 @@ const Scanner = ({ navigation }) => {
   }, []);
 
   useEffect(() => {
+    const socket = getSocket();
+    console.log("🧩 Socket ID:", socket.id);
+
+    socket.on('meeting_request', ({ fromUserId, eventId }) => {
+      console.log("📩 Received meeting request from:", fromUserId, "for event:", eventId);
+
+      Alert.alert(
+        'Meeting Request',
+        `User ${fromUserId} wants to connect with you!`,
+        [
+          {
+            text: 'Accept',
+            onPress: () => {
+              console.log("✅ Meeting accepted");
+              socket.emit('respond_meeting_request', {
+                fromUserId,
+                eventId,
+                accept: true
+              });
+            },
+          },
+          {
+            text: 'Decline',
+            style: 'cancel',
+            onPress: () => {
+              console.log("❌ Meeting declined");
+              socket.emit('respond_meeting_request', {
+                fromUserId,
+                eventId,
+                accept: false
+              });
+            },
+          },
+        ]
+      );
+    });
+
+    socket.on('write_meeting_notes', ({ meetingId }) => {
+      console.log("📝 Navigate to MeetingNoteScreen with ID:", meetingId);
+      navigation.navigate('MeetingNoteScreen', { meetingId });
+    });
+
+    socket.on('meeting_error', ({ message }) => {
+      console.log("⚠️ Meeting error received:", message);
+      setLoading(false);
+      setConnectionStatus('fail');
+      setFailureReason(message);
+      setShowPopup(true);
+    });
+
+    return () => {
+      socket.off('meeting_request');
+      socket.off('write_meeting_notes');
+      socket.off('meeting_error');
+    };
+  }, [navigation]);
+
+  useEffect(() => {
     if (showPopup) {
       const timer = setTimeout(() => {
+        console.log("⏱️ Resetting scanner after popup");
         setShowPopup(false);
         setScanCompleted(false);
         setFailureReason('');
         scannerRef.current?.reactivate();
       }, 3000);
-
       return () => clearTimeout(timer);
     }
   }, [showPopup]);
@@ -64,89 +126,63 @@ const Scanner = ({ navigation }) => {
     try {
       setLoading(true);
       setScanCompleted(true);
+      console.log("📸 QR Code Scanned:", e.data);
 
       let data;
       try {
         data = JSON.parse(e.data);
+        console.log("✅ Parsed QR Data:", data);
       } catch {
-        setScannedData(null);
-        setConnectionStatus('invalid');
-        setFailureReason('The scanned QR code is not valid.');
-        setShowPopup(true);
-        return;
-      }
-
-      if (!data?.id) {
-        setScannedData(null);
+        console.log("❌ Invalid QR Code - Not JSON");
         setConnectionStatus('invalid');
         setFailureReason('Invalid QR code.');
         setShowPopup(true);
         return;
       }
 
+      if (!data?.id) {
+        console.log("❌ QR code missing user ID");
+        setConnectionStatus('invalid');
+        setFailureReason('QR Code missing user ID.');
+        setShowPopup(true);
+        return;
+      }
+
+      if (!location?.latitude || !location?.longitude) {
+        console.log("📍 Location unavailable:", location);
+        setConnectionStatus('fail');
+        setFailureReason('Location not available. Please enable GPS and try again.');
+        setShowPopup(true);
+        return;
+      }
+
+      console.log("📍 Location:", location);
       setScannedData(data);
-      const receiverId = data.id;
+
       const token = await AsyncStorage.getItem('token');
+      console.log("🔑 Retrieved token:", token);
 
-      const response = await axios.post(
-        'https://letsmeet-backend-47lv.onrender.com/api/user-connections/send-request',
-        { receiver_id: receiverId },
-        {
-          headers: {
-            Authorization: `Bearer ${token}`,
-            'Content-Type': 'application/json',
-          },
-        }
-      );
+      const socket = getSocket();
+      const payload = {
+        targetUserId: data.id,
+        latitude: location.latitude,
+        longitude: location.longitude,
+        token,
+      };
 
-      const resData = response.data;
-      if (resData?.message === 'Already connected' || resData?.alreadyConnected) {
-        setConnectionStatus('already');
-        setFailureReason('You are already connected with this user.');
-      } else if (resData?.message === 'Request already sent') {
-        setConnectionStatus('already');
-
-        setFailureReason('You already sent a request to this user.');
-      } else if (response.status === 200) {
-        setConnectionStatus('success');
-      } else {
-        setConnectionStatus('fail');
-        setFailureReason('Unexpected response. Please try again.');
-      }
+      console.log("📡 Emitting scan_qr with:", payload);
+      socket.emit('scan_qr', payload);
     } catch (error) {
-
-      const errorMessage = error?.response?.data?.message;
-
-      if (
-        errorMessage === 'Connection already exists' ||
-        error?.response?.data?.alreadyConnected
-      ) {
-        setConnectionStatus('already');
-        setFailureReason('You are already connected with this user.');
-      } else if (errorMessage === 'Request already sent') {
-        setConnectionStatus('already');
-        setFailureReason('You already sent a request to this user.');
-      } else if (errorMessage === 'You cannot connect to yourself') {
-        setConnectionStatus('fail');
-        setFailureReason('You cannot connect with your own profile.');
-      } else if (errorMessage) {
-        setConnectionStatus('fail');
-        setFailureReason(errorMessage);
-      } else {
-        setConnectionStatus('fail');
-        setFailureReason('Something went wrong. Please try again.');
-      }
-
-
-    } finally {
-      setLoading(false);
+      console.log("❌ Unexpected error during scan:", error);
+      setConnectionStatus('fail');
+      setFailureReason('Something went wrong. Please try again.');
       setShowPopup(true);
     }
   };
 
   return (
     <>
-      <StatusBar barStyle="light-content" backgroundColor="#34495e" translucent={false} />
+      <StatusBar barStyle="light-content" backgroundColor="#34495e" />
       <View style={{ flex: 1, backgroundColor: '#e8effc' }}>
         <TouchableOpacity style={styles.backButton} onPress={() => navigation.goBack()}>
           <MaterialIcons name="arrow-back" size={24} color="#000" />
@@ -165,7 +201,8 @@ const Scanner = ({ navigation }) => {
               width: '100%',
               borderRadius: 20,
               overflow: 'hidden',
-            }} />
+            }}
+          />
         </View>
 
         <View style={styles.overlayContainer}>
@@ -186,11 +223,12 @@ const Scanner = ({ navigation }) => {
               ]}
             />
           </View>
-
         </View>
+
         <View style={styles.connect}>
           <Text style={styles.centerText}>Connect New People</Text>
         </View>
+
         {loading && (
           <View style={styles.loadingOverlay}>
             <View style={styles.loadingContent}>
@@ -203,11 +241,11 @@ const Scanner = ({ navigation }) => {
         <Modal visible={showPopup} transparent animationType="fade">
           <View style={styles.popupOverlay}>
             <View style={styles.popupContainer}>
-              {connectionStatus === 'fail' || connectionStatus === 'invalid' ? (
+              {(connectionStatus === 'fail' || connectionStatus === 'invalid') && (
                 <Text style={styles.warningHeader}>
-                  {connectionStatus === 'invalid' ? 'Invalid QR Code' : 'Request Already Sent'}
+                  {connectionStatus === 'invalid' ? 'Invalid QR Code' : 'Request Failed'}
                 </Text>
-              ) : null}
+              )}
 
               <Image
                 source={
@@ -235,10 +273,6 @@ const Scanner = ({ navigation }) => {
                   ? 'Request Sent Successfully!'
                   : failureReason || 'Connection Not Allowed'}
               </Text>
-
-              {failureReason !== '' && connectionStatus !== 'success' && (
-                <Text style={styles.failureReasonText}>{failureReason}</Text>
-              )}
 
               {scannedData && fullName && (
                 <Text style={styles.userText}>
@@ -399,11 +433,11 @@ const styles = StyleSheet.create({
     paddingLeft: 20,
     marginTop: 20,
   },
-  connect : {
-    display : "flex",
-    alignItems : "center",
-    justifyContent : "center",
-    marginBottom : 50
+  connect: {
+    display: "flex",
+    alignItems: "center",
+    justifyContent: "center",
+    marginBottom: 50
   }
 });
 

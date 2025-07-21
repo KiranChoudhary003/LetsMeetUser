@@ -26,18 +26,18 @@ const BottomTab = () => {
             iconInactive: 'calendar-month-outline',
             label: 'Events',
         },
+                {
+            name: 'Meetings', 
+            iconActive: 'card-account-details',
+            iconInactive: 'card-account-details-outline',
+            label: 'Meetings',
+        },
         {
             name: 'Complain',
             iconActive: 'message-alert',
             iconInactive: 'message-alert-outline',
             label: 'Complain',
         },
-        {
-            name: 'Meetings', 
-            iconActive: 'video',
-            iconInactive: 'video-outline',
-            label: 'Meetings',
-        }
     ];
 
     return (

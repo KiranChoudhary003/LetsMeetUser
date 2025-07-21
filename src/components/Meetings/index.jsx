@@ -1,237 +1,379 @@
-import React, { useState } from 'react';
+import React, { useEffect, useState } from 'react';
 import {
-  View,
-  Text,
   FlatList,
+  Image,
+  SafeAreaView,
+  StatusBar,
+  StyleSheet,
+  Text,
   TextInput,
   TouchableOpacity,
-  StyleSheet,
+  View,
+  ActivityIndicator,
   Modal,
-  ScrollView,
 } from 'react-native';
+import Entypo from 'react-native-vector-icons/Entypo';
+import { Dimensions } from 'react-native';
+import LottieView from 'lottie-react-native';
+import { BlurView } from '@react-native-community/blur';
 
-import Icon from 'react-native-vector-icons/Ionicons';
-import Feather from 'react-native-vector-icons/Feather';
-import { useNavigation } from '@react-navigation/native';
- 
+const { width } = Dimensions.get('window');
 
-
-const meetingsData = [
-  { id: '1', userName: 'User name', event: 'Event', date: '12/07/2025' },
-  { id: '2', userName: 'User name', event: 'Event', date: '13/07/2025' },
-  { id: '3', userName: 'harsh', event: 'hackathon', date: '14/07/2025' },
-  { id: '4', userName: 'User name', event: 'Event', date: '15/07/2025' },
-  { id: '5', userName: 'User name', event: 'Event', date: '15/07/2025' },
-  { id: '6', userName: 'User name', event: 'Event', date: '12/07/2025' },
-  { id: '7', userName: 'User name', event: 'Event', date: '13/07/2025' },
-  { id: '8', userName: 'harsh', event: 'Event', date: '14/07/2025' },
-  { id: '9', userName: 'User name', event: 'Event', date: '15/07/2025' },
-  { id: '10', userName: 'User name', event: 'Event', date: '15/07/2025' },
-];
-
-export default function MeetingsScreen() {
-   const navigation = useNavigation(); 
+const Meeting = ({ navigation }) => {
+  const [requests, setRequests] = useState([]);
+  const [loading, setLoading] = useState(true);
   const [search, setSearch] = useState('');
-  const [selectedMeeting, setSelectedMeeting] = useState(null);
-  const [modalVisible, setModalVisible] = useState(false);
+  const [profileView, setProfileView] = useState(false);
+  const [previewImage, setPreviewImage] = useState('');
+  const [previewName, setPreviewName] = useState('');
 
-  const filteredMeetings = meetingsData.filter(item =>
-    `${item.userName} ${item.event}`.toLowerCase().includes(search.toLowerCase())
+  useEffect(() => {
+    // Dummy data
+    const dummyUsers = [
+      {
+        id: 1,
+        first_name: 'Ajay',
+        last_name: 'Kumar',
+        role: 'Developer',
+        photo: '',
+        email: 'ajay@example.com',
+        linkedin_url: '',
+        preference: [],
+        eventCount: 5,
+      },
+      {
+        id: 2,
+        first_name: 'Neha',
+        last_name: 'Singh',
+        role: 'Designer',
+        photo: 'https://randomuser.me/api/portraits/women/65.jpg',
+        email: 'neha@example.com',
+        linkedin_url: '',
+        preference: [],
+        eventCount: 3,
+      },
+      {
+        id: 3,
+        first_name: 'Rahul',
+        last_name: 'Verma',
+        role: 'Manager',
+        photo: '',
+        email: 'rahul@example.com',
+        linkedin_url: '',
+        preference: [],
+        eventCount: 0,
+      },
+      
+    ];
+
+    const formatted = dummyUsers.map(user => ({
+      id: user.id,
+      name: `${user.first_name} ${user.last_name}`.trim(),
+      role: user.role,
+      image: user.photo,
+      email: user.email,
+      linkedin: user.linkedin_url,
+      preference: user.preference,
+      eventCount: user.eventCount,
+    }));
+
+    setRequests(formatted);
+    setLoading(false);
+  }, []);
+
+  const filteredRequests = requests.filter(user =>
+    user.name.toLowerCase().includes(search.toLowerCase())
   );
 
-  const renderItem = ({ item }) => (
-    <View style={styles.meetingCard}>
-      <View style={{ flex: 1 }}>
-        <Text style={styles.userName}>{item.userName}</Text>
-        <Text style={styles.eventName}>{item.event}</Text>
-        <Text style={styles.date}>{item.date}</Text>
+  const renderItem = ({ item }) => {
+    const initials = item.name
+      ? item.name.split(' ').map(w => w[0]).join('').toUpperCase()
+      : 'NA';
+
+    const handleImagePress = () => {
+      const imgUri = item.image?.startsWith('data:image')
+        ? item.image
+        : item.image ? item.image : '';
+      setPreviewImage(imgUri);
+      setPreviewName(initials);
+      setProfileView(true);
+    };
+
+    return (
+      <View style={styles.card}>
+        <View style={styles.userInfo}>
+          <TouchableOpacity onPress={handleImagePress}>
+            <View style={styles.profileCircle}>
+              {item.image && item.image.length > 10 ? (
+                <Image
+                  source={{ uri: item.image.startsWith('data:image') ? item.image : item.image }}
+                  style={styles.profileImage}
+                />
+              ) : (
+                <Text style={styles.initialsText}>{initials}</Text>
+              )}
+            </View>
+          </TouchableOpacity>
+
+          <TouchableOpacity
+            onPress={() => navigation.navigate('UserEvents', {
+              user: {
+                first_name: item.name,
+                attendees_role: item.role,
+                photo: item.image,
+                email: item.email,
+                linkedin_url: item.linkedin,
+                preference: Array.isArray(item.preference) ? item.preference : [],
+              },
+            })}
+            style={{ flex: 1 }}
+          >
+            <View style={{ flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between' }}>
+              <Text style={styles.nameText} numberOfLines={1}>{item.name}</Text>
+              <Text style={styles.eventBadge}>
+                Events: {item.eventCount}
+              </Text>
+            </View>
+            <Text style={styles.roleText}>{item.role}</Text>
+          </TouchableOpacity>
+        </View>
       </View>
-      <TouchableOpacity
-        onPress={() => {
-          setSelectedMeeting(item);
-          setModalVisible(true);
-        }}>
-       <Feather name="message-square" size={24} color="#34495e" />
-      </TouchableOpacity>
-    </View>
-  );
+    );
+  };
 
   return (
-    <View style={styles.container}>
-      {/* Header */}
-      <View style={styles.header}>
-        <TouchableOpacity onPress={() =>  navigation.goBack()}>
-          <Icon name="arrow-back" size={24} color="#2c3e50" />
-        </TouchableOpacity>
+    <SafeAreaView style={{ flex: 1, backgroundColor: '#34495E' }}>
+      <StatusBar barStyle="light-content" backgroundColor="#34495E" />
+      <View style={{ flex: 1, backgroundColor: '#E8EFFC' }}>
+        <View style={styles.header}>
+          <Text style={styles.meetHeading}>Meetings</Text>
+        </View>
 
-        <Text style={styles.headerTitle}>Meetings</Text>
-      </View>
+        <View style={styles.searchBar}>
+          <Entypo name="magnifying-glass" size={24} color="black" />
+          <TextInput
+            placeholder="Search user..."
+            value={search}
+            onChangeText={setSearch}
+            style={styles.searchInput}
+            placeholderTextColor="#888"
+          />
+          {search.length > 0 && (
+            <TouchableOpacity onPress={() => setSearch('')}>
+              <Entypo name="cross" size={24} color="black" />
+            </TouchableOpacity>
+          )}
+        </View>
 
-      {/* Search */}
-      <View style={styles.searchContainer}>
-         <Feather name="search" size={18} color="#000" style={styles.searchIcon} />
-        <TextInput
-          style={styles.searchInput}
-          placeholder="Search for name and events"
-          value={search}
-          onChangeText={setSearch}
-        />
-      </View>
+        <View style={{ paddingHorizontal: 16, paddingTop: 10 }}>
+          <Text style={{ fontSize: 16, color: '#333', fontWeight: 600 }}>
+            Total Users: {filteredRequests.length}
+          </Text>
+        </View>
 
-      {/* Count */}
-      <Text style={styles.totalCount}>Total meets: {filteredMeetings.length}</Text>
-
-      {/* List */}
-      <FlatList
-        data={filteredMeetings}
-        renderItem={renderItem}
-        keyExtractor={item => item.id}
-        ItemSeparatorComponent={() => <View style={styles.separator} />}
-        contentContainerStyle={styles.listContent}
-        style={{ flex: 1 }}
-      />
-
-      {/* Modal */}
-      {selectedMeeting && (
-        <Modal
-          animationType="slide"
-          transparent
-          visible={modalVisible}
-          onRequestClose={() => setModalVisible(false)}
-        >
-          <View style={styles.modalOverlay}>
-            <View style={styles.modalContent}>
-              <ScrollView style={{ maxHeight: 400 }}>
-                <Text style={styles.modalTitle}>
-                  Discussion with {selectedMeeting.userName}
-                </Text>
-
-                <Text style={styles.modalDescription}>
-                  Remark: ✍️ Coming soon…{"\n\n"}
-                  The decision about what to put into your paragraphs begins
-                  with the germination of a seed of ideas; this “germination
-                  process” is better known as brainstorming. There are many
-                  techniques for brainstorming; whichever one you choose,
-                  this stage of paragraph development cannot be skipped.
-                  Building paragraphs can be like building a skyscraper:
-                  there must be a well-planned foundation that supports what
-                  you are building. Any cracks, inconsistencies, or other
-                  corruptions of the foundation can cause your whole paper
-                  to crumble.
-                </Text>
-              </ScrollView>
-              <TouchableOpacity
-                style={styles.closeButton}
-                onPress={() => setModalVisible(false)}
-              >
-                <Text style={{ color: '#fff', fontWeight: 'bold' }}>Close</Text>
-              </TouchableOpacity>
-            </View>
+        {loading ? (
+          <View style={{ alignItems: 'center', marginTop: 40 }}>
+            <ActivityIndicator size="large" color="#34495e" />
+            <Text style={{ marginTop: 10, fontSize: 16, color: '#333' }}>Fetching connections...</Text>
           </View>
+        ) : filteredRequests.length === 0 ? (
+          <View style={styles.filterResultContainer}>
+            <Text style={styles.filterResultText}>No pending requests found!</Text>
+            <LottieView
+              style={styles.lottieContainer}
+              source={require('../../assets/Not-Found.json')}
+              autoPlay
+              loop
+              resizeMode="cover"
+            />
+          </View>
+        ) : (
+          <FlatList
+            data={filteredRequests}
+            keyExtractor={(item) => item.id.toString()}
+            renderItem={renderItem}
+            contentContainerStyle={styles.list}
+          />
+        )}
+
+        <Modal visible={profileView} transparent animationType="fade">
+          <BlurView
+            style={styles.blur}
+            blurType="light"
+            blurAmount={15}
+            reducedTransparencyFallbackColor="white"
+          />
+          <TouchableOpacity style={styles.modalOverlay} onPressOut={() => setProfileView(false)}>
+            <View style={styles.modalContent}>
+              {previewImage && previewImage.length > 100 ? (
+                <Image
+                  source={{ uri: previewImage }}
+                  style={styles.fullImage}
+                  resizeMode="contain"
+                />
+              ) : (
+                <View style={[styles.circle, styles.fullImageFallback]}>
+                  <Text style={styles.initialsPreview}>{previewName}</Text>
+                </View>
+              )}
+            </View>
+          </TouchableOpacity>
         </Modal>
-      )}
-    </View>
+      </View>
+    </SafeAreaView>
   );
-}
+};
 
-/* ---------- STYLES ---------- */
+export default Meeting;
+
 const styles = StyleSheet.create({
-  container: {
-    flex: 1,
-    backgroundColor: '#f0f4ff', // Softer & brighter than old #e8effc
-    paddingHorizontal: 16,
-    paddingTop: 20,
-  },
-  // header: {
-  //   flexDirection: 'row',
-  //   alignItems: 'center',
-  //   marginBottom: 16,
-  //   justifyContent: 'space-between',
-  // },
-  // headerTitle: {
-  //   fontSize: 20,
-  //   fontWeight: 'bold',
-  //   flex: 1,
-  //   textAlign: 'center',
-  //   marginLeft: -24,
-  //   color: '#2c3e50',
-  // },
   header: {
-  flexDirection: 'row',
-  alignItems: 'center',
-  marginBottom: 16,
-  paddingHorizontal: 4,
-},
-headerTitle: {
-  flex: 1,
-  fontSize: 20,
-  fontWeight: 'bold',
-  textAlign: 'center',
-  color: '#2c3e50',
-},
-
-  emoji: { fontSize: 22, marginHorizontal: 5 },
-  searchContainer: {
-    backgroundColor: '#fff',
+    paddingTop: 16,
+    paddingBottom: 8,
+    paddingHorizontal: 16,
+    position: 'relative',
+    alignItems: 'center',
+  },
+  meetHeading: {
+    fontSize: 18,
+    fontWeight: 'bold',
+    color: '#fff',
+    paddingHorizontal: 16,
+    paddingVertical: 6,
+    borderWidth: 1,
+    borderColor: '#888',
     borderRadius: 20,
-    paddingHorizontal: 12,
-    marginBottom: 12,
-    flexDirection: 'row',
-    alignItems: 'center',
-    height: 45,
+    backgroundColor: '#34495e',
     shadowColor: '#000',
-    shadowOpacity: 0.05,
-    shadowRadius: 2,
-    elevation: 1,
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.1,
+    shadowRadius: 4,
+    elevation: 3,
   },
-  searchInput: { flex: 1, fontSize: 14 },
-  totalCount: { textAlign: 'right', fontSize: 14, color: '#34495e', marginBottom: 10 },
-
-  meetingCard: {
-    //backgroundColor: '#fff',
-    borderRadius: 12,
-    padding: 18,
+  searchBar: {
+    marginTop: 10,
+    marginHorizontal: width * 0.03,
+    paddingHorizontal: width * 0.03,
+    height: 40,
     flexDirection: 'row',
     alignItems: 'center',
-    borderBottomWidth: 1,       // ✅ Add this line
-    borderBottomColor: '#000',
-
+    borderWidth: 0.3,
+    borderColor: '#333',
+    borderRadius: 25,
+    backgroundColor: '#f9f9f9f7',
   },
-  userName: { fontWeight: 'bold', fontSize: 16, color: '#2c3e50' },
-  eventName: { fontSize: 14, color: '#34495e' },
-  date: { fontSize: 13, color: '#7f8c8d' },
-  separator: { height: 10 }, // spacing instead of dark lines
-  listContent: { paddingBottom: 20, paddingTop: 4 },
+  searchInput: {
+    flex: 1,
+    fontSize: 16,
+    color: '#000',
+  },
+  card: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    borderBottomWidth: 0.8,
+    marginHorizontal: 12,
+    paddingBottom: 10,
+    paddingTop: 10,
+  },
+  userInfo: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    flex: 1,
+  },
+  profileCircle: {
+    width: width * 0.12,
+    height: width * 0.12,
+    borderRadius: (width * 0.12) / 2,
+    backgroundColor: '#34495E',
+    justifyContent: 'center',
+    alignItems: 'center',
+    marginRight: 10,
+  },
+  profileImage: {
+    width: '100%',
+    height: '100%',
+    borderRadius: (width * 0.12) / 2,
+  },
+  initialsText: {
+    color: '#fff',
+    fontSize: 14,
+    fontWeight: 'bold',
+    textAlign: 'center',
+  },
 
+  nameText: {
+    fontSize: 16,
+    fontWeight: '600',
+    color: '#000',
+    maxWidth: width * 0.4,
+  },
+  eventBadge: {
+    fontSize: 13,
+    color: '#34495e',
+    fontWeight: 'bold',
+  },
+  roleText: {
+    fontSize: 13,
+    color: '#555',
+    marginTop: 2,
+  },
+  filterResultContainer: {
+    alignItems: 'center',
+    marginTop: 40,
+  },
+  filterResultText: {
+    fontSize: 16,
+    color: '#555',
+  },
+  lottieContainer: {
+    marginTop: 50,
+    height: 200,
+    width: 200,
+  },
+  blur: {
+    position: 'absolute',
+    top: 0,
+    bottom: 0,
+    left: 0,
+    right: 0,
+  },
   modalOverlay: {
     flex: 1,
-    backgroundColor: 'rgba(0,0,0,0.5)',
     justifyContent: 'center',
     alignItems: 'center',
   },
   modalContent: {
-    width: '85%',
-    backgroundColor: '#fff',
-    borderRadius: 12,
-    padding: 20,
-    elevation: 5,
-  },
-  modalTitle: {
-    fontSize: 18,
-    fontWeight: 'bold',
-    marginBottom: 10,
-    color: '#2c3e50',
-  },
-  modalDescription: {
-    fontSize: 14,
-    color: '#555',
-    lineHeight: 20,
-  },
-  closeButton: {
-    marginTop: 20,
-    backgroundColor: '#34495e',
-    padding: 12,
-    borderRadius: 8,
+    width: width * 0.8,
+    height: width * 0.8,
+    borderRadius: width * 0.4,
+    backgroundColor: 'rgba(255,255,255,0.1)',
+    padding: 24,
     alignItems: 'center',
+    justifyContent: 'center',
+    shadowColor: '#000',
+    shadowOpacity: 0.3,
+    shadowRadius: 10,
+    elevation: 10,
+  },
+  fullImage: {
+    width: width * 0.8,
+    height: width * 0.8,
+    borderRadius: width * 0.4,
+  },
+  fullImageFallback: {
+    backgroundColor: '#211e1e',
+    justifyContent: 'center',
+    alignItems: 'center',
+    width: width * 0.8,
+    height: width * 0.8,
+    borderRadius: width * 0.4,
+  },
+  initialsPreview: {
+    color: '#fff',
+    fontWeight: 'bold',
+    fontSize: 150,
+    textAlign: 'center',
+    lineHeight: 300,
   },
 });
