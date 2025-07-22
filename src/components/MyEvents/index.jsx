@@ -1,20 +1,12 @@
-import React, { useRef, useEffect, useState, useContext } from 'react';
-import { Alert } from 'react-native';
-import {
-  ScrollView,
-  Text,
-  View,
-  SafeAreaView,
-  StatusBar,
-  TouchableOpacity,
-  StyleSheet,
-  Animated,
-  Pressable,
-  ActivityIndicator,
-} from 'react-native';
-import { LocationContext } from '../LocationContext/LocationContext';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import axios from 'axios';
+import React, { useContext, useEffect, useRef, useState } from 'react';
+import {
+  ActivityIndicator, Alert, Animated,
+  Pressable, SafeAreaView, ScrollView, StatusBar, StyleSheet, Text, TouchableOpacity, View
+} from 'react-native';
+import MaterialCommunityIcons from 'react-native-vector-icons/MaterialCommunityIcons';
+import { LocationContext } from '../LocationContext/LocationContext';
 
 const backgroundImage = require('../../assets/bgg.png');
 
@@ -310,64 +302,84 @@ const EventsScreen = ({ navigation }) => {
 
         <StatusBar barStyle="dark-content" />
         <View style={styles.header}>
+          {/* Centered Title */}
           <View style={styles.eventsLabel}>
             <Text style={styles.eventsLabelText}>My Events</Text>
           </View>
+
+          {/* Icon Positioned Absolutely */}
+          <TouchableOpacity
+            onPress={() => navigation.navigate('UserMeetings')}
+            style={styles.iconWrapper}
+          >
+            <MaterialCommunityIcons
+              name="video"
+              size={26}
+              color="#000"
+            />
+          </TouchableOpacity>
         </View>
+
+
+
         <ScrollView contentContainerStyle={styles.scrollView}>
           {loading ? (
             <View style={{ flex: 1, justifyContent: 'center', alignItems: 'center' }}>
               <Text style={{ marginBottom: 10, fontSize: 16, color: '#555' }}>Loading your events...</Text>
               <ActivityIndicator size="large" color="#34495e" />
             </View>
+          ) : eventData.length === 0 ? (
+            <View style={{ alignItems: 'center', marginTop: 60, paddingHorizontal: 24 }}>
+              <Text style={{ fontSize: 18, fontWeight: '600', color: '#2c3e50', marginTop: 16, textAlign: 'center' }}>
+                No Events Found
+              </Text>
+              <Text style={{ fontSize: 14, color: '#7f8c8d', textAlign: 'center', marginTop: 6 }}>
+                You haven't registered or attended any events yet.
+              </Text>
+            </View>
           ) : (
-            <>
-              {
-                Object.entries(events).map(([month, data]) => (
-                  <View key={month} style={styles.monthSection}>
-                    <Text style={styles.monthTitle}>{`${data.monthName} ${data.year}`}</Text>
+            Object.entries(events).map(([month, data]) => (
+              <View key={month} style={styles.monthSection}>
+                <Text style={styles.monthTitle}>{`${data.monthName} ${data.year}`}</Text>
 
-                    {data.events.map((event) => (
-                      <EventCard
-                        key={event.id}
-                        id={event.id}
-                        name={event.name}
-                        organizer={event.organizer}
-                        start_date={event.start_date}
-                        end_date={event.end_date}
-                        lat={event.lat}
-                        lon={event.lon}
-                        already_checked_in={event.already_checked_in}
-                        userLat={location?.latitude}
-                        userLon={location?.longitude}
-                        onCheckIn={() => handleCheckIn(event.id)}
-                        onPress={() =>
-                          navigation.navigate('MyEventsDescription', {
-                            id: event.id,
-                            name: event.name,
-                            organizer: event.organizer,
-                            description: event.description,
-                            start_date: event.start_date,
-                            end_date: event.end_date,
-                            lat: event.lat,
-                            lon: event.lon,
-                            webUrl: event.webUrl,
-                            banner: event.banner,
-                            isRegistered: event.is_registered,
-                            checkInAvailable: event.check_in_available,
-                            already_checked_in: event.already_checked_in,
-                            totalConnections: event.totalConnections,
-                            approvedRequests: event.approvedRequests,
-                            pendingRequests: event.pendingRequests,
-                            fetchUpcomingEvents,
-                          })}
-                      />
-                    ))}
-                  </View>
-                ))
-
-              }
-            </>
+                {data.events.map((event) => (
+                  <EventCard
+                    key={event.id}
+                    id={event.id}
+                    name={event.name}
+                    organizer={event.organizer}
+                    start_date={event.start_date}
+                    end_date={event.end_date}
+                    lat={event.lat}
+                    lon={event.lon}
+                    already_checked_in={event.already_checked_in}
+                    userLat={location?.latitude}
+                    userLon={location?.longitude}
+                    onCheckIn={() => handleCheckIn(event.id)}
+                    onPress={() =>
+                      navigation.navigate('MyEventsDescription', {
+                        id: event.id,
+                        name: event.name,
+                        organizer: event.organizer,
+                        description: event.description,
+                        start_date: event.start_date,
+                        end_date: event.end_date,
+                        lat: event.lat,
+                        lon: event.lon,
+                        webUrl: event.webUrl,
+                        banner: event.banner,
+                        isRegistered: event.is_registered,
+                        checkInAvailable: event.check_in_available,
+                        already_checked_in: event.already_checked_in,
+                        totalConnections: event.totalConnections,
+                        approvedRequests: event.approvedRequests,
+                        pendingRequests: event.pendingRequests,
+                        fetchUpcomingEvents,
+                      })}
+                  />
+                ))}
+              </View>
+            ))
           )}
         </ScrollView>
       </SafeAreaView>
@@ -442,7 +454,17 @@ const styles = StyleSheet.create({
     paddingTop: 16,
     paddingBottom: 8,
     paddingHorizontal: 16,
+    flexDirection: 'row',
+    position: 'relative',
   },
+
+  iconWrapper: {
+    position: 'absolute',
+    right: 8,
+    top: '50%',
+    padding: 4,
+  },
+
   button: {
     paddingHorizontal: 12,
     paddingVertical: 6,

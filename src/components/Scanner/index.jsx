@@ -28,6 +28,12 @@ const Scanner = ({ navigation }) => {
   const [loading, setLoading] = useState(false);
   const scannerRef = useRef(null);
   const moveAnim = useRef(new Animated.Value(0)).current;
+  const [showAcceptModal, setShowAcceptModal] = useState(false);
+  const [meetingRequestData, setMeetingRequestData] = useState(null);
+  const loadingRef = useRef(false);
+  const fallbackTriggered = useRef(false);
+  const timeoutIdRef = useRef(null);
+
 
   const { location } = useContext(LocationContext);
   const fullName = `${scannedData?.firstName ?? ''} ${scannedData?.lastName ?? ''}`.trim();
@@ -49,62 +55,71 @@ const Scanner = ({ navigation }) => {
   }, []);
 
   useEffect(() => {
-    const socket = getSocket();
-    console.log("🧩 Socket ID:", socket.id);
+    let socket;
 
-    socket.on('meeting_request', ({ fromUserId, eventId }) => {
-      console.log("📩 Received meeting request from:", fromUserId, "for event:", eventId);
+    const setupSocket = async () => {
+      try {
+        socket = await getSocket(); // ensures the socket is connected and authenticated
+        console.log("🧩 Connected Socket ID:", socket.id);
 
-      Alert.alert(
-        'Meeting Request',
-        `User ${fromUserId} wants to connect with you!`,
-        [
-          {
-            text: 'Accept',
-            onPress: () => {
-              console.log("✅ Meeting accepted");
-              socket.emit('respond_meeting_request', {
-                fromUserId,
-                eventId,
-                accept: true
-              });
-            },
-          },
-          {
-            text: 'Decline',
-            style: 'cancel',
-            onPress: () => {
-              console.log("❌ Meeting declined");
-              socket.emit('respond_meeting_request', {
-                fromUserId,
-                eventId,
-                accept: false
-              });
-            },
-          },
-        ]
-      );
-    });
+        socket.on('meeting_request', ({ fromUserId, eventId }) => {
+          console.log("📩 Received meeting request from:", fromUserId);
+          setMeetingRequestData({ fromUserId, eventId });
+          setShowAcceptModal(true);
+        });
 
-    socket.on('write_meeting_notes', ({ meetingId }) => {
-      console.log("📝 Navigate to MeetingNoteScreen with ID:", meetingId);
-      navigation.navigate('MeetingNoteScreen', { meetingId });
-    });
+        socket.on('write_meeting_notes', ({ meetingId }) => {
+          console.log("📝 Navigate to MeetingNoteScreen with ID:", meetingId);
+          setLoading(false); // make sure to stop loader
+          setConnectionStatus('success');
+          setShowPopup(true);
+          navigation.navigate('MeetingNoteScreen', { meetingId });
+        });
 
-    socket.on('meeting_error', ({ message }) => {
-      console.log("⚠️ Meeting error received:", message);
-      setLoading(false);
-      setConnectionStatus('fail');
-      setFailureReason(message);
-      setShowPopup(true);
-    });
+        socket.on('meeting_error', ({ message }) => {
+          console.log("⚠️ Meeting error received:", message);
+          setLoading(false);
+          setConnectionStatus('fail');
+          setFailureReason(message);
+          setShowPopup(true);
+        });
+
+        socket.on('meeting_declined', ({ by }) => {
+          console.log(`❌ Meeting declined by user ${by}`);
+          setLoading(false);
+          setConnectionStatus('fail');
+          setFailureReason('Your meeting request was declined.');
+          setShowPopup(true);
+
+          // Optional: Close scanner and go back after 3 seconds
+          setTimeout(() => {
+            setShowPopup(false);
+            setScanCompleted(false);
+            scannerRef.current?.reactivate(); // or navigate.goBack() if you prefer exit
+            // navigation.goBack(); // <- uncomment if you want to leave scanner
+          }, 3000);
+        });
+
+      } catch (err) {
+        console.error("❌ Socket setup failed:", err.message);
+      }
+    };
+
+    setupSocket();
 
     return () => {
-      socket.off('meeting_request');
-      socket.off('write_meeting_notes');
-      socket.off('meeting_error');
+      try {
+        const socket = getSocket();
+        socket.off('meeting_request');
+        socket.off('write_meeting_notes');
+        socket.off('meeting_error');
+        socket.off('meeting_declined');
+      } catch (err) {
+        console.warn("⚠️ Cleanup failed: socket not initialized");
+      }
     };
   }, [navigation]);
+
 
   useEffect(() => {
     if (showPopup) {
@@ -125,7 +140,10 @@ const Scanner = ({ navigation }) => {
 
     try {
       setLoading(true);
+      loadingRef.current = true;
       setScanCompleted(true);
+      fallbackTriggered.current = false;
+
       console.log("📸 QR Code Scanned:", e.data);
 
       let data;
@@ -137,6 +155,8 @@ const Scanner = ({ navigation }) => {
         setConnectionStatus('invalid');
         setFailureReason('Invalid QR code.');
         setShowPopup(true);
+        setLoading(false);
+        loadingRef.current = false;
         return;
       }
 
@@ -145,6 +165,8 @@ const Scanner = ({ navigation }) => {
         setConnectionStatus('invalid');
         setFailureReason('QR Code missing user ID.');
         setShowPopup(true);
+        setLoading(false);
+        loadingRef.current = false;
         return;
       }
 
@@ -153,32 +175,47 @@ const Scanner = ({ navigation }) => {
         setConnectionStatus('fail');
         setFailureReason('Location not available. Please enable GPS and try again.');
         setShowPopup(true);
+        setLoading(false);
+        loadingRef.current = false;
         return;
       }
 
-      console.log("📍 Location:", location);
       setScannedData(data);
-
       const token = await AsyncStorage.getItem('token');
       console.log("🔑 Retrieved token:", token);
 
-      const socket = getSocket();
+      const socket = await getSocket(); // ✅ Use correct socket init
       const payload = {
         targetUserId: data.id,
         latitude: location.latitude,
         longitude: location.longitude,
-        token,
       };
-
       console.log("📡 Emitting scan_qr with:", payload);
       socket.emit('scan_qr', payload);
+
+      // Set fallback timeout
+      timeoutIdRef.current = setTimeout(() => {
+        if (loadingRef.current && !fallbackTriggered.current) {
+          console.warn("⏳ No response within timeout. Showing failure.");
+          fallbackTriggered.current = true;
+          setLoading(false);
+          setConnectionStatus('fail');
+          setFailureReason('No response. Try again.');
+          setShowPopup(true);
+        }
+      }, 10000);
     } catch (error) {
       console.log("❌ Unexpected error during scan:", error);
       setConnectionStatus('fail');
       setFailureReason('Something went wrong. Please try again.');
       setShowPopup(true);
+      setLoading(false);
+      loadingRef.current = false;
+      clearTimeout(timeoutIdRef.current);
     }
   };
+
+
 
   return (
     <>
@@ -270,8 +307,9 @@ const Scanner = ({ navigation }) => {
                 ]}
               >
                 {connectionStatus === 'success'
-                  ? 'Request Sent Successfully!'
+                  ? `Connection established with ${fullName || 'user'}`
                   : failureReason || 'Connection Not Allowed'}
+
               </Text>
 
               {scannedData && fullName && (
@@ -279,6 +317,68 @@ const Scanner = ({ navigation }) => {
                   User: {fullName.length > 12 ? fullName.substring(0, 12) + '...' : fullName}
                 </Text>
               )}
+            </View>
+          </View>
+        </Modal>
+
+        <Modal
+          visible={showAcceptModal}
+          transparent
+          animationType="fade"
+          onRequestClose={() => setShowAcceptModal(false)}
+        >
+          <View style={styles.popupOverlay}>
+            <View style={styles.popupContainer}>
+              <Text style={styles.popupText}>You have a new meeting request!</Text>
+
+              <View style={{ flexDirection: 'row', gap: 12, marginTop: 20 }}>
+                <TouchableOpacity
+                  style={[styles.button, { backgroundColor: '#2ecc71' }]}
+                  onPress={async () => { // ✅ mark as async
+                    try {
+                      const socket = await getSocket(); // ✅ now allowed
+                      socket.emit('respond_meeting_request', {
+                        fromUserId: meetingRequestData?.fromUserId,
+                        eventId: meetingRequestData?.eventId,
+                        accept: true,
+                      });
+                      console.log("✅ Meeting accepted");
+                      setShowAcceptModal(false);
+                      setLoading(false);
+                      Alert.alert('Success', 'Meeting accepted');
+                    } catch (err) {
+                      console.error("❌ Failed to respond to meeting request:", err);
+                      Alert.alert('Error', 'Unable to accept the meeting.');
+                    }
+                  }}
+                >
+                  <Text style={styles.buttonText}>Accept</Text>
+                </TouchableOpacity>
+
+
+                <TouchableOpacity
+                  style={[styles.button, { backgroundColor: '#e74c3c' }]}
+                  onPress={async () => { // ✅ mark as async
+                    try {
+                      const socket = await getSocket(); // ✅
+                      socket.emit('respond_meeting_request', {
+                        fromUserId: meetingRequestData?.fromUserId,
+                        eventId: meetingRequestData?.eventId,
+                        accept: false,
+                      });
+                      console.log("❌ Meeting declined");
+                      setShowAcceptModal(false);
+                      setLoading(false);
+                    } catch (err) {
+                      console.error("❌ Failed to decline meeting:", err);
+                      Alert.alert('Error', 'Unable to decline the meeting.');
+                    }
+                  }}
+                >
+                  <Text style={styles.buttonText}>Decline</Text>
+                </TouchableOpacity>
+
+              </View>
             </View>
           </View>
         </Modal>

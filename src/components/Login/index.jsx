@@ -21,6 +21,7 @@ import logo from '../../assets/logo.png';
 import axios from 'axios';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import MaterialIcons from 'react-native-vector-icons/MaterialIcons';
+import { connectSocket } from '../../socket';
 
 const { width } = Dimensions.get('window');
 const INPUT_WIDTH = width * 0.85;
@@ -47,30 +48,38 @@ const Login = ({ navigation, route }) => {
     }, []);
 
     const handleSubmit = async () => {
-        setLoading(true);
+    setLoading(true);
 
-        try {
-            const response = await axios.post(
-                'https://letsmeet-backend-47lv.onrender.com/api/user-profile/login',
-                {
-                    email: login.email,
-                    password: login.password,
-                    device_token: deviceToken ?? '', 
-                },
-                {
-                    headers: { 'Content-Type': 'application/json' },
-                    timeout: 10000,
-                }
-            );
+    try {
+        const response = await axios.post(
+            'https://letsmeet-backend-47lv.onrender.com/api/user-profile/login',
+            {
+                email: login.email,
+                password: login.password,
+                device_token: deviceToken ?? '',
+            },
+            {
+                headers: { 'Content-Type': 'application/json' },
+                timeout: 10000,
+            }
+        );
 
-            await AsyncStorage.setItem('token', response.data.token);
-            navigation.replace('Layout', { screen: 'Home' });
-        } catch (error) {
-            Alert.alert('Error', 'Login failed. Check email or password');
-        } finally {
-            setLoading(false);
-        }
-    };
+        // ✅ Save token
+        await AsyncStorage.setItem('token', response.data.token);
+
+        // ✅ Connect socket
+        await connectSocket();
+
+        // ✅ Navigate after socket connection
+        navigation.replace('Layout', { screen: 'Home' });
+
+    } catch (error) {
+        Alert.alert('Error', 'Login failed. Check email or password');
+    } finally {
+        setLoading(false);
+    }
+};
+
 
     const handleForgotPassword = async () => {
         if (!forgotEmail) {
