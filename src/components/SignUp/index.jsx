@@ -1,5 +1,5 @@
 import React, { useEffect, useRef, useState } from 'react';
-import { StyleSheet, Text, TextInput, TouchableOpacity, View, Image, KeyboardAvoidingView, Alert, Dimensions, StatusBar } from 'react-native';
+import { StyleSheet, Text, TextInput, TouchableOpacity, View, Image, KeyboardAvoidingView, Dimensions, StatusBar, Platform } from 'react-native';
 import { ActivityIndicator, Checkbox, IconButton, Menu, Modal, Provider } from 'react-native-paper';
 import { ScrollView } from 'react-native-gesture-handler';
 import axios from 'axios';
@@ -27,6 +27,10 @@ const SignUp = ({ navigation, route }) => {
     const [anchorLayout, setAnchorLayout] = useState(null);
     const [inputWidth, setInputWidth] = useState(0);
 
+    const [alertModalVisible, setalertModalVisible] = useState(false);
+    const [alertMessage, setalertMessage] = useState('');
+    const [alertAction, setAlertAction] = useState(null);
+
     const roleRef = useRef(null);
 
     const toggleRole = (role) => {
@@ -43,7 +47,8 @@ const SignUp = ({ navigation, route }) => {
         setLoading(true);
 
         if (!firstName || !lastName || !email || !password || !linkedin || !jobRole || selectedRoles.length === 0) {
-            Alert.alert('All fields must be filled, including at least one preference.');
+            setalertMessage('All fields must be filled, including at least one preference.');
+            setalertModalVisible(true);
             setLoading(false);
             return;
         }
@@ -69,19 +74,20 @@ const SignUp = ({ navigation, route }) => {
             const data = await response.json();
 
             if (response.status === 201) {
-                Alert.alert('Successfully Sign Up', 'Redirected into Login Page');
-                navigation.replace('Login', { deviceToken });
+                setalertMessage('Please check your email to activate your account.');
+                setAlertAction(() => () => navigation.replace('Login', { deviceToken }));
+                setalertModalVisible(true);
             } else {
-                Alert.alert(data.message || 'Registration failed, please try again.');
+                setalertMessage(data.message || 'Registration failed, please try again.');
+                setalertModalVisible(true);
             }
         } catch (error) {
-            Alert.alert('Error', "Couldn't register. Please check your network connection.");
-        }
-        finally {
+            setalertMessage("Couldn't register. Please check your network connection.");
+            setalertModalVisible(true);
+        } finally {
             setLoading(false);
         }
     };
-
 
     const removeRole = (role) => {
         setSelectedRoles(selectedRoles.filter((r) => r !== role));
@@ -369,7 +375,38 @@ const SignUp = ({ navigation, route }) => {
                         </View>
                     </Modal>
                 </View>
-            </Provider>
+                <Modal
+                    animationType="fade"
+                    transparent
+                    visible={alertModalVisible}
+                    onRequestClose={() => {
+                        setalertModalVisible(false);
+                        if (alertAction) {
+                            alertAction();
+                            setAlertAction(null);
+                        }
+                    }}
+                >
+                    <View style={styles.modalOverlay}>
+                        <View style={[styles.modalContainer, { padding: 24 }]}>
+                            <Text style={styles.modalTitle}>Alert</Text>
+                            <Text style={styles.modalText}>{alertMessage}</Text>
+                            <TouchableOpacity
+                                style={[styles.doneButton, { marginTop: 16 }]}
+                                onPress={() => {
+                                    setalertModalVisible(false);
+                                    if (alertAction) {
+                                        alertAction();
+                                        setAlertAction(null);
+                                    }
+                                }}
+                            >
+                                <Text style={styles.doneText}>OK</Text>
+                            </TouchableOpacity>
+                        </View>
+                    </View>
+                </Modal>
+        </Provider >
         </>
     );
 }
@@ -536,21 +573,19 @@ const styles = StyleSheet.create({
         marginLeft: 4,
     },
     modalTitle: {
+        textAlign: 'center',
         fontSize: 18,
         fontWeight: 'bold',
         marginBottom: 10,
         color: '#34495e',
     },
     modalText: {
-        fontSize: 14,
-        color: '#444',
-        lineHeight: 20,
-    },
-    modalText: {
+        textAlign: 'center',
         fontSize: 16,
         lineHeight: 24,
         marginBottom: 10,
         color: '#444',
+        whiteSpace: 'pre-line',
     },
 });
 

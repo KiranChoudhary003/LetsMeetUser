@@ -1,7 +1,6 @@
-import React, { useEffect, useState } from 'react';
+import React, { useEffect, useState, useRef } from 'react';
 import {
     ActivityIndicator,
-    Alert,
     Image,
     Keyboard,
     KeyboardAvoidingView,
@@ -22,12 +21,12 @@ import axios from 'axios';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import MaterialIcons from 'react-native-vector-icons/MaterialIcons';
 import { connectSocket } from '../../socket';
+import { BlurView } from '@react-native-community/blur';
 
 const { width } = Dimensions.get('window');
 const INPUT_WIDTH = width * 0.85;
 
 const Login = ({ navigation, route }) => {
-
     const { deviceToken } = route.params || {};
 
     const [login, setLogin] = useState({ email: '', password: '' });
@@ -35,61 +34,205 @@ const Login = ({ navigation, route }) => {
     const [forgotModalVisible, setForgotModalVisible] = useState(false);
     const [forgotEmail, setForgotEmail] = useState('');
     const [forgotLoading, setForgotLoading] = useState(false);
+    const [alertModalVisible, setalertModalVisible] = useState(false);
+    const [alertMessage, setalertMessage] = useState('');
     const [showPassword, setShowPassword] = useState(false);
+    const [retryCountdown, setRetryCountdown] = useState(0);
+    const [isRetryLocked, setIsRetryLocked] = useState(false);
+    const retryIntervalRef = useRef(null);
 
     useEffect(() => {
-        const checkToken = async () => {
-            const token = await AsyncStorage.getItem('token');
-            if (token) {
-                navigation.replace('Layout', { screen: 'Home' });
+        const startCountdown = async () => {
+            const retryUntil = await AsyncStorage.getItem('retryUntil');
+            const now = Date.now();
+
+            if (retryUntil && parseInt(retryUntil) > now) {
+                const remaining = Math.ceil((parseInt(retryUntil) - now) / 1000);
+                setRetryCountdown(remaining);
+                setIsRetryLocked(true);
+                setalertModalVisible(true);
+
+                retryIntervalRef.current = setInterval(() => {
+                    setRetryCountdown((prev) => {
+                        if (prev <= 1) {
+                            clearInterval(retryIntervalRef.current);
+                            retryIntervalRef.current = null;
+                            AsyncStorage.removeItem('retryUntil');
+                            setIsRetryLocked(false);
+                            setalertModalVisible(false);
+                            return 0;
+                        }
+                        return prev - 1;
+                    });
+                }, 1000);
             }
         };
-        checkToken();
+
+        startCountdown();
+
+        return () => {
+            if (retryIntervalRef.current) {
+                clearInterval(retryIntervalRef.current);
+            }
+        };
+    }, []);
+
+
+    useEffect(() => {
+        let interval = null;
+
+        const startCountdown = async () => {
+            const retryUntil = await AsyncStorage.getItem('retryUntil');
+            const now = Date.now();
+
+            if (retryUntil && parseInt(retryUntil) > now) {
+                const remaining = Math.ceil((parseInt(retryUntil) - now) / 1000);
+                setRetryCountdown(remaining);
+                setIsRetryLocked(true);
+                setalertModalVisible(true);
+
+                interval = setInterval(() => {
+                    setRetryCountdown((prev) => {
+                        if (prev <= 1) {
+                            clearInterval(interval);
+                            AsyncStorage.removeItem('retryUntil');
+                            setIsRetryLocked(false);
+                            setalertModalVisible(false);
+                            return 0;
+                        }
+                        return prev - 1;
+                    });
+                }, 1000);
+            }
+        };
+
+        startCountdown();
+
+        return () => {
+            if (interval) clearInterval(interval);
+        };
     }, []);
 
     const handleSubmit = async () => {
-    setLoading(true);
+        if (!login.email.trim() || !login.password.trim()) {
+            setalertMessage('Both email and password are required.');
+            setalertModalVisible(true);
+            return;
+        }
+        setLoading(true);
 
-    try {
-        const response = await axios.post(
-            'https://letsmeet-backend-47lv.onrender.com/api/user-profile/login',
-            {
-                email: login.email,
-                password: login.password,
-                device_token: deviceToken ?? '',
-            },
-            {
-                headers: { 'Content-Type': 'application/json' },
-                timeout: 10000,
+        try {
+            const response = await axios.post(
+                'https://letsmeet-backend-47lv.onrender.com/api/user-profile/login',
+                {
+                    email: login.email,
+                    password: login.password,
+                    device_token: deviceToken ?? '',
+                },
+                {
+                    headers: { 'Content-Type': 'application/json' },
+                    timeout: 10000,
+                }
+            );
+
+            await AsyncStorage.setItem('token', response.data.token);
+            await connectSocket();
+            navigation.replace('Layout', { screen: 'Home' });
+
+        } catch (error) {
+            let message = 'Server error';
+
+            if (error.response) {
+                const status = error.response.status;
+                const data = error.response.data;
+
+                switch (status) {
+                    case 401:
+                        if (data.attemptsLeft === 0) {
+                            const unlockAt = Date.now() + data.retryAfterSeconds * 1000;
+                            await AsyncStorage.setItem('retryUntil', unlockAt.toString());
+                            setRetryCountdown(data.retryAfterSeconds);
+                            setIsRetryLocked(true);
+                            setalertModalVisible(true);
+                            if (retryIntervalRef.current) clearInterval(retryIntervalRef.current);
+
+                            // 🔁 Start new countdown
+                            retryIntervalRef.current = setInterval(() => {
+                                setRetryCountdown((prev) => {
+                                    if (prev <= 1) {
+                                        clearInterval(retryIntervalRef.current);
+                                        retryIntervalRef.current = null;
+                                        AsyncStorage.removeItem('retryUntil');
+                                        setIsRetryLocked(false);
+                                        setalertModalVisible(false);
+                                        return 0;
+                                    }
+                                    return prev - 1;
+                                });
+                            }, 1000);
+                            return;
+                        } else {
+                            message = `Invalid credentials. ${data.attemptsLeft} attempts left.`;
+                        }
+                        break;
+
+                    case 403:
+                        message = data.message || 'Access denied.';
+                        break;
+
+                    case 429:
+                        const unlockAt = Date.now() + data.retryAfterSeconds * 1000;
+                        await AsyncStorage.setItem('retryUntil', unlockAt.toString());
+                        setRetryCountdown(data.retryAfterSeconds);
+                        setIsRetryLocked(true);
+                        setalertModalVisible(true);
+                        if (retryIntervalRef.current) clearInterval(retryIntervalRef.current);
+
+                        // 🔁 Start new countdown
+                        retryIntervalRef.current = setInterval(() => {
+                            setRetryCountdown((prev) => {
+                                if (prev <= 1) {
+                                    clearInterval(retryIntervalRef.current);
+                                    retryIntervalRef.current = null;
+                                    AsyncStorage.removeItem('retryUntil');
+                                    setIsRetryLocked(false);
+                                    setalertModalVisible(false);
+                                    return 0;
+                                }
+                                return prev - 1;
+                            });
+                        }, 1000);
+                        return;
+
+                    case 500:
+                        message = 'Server error';
+                        break;
+
+                    default:
+                        message = data.message || 'Login failed';
+                }
+            } else {
+                message = 'Network error. Please check your internet connection.';
             }
-        );
 
-        // ✅ Save token
-        await AsyncStorage.setItem('token', response.data.token);
-
-        // ✅ Connect socket
-        await connectSocket();
-
-        // ✅ Navigate after socket connection
-        navigation.replace('Layout', { screen: 'Home' });
-
-    } catch (error) {
-        Alert.alert('Error', 'Login failed. Check email or password');
-    } finally {
-        setLoading(false);
-    }
-};
-
+            setalertMessage(message);
+            setalertModalVisible(true);
+        } finally {
+            setLoading(false);
+        }
+    };
 
     const handleForgotPassword = async () => {
         if (!forgotEmail) {
-            Alert.alert('Error', 'Please enter your email.');
+            setalertMessage('Please enter your email.');
+            setalertModalVisible(true);
             return;
         }
 
         const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
         if (!emailRegex.test(forgotEmail.toLowerCase())) {
-            Alert.alert('Invalid Email', 'Please enter a valid email address.');
+            setalertMessage('Please enter a valid email address.');
+            setalertModalVisible(true);
             return;
         }
 
@@ -101,19 +244,22 @@ const Login = ({ navigation, route }) => {
                 { headers: { 'Content-Type': 'application/json' } }
             );
 
-            Alert.alert('Success', 'Password reset link sent to your email.');
+            setalertMessage('Password reset link sent to your email.');
+            setalertModalVisible(true);
             setForgotModalVisible(false);
             setForgotEmail('');
         } catch (error) {
-            Alert.alert('Error', 'No account found with this email.');
+            setalertMessage('No account found with this email.');
+            setalertModalVisible(true);
         } finally {
             setForgotLoading(false);
         }
     };
 
+
     return (
         <>
-            <StatusBar barStyle="light-content" backgroundColor="#34495e" translucent={false} />
+            <StatusBar barStyle="light-content" backgroundColor="#34495e" />
             <KeyboardAvoidingView
                 style={styles.container}
                 behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
@@ -132,7 +278,8 @@ const Login = ({ navigation, route }) => {
                             value={login.email}
                             onChangeText={(text) =>
                                 setLogin({ ...login, email: text.toLowerCase() })
-                            } />
+                            }
+                        />
 
                         <View style={styles.passwordInputContainer}>
                             <TextInput
@@ -161,7 +308,7 @@ const Login = ({ navigation, route }) => {
                         {loading ? (
                             <ActivityIndicator size="large" color="#34495e" />
                         ) : (
-                            <TouchableOpacity style={styles.button} onPress={handleSubmit}>
+                            <TouchableOpacity style={styles.button} onPress={handleSubmit} disabled={isRetryLocked}>
                                 <Text style={styles.buttonText}>Log-in</Text>
                             </TouchableOpacity>
                         )}
@@ -222,6 +369,39 @@ const Login = ({ navigation, route }) => {
                         </Text>
                     </Text>
                 </View>
+
+                <Modal
+                    animationType="fade"
+                    transparent
+                    visible={alertModalVisible}
+                    onRequestClose={() => {
+                        if (!isRetryLocked) setalertModalVisible(false);
+                    }}
+                >
+                    <View style={styles.modalContainer}>
+                        {isRetryLocked && (
+                            <BlurView
+                                style={StyleSheet.absoluteFill}
+                                blurType="light"
+                                blurAmount={4}
+                                reducedTransparencyFallbackColor="white"
+                            />
+                        )}
+                        <View style={styles.modalBox}>
+                            <Text style={styles.modalTitle}>Login Error</Text>
+                            <Text style={styles.modalMessage}>
+                                {isRetryLocked
+                                    ? `Please wait ${retryCountdown} seconds before trying again.`
+                                    : alertMessage}
+                            </Text>
+                            {!isRetryLocked && (
+                                <TouchableOpacity style={styles.button} onPress={() => setalertModalVisible(false)}>
+                                    <Text style={styles.buttonText}>OK</Text>
+                                </TouchableOpacity>
+                            )}
+                        </View>
+                    </View>
+                </Modal>
             </KeyboardAvoidingView>
         </>
     );
@@ -330,6 +510,12 @@ const styles = StyleSheet.create({
         borderRadius: 12,
         elevation: 5,
         alignItems: 'center',
+    },
+    modalMessage: {
+        fontSize: 15,
+        color: '#34495e',
+        textAlign: 'center',
+        marginBottom: 10,
     },
     modalTitle: {
         fontSize: 20,
