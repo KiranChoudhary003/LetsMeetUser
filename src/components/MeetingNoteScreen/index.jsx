@@ -29,14 +29,11 @@ const MeetingNoteScreen = ({ route, navigation }) => {
   };
 
   const submitNote = async () => {
-    if (!socket || !socket.connected) return;
+    if (!socket || !socket.connected) {return;}
 
     try {
-      console.log("📤 Emitting write_meeting_notes:", { meetingId, note });
       socket.emit('write_meeting_notes', { meetingId, notes: note });
-    } catch (err) {
-      console.error("❌ Failed to emit note:", err);
-    }
+    } catch (err) { }
   };
 
   useEffect(() => {

@@ -5,7 +5,6 @@ export const getToken = async () => {
     const token = await AsyncStorage.getItem('token');
     return token;
   } catch (error) {
-    console.error("Failed to retrieve token:", error);
     return null;
   }
 };

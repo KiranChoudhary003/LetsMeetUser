@@ -15,12 +15,13 @@ import {
     Linking,
     StatusBar,
     Dimensions,
+    Animated
 } from 'react-native';
 import logo from '../../assets/logo.png';
 import axios from 'axios';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import MaterialIcons from 'react-native-vector-icons/MaterialIcons';
-import { connectSocket } from '../../socket';
+import { getSocket, connectSocket } from '../../socket';
 import { BlurView } from '@react-native-community/blur';
 
 const { width } = Dimensions.get('window');
@@ -28,7 +29,6 @@ const INPUT_WIDTH = width * 0.85;
 
 const Login = ({ navigation, route }) => {
     const { deviceToken } = route.params || {};
-
     const [login, setLogin] = useState({ email: '', password: '' });
     const [loading, setLoading] = useState(false);
     const [forgotModalVisible, setForgotModalVisible] = useState(false);
@@ -40,31 +40,42 @@ const Login = ({ navigation, route }) => {
     const [retryCountdown, setRetryCountdown] = useState(0);
     const [isRetryLocked, setIsRetryLocked] = useState(false);
     const retryIntervalRef = useRef(null);
+    const [meetingModalVisible, setMeetingModalVisible] = useState(false);
+    const progressAnim = useRef(new Animated.Value(0)).current;
+    const timeoutIdRef = useRef(null);
+
+
+    const handleRateLimit = async (seconds) => {
+        const unlockAt = Date.now() + seconds * 1000;
+        await AsyncStorage.setItem('retryUntil', unlockAt.toString());
+        setRetryCountdown(seconds);
+        setIsRetryLocked(true);
+        setalertModalVisible(true);
+        if (retryIntervalRef.current) { clearInterval(retryIntervalRef.current); }
+
+        retryIntervalRef.current = setInterval(() => {
+            setRetryCountdown((prev) => {
+                if (prev <= 1) {
+                    clearInterval(retryIntervalRef.current);
+                    retryIntervalRef.current = null;
+                    AsyncStorage.removeItem('retryUntil');
+                    setIsRetryLocked(false);
+                    setalertModalVisible(false);
+                    return 0;
+                }
+                return prev - 1;
+            });
+        }, 1000);
+    };
 
     useEffect(() => {
         const startCountdown = async () => {
             const retryUntil = await AsyncStorage.getItem('retryUntil');
             const now = Date.now();
 
-            if (retryUntil && parseInt(retryUntil) > now) {
-                const remaining = Math.ceil((parseInt(retryUntil) - now) / 1000);
-                setRetryCountdown(remaining);
-                setIsRetryLocked(true);
-                setalertModalVisible(true);
-
-                retryIntervalRef.current = setInterval(() => {
-                    setRetryCountdown((prev) => {
-                        if (prev <= 1) {
-                            clearInterval(retryIntervalRef.current);
-                            retryIntervalRef.current = null;
-                            AsyncStorage.removeItem('retryUntil');
-                            setIsRetryLocked(false);
-                            setalertModalVisible(false);
-                            return 0;
-                        }
-                        return prev - 1;
-                    });
-                }, 1000);
+            if (retryUntil && parseInt(retryUntil, 10) > now) {
+                const remaining = Math.ceil((parseInt(retryUntil, 10) - now) / 1000);
+                await handleRateLimit(remaining);
             }
         };
 
@@ -78,47 +89,13 @@ const Login = ({ navigation, route }) => {
     }, []);
 
 
-    useEffect(() => {
-        let interval = null;
-
-        const startCountdown = async () => {
-            const retryUntil = await AsyncStorage.getItem('retryUntil');
-            const now = Date.now();
-
-            if (retryUntil && parseInt(retryUntil) > now) {
-                const remaining = Math.ceil((parseInt(retryUntil) - now) / 1000);
-                setRetryCountdown(remaining);
-                setIsRetryLocked(true);
-                setalertModalVisible(true);
-
-                interval = setInterval(() => {
-                    setRetryCountdown((prev) => {
-                        if (prev <= 1) {
-                            clearInterval(interval);
-                            AsyncStorage.removeItem('retryUntil');
-                            setIsRetryLocked(false);
-                            setalertModalVisible(false);
-                            return 0;
-                        }
-                        return prev - 1;
-                    });
-                }, 1000);
-            }
-        };
-
-        startCountdown();
-
-        return () => {
-            if (interval) clearInterval(interval);
-        };
-    }, []);
-
     const handleSubmit = async () => {
         if (!login.email.trim() || !login.password.trim()) {
             setalertMessage('Both email and password are required.');
             setalertModalVisible(true);
             return;
         }
+
         setLoading(true);
 
         try {
@@ -135,10 +112,10 @@ const Login = ({ navigation, route }) => {
                 }
             );
 
-            await AsyncStorage.setItem('token', response.data.token);
-            await connectSocket();
+            const token = response.data.token;
+            await AsyncStorage.setItem('token', token);
             navigation.replace('Layout', { screen: 'Home' });
-
+            setLogin({ email: '', password: '' });
         } catch (error) {
             let message = 'Server error';
 
@@ -149,65 +126,21 @@ const Login = ({ navigation, route }) => {
                 switch (status) {
                     case 401:
                         if (data.attemptsLeft === 0) {
-                            const unlockAt = Date.now() + data.retryAfterSeconds * 1000;
-                            await AsyncStorage.setItem('retryUntil', unlockAt.toString());
-                            setRetryCountdown(data.retryAfterSeconds);
-                            setIsRetryLocked(true);
-                            setalertModalVisible(true);
-                            if (retryIntervalRef.current) clearInterval(retryIntervalRef.current);
-
-                            // 🔁 Start new countdown
-                            retryIntervalRef.current = setInterval(() => {
-                                setRetryCountdown((prev) => {
-                                    if (prev <= 1) {
-                                        clearInterval(retryIntervalRef.current);
-                                        retryIntervalRef.current = null;
-                                        AsyncStorage.removeItem('retryUntil');
-                                        setIsRetryLocked(false);
-                                        setalertModalVisible(false);
-                                        return 0;
-                                    }
-                                    return prev - 1;
-                                });
-                            }, 1000);
+                            await handleRateLimit(data.retryAfterSeconds);
                             return;
                         } else {
                             message = `Invalid credentials. ${data.attemptsLeft} attempts left.`;
                         }
                         break;
-
                     case 403:
                         message = data.message || 'Access denied.';
                         break;
-
                     case 429:
-                        const unlockAt = Date.now() + data.retryAfterSeconds * 1000;
-                        await AsyncStorage.setItem('retryUntil', unlockAt.toString());
-                        setRetryCountdown(data.retryAfterSeconds);
-                        setIsRetryLocked(true);
-                        setalertModalVisible(true);
-                        if (retryIntervalRef.current) clearInterval(retryIntervalRef.current);
-
-                        // 🔁 Start new countdown
-                        retryIntervalRef.current = setInterval(() => {
-                            setRetryCountdown((prev) => {
-                                if (prev <= 1) {
-                                    clearInterval(retryIntervalRef.current);
-                                    retryIntervalRef.current = null;
-                                    AsyncStorage.removeItem('retryUntil');
-                                    setIsRetryLocked(false);
-                                    setalertModalVisible(false);
-                                    return 0;
-                                }
-                                return prev - 1;
-                            });
-                        }, 1000);
+                        await handleRateLimit(data.retryAfterSeconds);
                         return;
-
                     case 500:
                         message = 'Server error';
                         break;
-
                     default:
                         message = data.message || 'Login failed';
                 }
@@ -221,6 +154,7 @@ const Login = ({ navigation, route }) => {
             setLoading(false);
         }
     };
+
 
     const handleForgotPassword = async () => {
         if (!forgotEmail) {
@@ -346,7 +280,7 @@ const Login = ({ navigation, route }) => {
                                         </TouchableOpacity>
                                     )}
                                     <TouchableOpacity onPress={() => setForgotModalVisible(false)}>
-                                        <Text style={{ marginTop: 10, color: 'gray' }}>Cancel</Text>
+                                        <Text style={styles.cancelText}>Cancel</Text>
                                     </TouchableOpacity>
                                 </View>
                             </View>
@@ -375,7 +309,7 @@ const Login = ({ navigation, route }) => {
                     transparent
                     visible={alertModalVisible}
                     onRequestClose={() => {
-                        if (!isRetryLocked) setalertModalVisible(false);
+                        if (!isRetryLocked) { setalertModalVisible(false); }
                     }}
                 >
                     <View style={styles.modalContainer}>
@@ -403,6 +337,8 @@ const Login = ({ navigation, route }) => {
                     </View>
                 </Modal>
             </KeyboardAvoidingView>
+
+
         </>
     );
 };
@@ -466,7 +402,7 @@ const styles = StyleSheet.create({
     signUpSection: {
         marginTop: 10,
         flexDirection: 'row',
-        color: "#000"
+        color: '#000',
     },
     signUp: {
         fontSize: 14,
@@ -535,6 +471,78 @@ const styles = StyleSheet.create({
         color: '#7680DE',
         fontWeight: 'bold',
     },
+    cancelText: {
+        marginTop: 10,
+        color: 'gray',
+    },
+    requestModalOverlay: {
+        flex: 1,
+        backgroundColor: '#00000088',
+        justifyContent: 'center',
+        alignItems: 'center',
+        zIndex: 1000,
+    },
+    requestModalWrapper: {
+        flex: 1,
+        justifyContent: 'center',
+        alignItems: 'center',
+    },
+    requestModalContainer: {
+        width: '85%',
+        backgroundColor: '#fff',
+        borderRadius: 20,
+        padding: 25,
+        shadowColor: '#000',
+        shadowOpacity: 0.25,
+        shadowRadius: 10,
+        elevation: 10,
+        zIndex: 1000,
+    },
+    requestModalTitle: {
+        color: '#333',
+        fontSize: 20,
+        fontWeight: 'bold',
+        marginBottom: 10,
+        textAlign: 'center',
+    },
+    requestModalMessage: {
+        color: '#555',
+        fontSize: 16,
+        marginBottom: 20,
+        textAlign: 'center',
+    },
+    requestProgressBarContainer: {
+        height: 10,
+        backgroundColor: '#e0e0e0',
+        borderRadius: 10,
+        overflow: 'hidden',
+        marginBottom: 15,
+    },
+    requestProgressBarFill: {
+        height: '100%',
+        backgroundColor: '#34495e',
+    },
+    requestModalButtons: {
+        flexDirection: 'row',
+        justifyContent: 'space-around',
+    },
+    requestModalButton: {
+        width: '40%',
+        padding: 12,
+        borderRadius: 10,
+        alignItems: 'center',
+    },
+    requestAcceptBtn: {
+        backgroundColor: '#34495e',
+    },
+    requestDeclineBtn: {
+        backgroundColor: '#F44336',
+    },
+    requestModalButtonText: {
+        color: '#fff',
+        fontWeight: 'bold',
+    },
+
 });
 
 export default Login;

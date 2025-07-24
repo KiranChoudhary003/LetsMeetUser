@@ -6,14 +6,12 @@ let socket = null;
 let initialized = false;
 let connecting = false;
 
-export const connectSocket = async () => {
-  if (initialized && socket && socket.connected) {
-    console.log('♻️ Reusing already connected socket:', socket.id);
+export const connectSocket = async (passedToken = null) => {
+  if (initialized && socket?.connected) {
     return socket;
   }
 
   if (connecting) {
-    console.log('⏳ Socket is currently connecting. Waiting for completion...');
     return new Promise((resolve, reject) => {
       const interval = setInterval(() => {
         if (initialized && socket?.connected) {
@@ -23,67 +21,76 @@ export const connectSocket = async () => {
       }, 100);
       setTimeout(() => {
         clearInterval(interval);
-        reject(new Error('⏱️ Timeout while waiting for socket to connect'));
-      }, 5000);
+        reject(new Error('Timeout while waiting for socket to connect'));
+      }, 7000);
     });
   }
 
   connecting = true;
 
-  const token = await AsyncStorage.getItem('token');
-
+  let token = passedToken;
   if (!token) {
-    console.log('🔑 No token found. You may need to login.');
-    connecting = false;
-    throw new Error('Token not found');
+    token = await AsyncStorage.getItem('token');
+    if (!token) {
+      connecting = false;
+      console.warn('⚠️ No token found. Skipping socket connection.');
+      return null;
+    }
   }
 
-  console.log('🗝️ Using token:', token.slice(0, 10) + '...');
-
-  // ✅ Decode the token to get user ID in frontend only
   try {
     const decoded = jwtDecode(token);
     const userId = decoded?.id || decoded?.user?.id;
     if (userId) {
       await AsyncStorage.setItem('userId', String(userId));
-      console.log('✅ Saved userId:', userId);
-    } else {
-      console.warn('⚠️ No userId found in token');
     }
   } catch (e) {
-    console.error('❌ Failed to decode token:', e.message);
+    console.warn('JWT decode failed:', e.message);
   }
 
   if (socket) {
-    console.log('🔄 Disconnecting previous socket...');
     socket.disconnect();
   }
 
-  console.log('🌐 Establishing new socket connection...');
-
   socket = io('https://letsmeet-backend-47lv.onrender.com', {
     auth: {token},
-    // transports: ["websocket"], // OPTIONAL: remove if connection fails
+    transports: ['websocket'],
+    reconnection: true,
+    reconnectionAttempts: Infinity,
+    reconnectionDelay: 2000,
+    timeout: 10000,
+  });
+
+  socket.on('connect', () => {
+    console.log('✅ Socket connected');
+    initialized = true;
+    connecting = false;
+  });
+
+  socket.on('disconnect', reason => {
+    console.warn('⚠️ Socket disconnected:', reason);
+    if (reason === 'io server disconnect') {
+      socket.connect(); // manual reconnect
+    }
+  });
+
+  socket.on('connect_error', err => {
+    console.error('❌ Socket connection error:', err.message);
+    connecting = false;
   });
 
   return new Promise((resolve, reject) => {
-    socket.on('connect', () => {
-      console.log('✅ Socket connected:', socket.id);
-      initialized = true;
-      connecting = false;
+    socket.once('connect', () => {
       resolve(socket);
     });
-
-    socket.on('connect_error', err => {
-      console.log('❌ Socket connection failed:', err.message);
-      connecting = false;
-      reject(err);
-    });
+    socket.once('connect_error', reject);
   });
 };
 
 export const getSocket = () => {
-  if (!socket)
-    throw new Error('🚫 Socket not initialized. Call connectSocket() first.');
+  if (!socket || !socket.connected) {
+    console.warn('⚠️ Socket not connected yet');
+    return null;
+  }
   return socket;
 };

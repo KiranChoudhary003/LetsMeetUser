@@ -5,28 +5,42 @@ import {
   StyleSheet,
   Image,
   Animated,
-  Dimensions,
   Alert,
-  TouchableOpacity,
   Platform,
-  PermissionsAndroid,
   StatusBar,
   BackHandler,
+  PermissionsAndroid,
 } from 'react-native';
 import logo from '../../assets/logo.png';
-import { PERMISSIONS, check, request, RESULTS, openSettings } from 'react-native-permissions';
+import {
+  PERMISSIONS,
+  check,
+  request,
+  RESULTS,
+  openSettings,
+} from 'react-native-permissions';
 import Geolocation from 'react-native-geolocation-service';
 import { LocationContext } from '../../components/LocationContext/LocationContext';
-import messaging from '@react-native-firebase/messaging';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { useFocusEffect } from '@react-navigation/native';
+
+// ✅ Modular Firebase imports
+import { getApp } from '@react-native-firebase/app';
+import {
+  getMessaging,
+  getToken,
+  requestPermission,
+} from '@react-native-firebase/messaging';
 
 const Welcome = ({ navigation }) => {
   const colorAnim = useRef(new Animated.Value(0)).current;
   const textFadeAnim = useRef(new Animated.Value(0)).current;
 
   const { setLocation } = useContext(LocationContext);
-  const [locationData, setLocationData] = useState({ latitude: null, longitude: null });
+  const [locationData, setLocationData] = useState({
+    latitude: null,
+    longitude: null,
+  });
 
   useFocusEffect(
     React.useCallback(() => {
@@ -34,9 +48,7 @@ const Welcome = ({ navigation }) => {
         BackHandler.exitApp();
         return true;
       };
-
       const backHandler = BackHandler.addEventListener('hardwareBackPress', backAction);
-
       return () => backHandler.remove();
     }, [])
   );
@@ -44,6 +56,10 @@ const Welcome = ({ navigation }) => {
   useEffect(() => {
     const initialize = async () => {
       const locationGranted = await requestLocationPermissions();
+      const fcmToken = await requestNotificationPermission();
+      await requestCameraPermission();
+      await requestStoragePermission();
+
       let coords = { latitude: null, longitude: null };
 
       if (locationGranted) {
@@ -52,16 +68,13 @@ const Welcome = ({ navigation }) => {
         setLocationData(coords);
       }
 
-      const fcmToken = await requestNotificationPermission();
-
       setTimeout(async () => {
         const savedToken = await AsyncStorage.getItem('token');
-
         if (savedToken) {
           navigation.replace('Layout', { screen: 'Home' });
         } else {
           navigation.replace('Login', {
-            deviceToken: fcmToken ?? null
+            deviceToken: fcmToken ?? null,
           });
         }
       }, 3000);
@@ -87,26 +100,22 @@ const Welcome = ({ navigation }) => {
   }, []);
 
   const requestLocationPermissions = async () => {
-    const permission = Platform.OS === 'android'
-      ? PERMISSIONS.ANDROID.ACCESS_FINE_LOCATION
-      : PERMISSIONS.IOS.LOCATION_WHEN_IN_USE;
+    const permission =
+      Platform.OS === 'android'
+        ? PERMISSIONS.ANDROID.ACCESS_FINE_LOCATION
+        : PERMISSIONS.IOS.LOCATION_WHEN_IN_USE;
 
     const askAgain = async () => {
       const newStatus = await request(permission);
-
       if (newStatus === RESULTS.GRANTED) return true;
-
       if (newStatus === RESULTS.BLOCKED) {
         Alert.alert(
           'Location Permission Required',
           'Please enable location permission from settings to proceed.',
-          [
-            { text: 'Open Settings', onPress: () => openSettings() },
-          ]
+          [{ text: 'Open Settings', onPress: () => openSettings() }]
         );
         return false;
       }
-
       return new Promise((resolve) => {
         Alert.alert(
           'Location Required',
@@ -119,25 +128,83 @@ const Welcome = ({ navigation }) => {
                 resolve(result);
               },
             },
-            {
-              text: 'Cancel',
-              style: 'cancel',
-              onPress: () => resolve(false),
-            },
+            { text: 'Cancel', style: 'cancel', onPress: () => resolve(false) },
           ]
         );
       });
     };
 
     const result = await check(permission);
-
-    if (result === RESULTS.GRANTED) return true;
-
-    return await askAgain();
+    return result === RESULTS.GRANTED ? true : await askAgain();
   };
 
+  const requestCameraPermission = async () => {
+    const permission =
+      Platform.OS === 'android' ? PERMISSIONS.ANDROID.CAMERA : PERMISSIONS.IOS.CAMERA;
+
+    const result = await request(permission);
+    if (result === RESULTS.GRANTED) return true;
+
+    Alert.alert(
+      'Camera Permission',
+      'Camera access is required to scan QR codes.',
+      [{ text: 'OK' }]
+    );
+    return false;
+  };
+
+  const requestStoragePermission = async () => {
+  try {
+    if (Platform.OS === 'android') {
+      if (Platform.Version >= 33) {
+        // Android 13+ (API level 33+)
+        const result = await request(PERMISSIONS.ANDROID.READ_MEDIA_IMAGES);
+
+        if (result === RESULTS.GRANTED) return true;
+
+        if (result === RESULTS.BLOCKED) {
+          Alert.alert(
+            'Storage Permission Blocked',
+            'Please enable storage access from settings.',
+            [
+              { text: 'Open Settings', onPress: () => openSettings() },
+              { text: 'Cancel', style: 'cancel' }
+            ]
+          );
+        }
+
+        return false;
+      } else {
+        // Android 12 and below
+        const write = await request(PERMISSIONS.ANDROID.WRITE_EXTERNAL_STORAGE);
+
+        if (write === RESULTS.GRANTED) return true;
+
+        if (write === RESULTS.BLOCKED) {
+          Alert.alert(
+            'Storage Permission Blocked',
+            'Please enable storage access from settings.',
+            [
+              { text: 'Open Settings', onPress: () => openSettings() },
+              { text: 'Cancel', style: 'cancel' }
+            ]
+          );
+        }
+
+        return false;
+      }
+    }
+
+    return true; // iOS doesn't need storage permission
+  } catch (error) {
+    console.error('Storage permission error:', error);
+    return false;
+  }
+};
+
+
   const getCurrentLocation = () => {
-    return new Promise((resolve, reject) => {
+    return new Promise((resolve) => {
       Geolocation.getCurrentPosition(
         (position) => {
           const { latitude, longitude } = position.coords;
@@ -157,29 +224,21 @@ const Welcome = ({ navigation }) => {
       );
     });
   };
+
   const requestNotificationPermission = async () => {
     if (Platform.OS === 'android' && Platform.Version >= 33) {
       const result = await PermissionsAndroid.request(
         PermissionsAndroid.PERMISSIONS.POST_NOTIFICATIONS
       );
-
-      if (result !== PermissionsAndroid.RESULTS.GRANTED) {
-        return null;
-      }
+      if (result !== PermissionsAndroid.RESULTS.GRANTED) return null;
     }
 
     try {
-      const authStatus = await messaging().requestPermission();
+      const app = getApp();
+      const messaging = getMessaging(app);
 
-      const enabled =
-        authStatus === messaging.AuthorizationStatus.AUTHORIZED ||
-        authStatus === messaging.AuthorizationStatus.PROVISIONAL;
-
-      if (!enabled) {
-        return null;
-      }
-
-      const token = await messaging().getToken();
+      await requestPermission(messaging);
+      const token = await getToken(messaging);
       return token ?? null;
     } catch (error) {
       console.error('FCM Token Error:', error);
@@ -189,12 +248,8 @@ const Welcome = ({ navigation }) => {
 
   return (
     <>
-      <StatusBar
-        barStyle="light-content"
-        backgroundColor="#34495e"
-        translucent={false}
-      />
-      <View style={styles.container} activeOpacity={1}>
+      <StatusBar barStyle="light-content" backgroundColor="#34495e" />
+      <View style={styles.container}>
         <Animated.View
           style={[
             styles.animatedBg,

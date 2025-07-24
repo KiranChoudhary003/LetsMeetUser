@@ -11,10 +11,8 @@ import {
   Animated,
   Easing,
   StatusBar,
-  Alert,
 } from 'react-native';
 import QRCodeScanner from 'react-native-qrcode-scanner';
-import AsyncStorage from '@react-native-async-storage/async-storage';
 import MaterialIcons from 'react-native-vector-icons/MaterialIcons';
 import { LocationContext } from '../LocationContext/LocationContext';
 import { getSocket } from '../../socket';
@@ -31,9 +29,6 @@ const Scanner = ({ navigation }) => {
   const loadingRef = useRef(false);
   const fallbackTriggered = useRef(false);
   const timeoutIdRef = useRef(null);
-
-
-
 
   const { location } = useContext(LocationContext);
   const fullName = `${scannedData?.firstName ?? ''} ${scannedData?.lastName ?? ''}`.trim();
@@ -52,15 +47,14 @@ const Scanner = ({ navigation }) => {
         useNativeDriver: true,
       })
     ).start();
-  }, []);
+  }, [moveAnim]);
 
   useEffect(() => {
     let socket;
 
     const setupSocket = async () => {
       try {
-        socket = await getSocket(); // ensures the socket is connected and authenticated
-        console.log("🧩 DEBUG: Socket retrieved in Scanner:", socket.id);
+        socket = await getSocket();
 
         socket.on('write_meeting_notes', ({ meetingId }) => {
           clearTimeout(timeoutIdRef.current);
@@ -68,19 +62,16 @@ const Scanner = ({ navigation }) => {
 
           setLoading(false);
           setConnectionStatus('success');
-          setShowPopup(true); // Show popup
+          setShowPopup(true);
 
-          // ⏳ Wait 3 seconds before navigating
           setTimeout(() => {
-            setShowPopup(false); // Optional: hide popup after navigation
+            setShowPopup(false);
             navigation.navigate('MeetingNoteScreen', { meetingId });
           }, 2000);
         });
 
-
         socket.on('meeting_error', ({ message }) => {
-          console.log("⚠️ DEBUG: Received meeting_error →", message);
-          clearTimeout(timeoutIdRef.current); // ✅ Clear fallback
+          clearTimeout(timeoutIdRef.current);
           loadingRef.current = false;
 
           setLoading(false);
@@ -90,74 +81,37 @@ const Scanner = ({ navigation }) => {
         });
 
         socket.on('meeting_declined', ({ by }) => {
-          console.log(`❌ DEBUG: Meeting declined by user ID: ${by}`);
-          clearTimeout(timeoutIdRef.current); // ✅ Clear fallback
+          clearTimeout(timeoutIdRef.current);
           loadingRef.current = false;
-
           setLoading(false);
           setConnectionStatus('fail');
           setFailureReason('Your meeting request was declined.');
           setShowPopup(true);
-
           setTimeout(() => {
-            console.log("🧽 DEBUG: Resetting scanner after decline");
             setShowPopup(false);
             setScanCompleted(false);
             scannerRef.current?.reactivate();
           }, 3000);
         });
-
-        socket.on('meeting_error', ({ message }) => {
-          console.log("⚠️ DEBUG: Received meeting_error →", message);
-          setLoading(false);
-          setConnectionStatus('fail');
-          setFailureReason(message);
-          setShowPopup(true);
-        });
-
-        socket.on('meeting_declined', ({ by }) => {
-          console.log(`❌ DEBUG: Meeting declined by user ID: ${by}`);
-          setLoading(false);
-          setConnectionStatus('fail');
-          setFailureReason('Your meeting request was declined.');
-          setShowPopup(true);
-
-          setTimeout(() => {
-            console.log("🧽 DEBUG: Resetting scanner after decline");
-            setShowPopup(false);
-            setScanCompleted(false);
-            scannerRef.current?.reactivate();
-          }, 3000);
-        });
-
-      } catch (err) {
-        console.error("❌ DEBUG: Socket setup failed in Scanner:", err.message);
-      }
+      } catch (err) { }
     };
 
     setupSocket();
 
     return () => {
       try {
-        const socket = getSocket();
-        console.log("🧹 DEBUG: Cleaning up socket listeners in Scanner");
+        getSocket();
         socket.off('meeting_request');
         socket.off('write_meeting_notes');
         socket.off('meeting_error');
         socket.off('meeting_declined');
-      } catch (err) {
-        console.warn("⚠️ DEBUG: Cleanup failed: socket not initialized", err.message);
-      }
+      } catch (err) { }
     };
   }, [navigation]);
 
-
-
   useEffect(() => {
     if (showPopup) {
-      console.log("🧪 DEBUG: Popup shown, starting reset timer");
       const timer = setTimeout(() => {
-        console.log("⏱️ DEBUG: Resetting scanner after popup timeout");
         setShowPopup(false);
         setScanCompleted(false);
         setFailureReason('');
@@ -167,13 +121,10 @@ const Scanner = ({ navigation }) => {
     }
   }, [showPopup]);
 
-
   const onSuccess = async (e) => {
     Vibration.vibrate(150);
-    console.log("📸 DEBUG: QR code scanned");
 
     if (scanCompleted) {
-      console.log("⛔ DEBUG: Scan already completed, ignoring...");
       return;
     }
 
@@ -183,16 +134,12 @@ const Scanner = ({ navigation }) => {
       setScanCompleted(true);
       fallbackTriggered.current = false;
 
-      console.log("📄 DEBUG: QR raw data:", e.data);
-
       let data;
       try {
         data = JSON.parse(e.data);
-        console.log("✅ DEBUG: Parsed QR JSON:", data);
       } catch {
-        console.log("❌ DEBUG: Failed to parse QR code");
         setConnectionStatus('invalid');
-        setFailureReason('Invalid QR code.');
+        setFailureReason('Scanned code is not valid. Please try another.');
         setShowPopup(true);
         setLoading(false);
         loadingRef.current = false;
@@ -200,9 +147,8 @@ const Scanner = ({ navigation }) => {
       }
 
       if (!data?.id) {
-        console.log("❌ DEBUG: QR code missing 'id' field");
         setConnectionStatus('invalid');
-        setFailureReason('QR Code missing user ID.');
+        setFailureReason('Scanned code is not valid. Please try another.');
         setShowPopup(true);
         setLoading(false);
         loadingRef.current = false;
@@ -210,9 +156,8 @@ const Scanner = ({ navigation }) => {
       }
 
       if (!location?.latitude || !location?.longitude) {
-        console.log("📍 DEBUG: Location unavailable", location);
         setConnectionStatus('fail');
-        setFailureReason('Location not available. Please enable GPS and try again.');
+        setFailureReason('Please enable location and try again.');
         setShowPopup(true);
         setLoading(false);
         loadingRef.current = false;
@@ -220,33 +165,27 @@ const Scanner = ({ navigation }) => {
       }
 
       setScannedData(data);
-      const token = await AsyncStorage.getItem('token');
-      console.log("🔑 DEBUG: Retrieved token:", token);
 
       const socket = await getSocket();
-      console.log("📡 DEBUG: Socket to emit from:", socket.id);
 
       const payload = {
         targetUserId: data.id,
         latitude: location.latitude,
         longitude: location.longitude,
       };
-      console.log("📡 DEBUG: Emitting scan_qr with payload:", payload);
       socket.emit('scan_qr', payload);
 
       timeoutIdRef.current = setTimeout(() => {
         if (loadingRef.current && !fallbackTriggered.current) {
-          console.warn("⏳ DEBUG: Fallback triggered — no response received");
           fallbackTriggered.current = true;
           setLoading(false);
           setConnectionStatus('fail');
-          setFailureReason('No response. Try again.');
+          setFailureReason('Unable to connect. Please try again later.');
           setShowPopup(true);
         }
       }, 10000);
 
     } catch (error) {
-      console.log("❌ DEBUG: Unexpected error in scan handler:", error);
       setConnectionStatus('fail');
       setFailureReason('Something went wrong. Please try again.');
       setShowPopup(true);
@@ -255,8 +194,6 @@ const Scanner = ({ navigation }) => {
       clearTimeout(timeoutIdRef.current);
     }
   };
-
-
 
   return (
     <>
@@ -513,9 +450,9 @@ const styles = StyleSheet.create({
     marginTop: 20,
   },
   connect: {
-    display: "flex",
-    alignItems: "center",
-    justifyContent: "center",
+    display: 'flex',
+    alignItems: 'center',
+    justifyContent: 'center',
     marginBottom: 50
   }
 });

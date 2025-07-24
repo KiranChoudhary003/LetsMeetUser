@@ -4,7 +4,6 @@ import { NavigationContainer, useNavigationContainerRef } from '@react-navigatio
 import { createStackNavigator } from '@react-navigation/stack';
 import React, { useEffect, useRef, useState } from 'react';
 import {
-  Alert,
   Animated,
   Modal,
   StatusBar,
@@ -16,6 +15,7 @@ import {
 import { KeyboardProvider } from 'react-native-keyboard-controller';
 import { SafeAreaProvider } from 'react-native-safe-area-context';
 import { enableScreens } from 'react-native-screens';
+import { initializeGlobalSocketListeners } from './src/components/InitializeSocket/initializeGlobalSocketListeners';
 
 import ChatPage from './src/components/Chatting/ChatPage';
 import UserFriendList from './src/components/Chatting/UserFriendList';
@@ -52,73 +52,55 @@ const App = () => {
   const timeoutIdRef = useRef(null);
 
   useEffect(() => {
-    const setupSocket = async () => {
-      try {
-        const token = await AsyncStorage.getItem('token');
-        if (!token) {
-          console.warn("⛔ No token found. Skipping socket setup.");
-          return;
+    const intervalId = setInterval(async () => {
+      const socket = getSocket();
+      const isConnected = socket && socket.connected;
+
+      if (!isConnected) {
+        console.warn('🔄 Attempting to reconnect socket...');
+        try {
+          const token = await AsyncStorage.getItem('token');
+          if (token) {
+            await connectSocket(token);
+            const newSocket = getSocket();
+
+            if (newSocket && !socketSetupDone.current) {
+              socketSetupDone.current = true;
+
+              initializeGlobalSocketListeners(newSocket, {
+                onMeetingRequest: ({ fromUserId, fromUserName, eventId }) => {
+                  setMeetingData({ fromUserId, fromUserName, eventId });
+                  setMeetingExpired(false);
+                  setMeetingModalVisible(true);
+                  progressAnim.setValue(0);
+
+                  Animated.timing(progressAnim, {
+                    toValue: 1,
+                    duration: 10000,
+                    useNativeDriver: false,
+                  }).start();
+
+                  if (timeoutIdRef.current) {clearTimeout(timeoutIdRef.current);}
+                  timeoutIdRef.current = setTimeout(() => {
+                    setMeetingExpired(true);
+                  }, 9000);
+                },
+                onWriteMeetingNotes: ({ meetingId }) => {
+                  navigationRef.current?.navigate('MeetingNoteScreen', { meetingId });
+                },
+                onMeetingError: () => { },
+                onMeetingDeclined: () => { },
+              });
+            }
+          }
+        } catch (err) {
+          console.warn('❌ Reconnection failed:', err.message);
         }
-
-        await connectSocket(token);
-        const socket = getSocket();
-
-        if (!socket || socketSetupDone.current) return;
-
-        socketSetupDone.current = true;
-        console.log("✅ Global socket listener initialized");
-
-        socket.on('meeting_request', ({ fromUserId, fromUserName, eventId }) => {
-          console.log("📥 Received meeting_request:", { fromUserId, fromUserName, eventId });
-
-          setMeetingData({ fromUserId, fromUserName, eventId });
-          setMeetingExpired(false);
-          setMeetingModalVisible(true);
-          progressAnim.setValue(0);
-
-          Animated.timing(progressAnim, {
-            toValue: 1,
-            duration: 10000,
-            useNativeDriver: false,
-          }).start();
-
-          if (timeoutIdRef.current) clearTimeout(timeoutIdRef.current);
-          timeoutIdRef.current = setTimeout(() => {
-            setMeetingExpired(true);
-          }, 10000);
-        });
-
-        socket.on('write_meeting_notes', ({ meetingId }) => {
-          console.log("📝 write_meeting_notes received, navigating...");
-          navigationRef.current?.navigate('MeetingNoteScreen', { meetingId });
-        });
-
-        socket.on('meeting_error', ({ message }) => {
-          Alert.alert('Meeting Error', message);
-        });
-
-        socket.on('meeting_declined', ({ by }) => {
-          Alert.alert('Declined', 'Your meeting request was declined.');
-        });
-
-      } catch (err) {
-        console.warn("⚠️ Socket setup failed in App.jsx:", err.message);
       }
-    };
-
-    console.log("📡 Setting up global socket listeners in App.jsx");
-    setupSocket();
-
-    return () => {
-      try {
-        const socket = getSocket();
-        socket.off('meeting_request');
-        socket.off('write_meeting_notes');
-        socket.off('meeting_error');
-        socket.off('meeting_declined');
-      } catch (err) { }
-    };
+    }, 5000);
+    return () => clearInterval(intervalId);
   }, []);
+
 
   const clearMeetingTimeouts = () => {
     clearTimeout(timeoutIdRef.current);
