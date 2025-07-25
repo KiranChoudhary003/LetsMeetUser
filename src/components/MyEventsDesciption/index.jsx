@@ -12,6 +12,7 @@ import {
     StatusBar,
 } from 'react-native';
 import Ionicons from 'react-native-vector-icons/Ionicons';
+import MaterialCommunityIcons from 'react-native-vector-icons/MaterialCommunityIcons';
 
 const backgroundImage = require('../../assets/bgg.png');
 
@@ -133,6 +134,18 @@ const MyEventsDesciption = ({ navigation, route }) => {
                             </Text>
                         </TouchableOpacity>
                         <Text style={styles.headerTitle}>{name}</Text>
+                        <TouchableOpacity
+                            onPress={() => navigation.navigate('UserMeetings', {
+                                event : {id}
+                            })}
+                            style={styles.iconWrapper}
+                        >
+                            <MaterialCommunityIcons
+                                name="card-account-details"
+                                size={26}
+                                color="#fff"
+                            />
+                        </TouchableOpacity>
                     </View>
 
                     <ScrollView contentContainerStyle={styles.scrollContainer}>
@@ -265,6 +278,12 @@ const styles = StyleSheet.create({
         fontSize: 18,
         fontWeight: 'bold',
     },
+    iconWrapper: {
+        position: 'absolute',
+        right: 10,
+        top: '30%',
+        paddingHorizontal: 4,
+    },
     scrollContainer: {
         padding: 16,
         paddingBottom: 40,
@@ -303,6 +322,7 @@ const styles = StyleSheet.create({
         backgroundColor: '#f0f0f0',
         alignItems: 'center',
         marginTop: 10,
+        width : 300,
     },
     tickText: {
         fontWeight: 'bold',

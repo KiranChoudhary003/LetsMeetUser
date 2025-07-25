@@ -25,6 +25,8 @@ import MeetingScreen from './src/components/MeetingScreen';
 import MeetingNoteScreen from './src/components/MeetingNoteScreen';
 
 import { LocationProvider } from './src/components/LocationContext/LocationContext';
+import UserMeetings from './src/components/UserMeetings';
+import MeetingRecords from './src/components/MeetingRecords';
 
 enableScreens();
 const Stack = createStackNavigator();
@@ -54,6 +56,8 @@ const App = () => {
               <Stack.Screen name="UserEvents" component={UserEvents} />
               <Stack.Screen name="MeetingScreen" component={MeetingScreen} />
               <Stack.Screen name="MeetingNoteScreen" component={MeetingNoteScreen} />
+              <Stack.Screen name="UserMeetings" component={UserMeetings} />
+              <Stack.Screen name="MeetingRecord" component={MeetingRecords} />
             </Stack.Navigator>
           </NavigationContainer>
         </LocationProvider>

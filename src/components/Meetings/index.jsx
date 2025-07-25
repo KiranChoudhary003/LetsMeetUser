@@ -16,6 +16,8 @@ import Entypo from 'react-native-vector-icons/Entypo';
 import { Dimensions } from 'react-native';
 import LottieView from 'lottie-react-native';
 import { BlurView } from '@react-native-community/blur';
+import AsyncStorage from '@react-native-async-storage/async-storage';
+import axios from 'axios';
 
 const { width } = Dimensions.get('window');
 
@@ -28,57 +30,45 @@ const Meeting = ({ navigation }) => {
   const [previewName, setPreviewName] = useState('');
 
   useEffect(() => {
-    // Dummy data
-    const dummyUsers = [
-      {
-        id: 1,
-        first_name: 'Ajay',
-        last_name: 'Kumar',
-        role: 'Developer',
-        photo: '',
-        email: 'ajay@example.com',
-        linkedin_url: '',
-        preference: [],
-        eventCount: 5,
-      },
-      {
-        id: 2,
-        first_name: 'Neha',
-        last_name: 'Singh',
-        role: 'Designer',
-        photo: 'https://randomuser.me/api/portraits/women/65.jpg',
-        email: 'neha@example.com',
-        linkedin_url: '',
-        preference: [],
-        eventCount: 3,
-      },
-      {
-        id: 3,
-        first_name: 'Rahul',
-        last_name: 'Verma',
-        role: 'Manager',
-        photo: '',
-        email: 'rahul@example.com',
-        linkedin_url: '',
-        preference: [],
-        eventCount: 0,
-      },
-      
-    ];
+    const fetchMeetings = async () => {
+      try {
+        const token = await AsyncStorage.getItem('token');
+        const response = await axios.get('https://letsmeet-backend-47lv.onrender.com/api/user-events/meetings', {
+          headers: {
+            Authorization: `Bearer ${token}`,
+          },
+        });
 
-    const formatted = dummyUsers.map(user => ({
-      id: user.id,
-      name: `${user.first_name} ${user.last_name}`.trim(),
-      role: user.role,
-      image: user.photo,
-      email: user.email,
-      linkedin: user.linkedin_url,
-      preference: user.preference,
-      eventCount: user.eventCount,
-    }));
+        const usersWithMeetings = [];
 
-    setRequests(formatted);
-    setLoading(false);
+        response.data?.connections?.forEach(connection => {
+          const user = connection.user;
+          const eventsWithMeetings = connection.events?.filter(e => e.meetings && e.meetings.length > 0);
+
+          if (eventsWithMeetings.length > 0) {
+            usersWithMeetings.push({
+              id: user.id,
+              name: `${user.first_name} ${user.last_name}`,
+              role: user.role || 'Attendee', // or any default role
+              photo: user.photo || '',
+              email: user.email || '',
+              linkedin: user.linkedin_url || '',
+              preference: user.preference || [],
+              eventCount: eventsWithMeetings.length,
+              events: eventsWithMeetings, // include all events & meetings
+            });
+          }
+        });
+
+        setRequests(usersWithMeetings);
+        setLoading(false);
+      } catch (error) {
+        console.error('Failed to fetch meetings:', error);
+        setLoading(false);
+      }
+    };
+
+    fetchMeetings();
   }, []);
 
   const filteredRequests = requests.filter(user =>
@@ -86,14 +76,10 @@ const Meeting = ({ navigation }) => {
   );
 
   const renderItem = ({ item }) => {
-    const initials = item.name
-      ? item.name.split(' ').map(w => w[0]).join('').toUpperCase()
-      : 'NA';
+    const initials = item.name ? item.name.split(' ').map(w => w[0]).join('').toUpperCase() : 'NA';
 
     const handleImagePress = () => {
-      const imgUri = item.image?.startsWith('data:image')
-        ? item.image
-        : item.image ? item.image : '';
+      const imgUri = item.photo?.startsWith('data:image') ? item.photo : item.photo || '';
       setPreviewImage(imgUri);
       setPreviewName(initials);
       setProfileView(true);
@@ -104,11 +90,8 @@ const Meeting = ({ navigation }) => {
         <View style={styles.userInfo}>
           <TouchableOpacity onPress={handleImagePress}>
             <View style={styles.profileCircle}>
-              {item.image && item.image.length > 10 ? (
-                <Image
-                  source={{ uri: item.image.startsWith('data:image') ? item.image : item.image }}
-                  style={styles.profileImage}
-                />
+              {item.photo && item.photo.length > 10 ? (
+                <Image source={{ uri: item.photo }} style={styles.profileImage} />
               ) : (
                 <Text style={styles.initialsText}>{initials}</Text>
               )}
@@ -120,19 +103,18 @@ const Meeting = ({ navigation }) => {
               user: {
                 first_name: item.name,
                 attendees_role: item.role,
-                photo: item.image,
+                photo: item.photo,
                 email: item.email,
                 linkedin_url: item.linkedin,
                 preference: Array.isArray(item.preference) ? item.preference : [],
               },
+              events: item.events, 
             })}
             style={{ flex: 1 }}
           >
             <View style={{ flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between' }}>
               <Text style={styles.nameText} numberOfLines={1}>{item.name}</Text>
-              <Text style={styles.eventBadge}>
-                Events: {item.eventCount}
-              </Text>
+              <Text style={styles.eventBadge}>Events: {item.eventCount}</Text>
             </View>
             <Text style={styles.roleText}>{item.role}</Text>
           </TouchableOpacity>
@@ -174,11 +156,11 @@ const Meeting = ({ navigation }) => {
         {loading ? (
           <View style={{ alignItems: 'center', marginTop: 40 }}>
             <ActivityIndicator size="large" color="#34495e" />
-            <Text style={{ marginTop: 10, fontSize: 16, color: '#333' }}>Fetching connections...</Text>
+            <Text style={{ marginTop: 10, fontSize: 16, color: '#333' }}>Fetching meetings...</Text>
           </View>
         ) : filteredRequests.length === 0 ? (
           <View style={styles.filterResultContainer}>
-            <Text style={styles.filterResultText}>No pending requests found!</Text>
+            <Text style={styles.filterResultText}>No users with meetings found!</Text>
             <LottieView
               style={styles.lottieContainer}
               source={require('../../assets/Not-Found.json')}
@@ -206,11 +188,7 @@ const Meeting = ({ navigation }) => {
           <TouchableOpacity style={styles.modalOverlay} onPressOut={() => setProfileView(false)}>
             <View style={styles.modalContent}>
               {previewImage && previewImage.length > 100 ? (
-                <Image
-                  source={{ uri: previewImage }}
-                  style={styles.fullImage}
-                  resizeMode="contain"
-                />
+                <Image source={{ uri: previewImage }} style={styles.fullImage} resizeMode="contain" />
               ) : (
                 <View style={[styles.circle, styles.fullImageFallback]}>
                   <Text style={styles.initialsPreview}>{previewName}</Text>

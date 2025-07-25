@@ -17,22 +17,7 @@ import Entypo from 'react-native-vector-icons/Entypo';
 
 const { width } = Dimensions.get('window');
 
-const dummyUserEvents = [
-  { id: 'e1', name: 'Hackathon 2025', organizer: 'Tech Club', start_date: '2025-07-15', end_date: '2025-07-15', meetingsCount: 3 },
-  { id: 'e2', name: 'Workshop on AI', organizer: 'AI Dept', start_date: '2025-07-10', end_date: '2025-07-10', meetingsCount: 2 },
-  { id: 'e3', name: 'Seminar on Startups', organizer: 'E-Cell', start_date: '2025-06-20', end_date: '2025-06-20', meetingsCount: 4 },
-  { id: 'e4', name: 'Hackathon 2025', organizer: 'Tech Club', start_date: '2025-07-15', end_date: '2025-07-15', meetingsCount: 3 },
-  { id: 'e5', name: 'Workshop on AI', organizer: 'AI Dept', start_date: '2025-07-10', end_date: '2025-07-10', meetingsCount: 2 },
-  { id: 'e6', name: 'Seminar on Startups', organizer: 'E-Cell', start_date: '2025-06-20', end_date: '2025-06-20', meetingsCount: 4 },
-  { id: 'e7', name: 'Hackathon 2025', organizer: 'Tech Club', start_date: '2025-07-15', end_date: '2025-07-15', meetingsCount: 3 },
-  { id: 'e8', name: 'Workshop on AI', organizer: 'AI Dept', start_date: '2025-07-10', end_date: '2025-07-10', meetingsCount: 2 },
-  { id: 'e9', name: 'Seminar on Startups', organizer: 'E-Cell', start_date: '2025-06-20', end_date: '2025-06-20', meetingsCount: 4 },
-  { id: 'e10', name: 'Hackathon 2025', organizer: 'Tech Club', start_date: '2025-07-15', end_date: '2025-07-15', meetingsCount: 3 },
-  { id: 'e11', name: 'Workshop on AI', organizer: 'AI Dept', start_date: '2025-07-10', end_date: '2025-07-10', meetingsCount: 2 },
-  { id: 'e12', name: 'Seminar on Startups', organizer: 'E-Cell', start_date: '2025-06-20', end_date: '2025-06-20', meetingsCount: 4 },
-];
-
-const EventCard = ({ name, organizer, start_date, meetingsCount, eventId }) => {
+const EventCard = ({ name, organizer, start_date, meetingsCount, eventId, meetings }) => {
   const scale = new Animated.Value(1);
   const navigation = useNavigation();
 
@@ -48,6 +33,7 @@ const EventCard = ({ name, organizer, start_date, meetingsCount, eventId }) => {
     navigation.navigate('MeetingScreen', {
       eventId,
       name,
+      meetings, // send full meeting data here
     });
   };
 
@@ -70,12 +56,12 @@ const EventCard = ({ name, organizer, start_date, meetingsCount, eventId }) => {
 };
 
 export default function UserEvents({ route }) {
-  const { userName } = route.params;
   const navigation = useNavigation();
+  const { user, events = [] } = route.params; // get user + events from previous screen
   const [search, setSearch] = useState('');
 
-  const filteredEvents = dummyUserEvents.filter(event =>
-    event.name.toLowerCase().includes(search.toLowerCase())
+  const filteredEvents = events.filter(event =>
+    event.event_name.toLowerCase().includes(search.toLowerCase())
   );
 
   return (
@@ -101,14 +87,15 @@ export default function UserEvents({ route }) {
       <Text style={styles.totalEventsText}>Total Events: {filteredEvents.length}</Text>
 
       <ScrollView contentContainerStyle={styles.scrollView}>
-        {filteredEvents.map((event) => (
+        {filteredEvents.map((event, index) => (
           <EventCard
-            key={event.id}
-            name={event.name}
-            organizer={event.organizer}
-            start_date={event.start_date}
-            meetingsCount={event.meetingsCount}
-            eventId={event.id}
+            key={index}
+            name={event.event_name}
+            organizer={event.organizer || 'Organizer'} 
+            start_date={event.start_date || '2025-07-10'}
+            meetingsCount={event.meetings?.length || 0}
+            eventId={event.event_id}
+            meetings={event.meetings || []}
           />
         ))}
       </ScrollView>

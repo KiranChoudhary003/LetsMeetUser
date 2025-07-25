@@ -10,24 +10,15 @@ import {
   TouchableWithoutFeedback,
   TextInput,
 } from 'react-native';
-import { useNavigation } from '@react-navigation/native';
+import { useNavigation, useRoute } from '@react-navigation/native';
 import Feather from 'react-native-vector-icons/Feather';
 import Icon from 'react-native-vector-icons/MaterialIcons';
 
-const initialMeetings = [
-  { id: '1', date: '12/07/2025', time: '10:00 AM', desc: 'Meet 1 dussion Meet 1 discussion Meet 1 discussion Meet 1 discussion  Meet 1 discussion Meet 1 discussion Meet 1 discussion Meet 1 discussion Meet 1 discussion Meet 1 discussion Meet 1 discussion Meet 1 discussion Meet 1 discussion Meet 1 discussion Meet 1 discussion Meet 1 discussion Meet 1 discussion Meet 1 discussion Meet 1 discussion Meet 1 discussion Meet 1 discussion Meet 1 discussion Meet 1 discussion Meet 1 discussion Meet 1 discussion Meet 1 discussion Meet 1 discussion Meet 1 discussion Meet 1 discussion Meet 1 discussion Meet 1 discussion Meet 1 discussion Meet 1 discussion Meet 1 discussion Meet 1 discussion Meet 1 discussion Meet 1 discussion Meet 1 discussion Meet 1 discussion Meet 1 discussion Meet 1 discussion Meet 1 discussion Meet 1 discussion Meet 1 discussion Meet 1 discussion Meet 1 discussion Meet 1 discussion Meet 1 discussion Meet 1 discussion Meet 1 discussion Meet 1 discussion Meet 1 discussion Meet 1 discussion Meet 1 discussion Meet 1 discussion Meet 1 discussion Meet 1 discussion Meet 1 discussion Meet 1 discussion Meet 1 discussion Meet 1 discussion Meet 1 discussion Meet 1 discussion Meet 1 discussion Meet 1 discussion Meet 1 discussion Meet 1 discussion Meet 1 discussion v' },
-  { id: '2', date: '13/07/2025', time: '2:30 PM', desc: 'Meet sion' },
-  { id: '3', date: '14/07/2025', time: '4:00 PM', desc: 'Hackathon planning' },
-  { id: '4', date: '15/07/2025', time: '9:00 AM', desc: 'Daily sync-up' },
-  { id: '5', date: '15/07/2025', time: '11:15 AM', desc: 'Team progress review' },
-  { id: '6', date: '12/07/2025', time: '3:45 PM', desc: 'Project planning' },
-  { id: '7', date: '13/07/2025', time: '5:00 PM', desc: 'Tech discussion' },
-  { id: '8', date: '14/07/2025', time: '6:30 PM', desc: 'Event feedback' },
-  { id: '9', date: '15/07/2025', time: '8:15 PM', desc: 'Retrospective meet' },
-  { id: '10', date: '15/07/2025', time: '10:45 PM', desc: 'Final wrap-up' },
-];
-
 export default function MeetingScreen() {
+  const navigation = useNavigation();
+  const route = useRoute();
+  const { meetings: initialMeetings = [], name = 'Event' } = route.params; // Get meetings from navigation
+
   const [meetings, setMeetings] = useState(initialMeetings);
   const [selectedMeeting, setSelectedMeeting] = useState(null);
   const [modalVisible, setModalVisible] = useState(false);
@@ -40,7 +31,7 @@ export default function MeetingScreen() {
     setModalVisible(true);
     setIsEditing(false);
   };
-  const navigation = useNavigation();
+
   const saveDescription = () => {
     const updatedMeetings = meetings.map((meeting) =>
       meeting.id === selectedMeeting.id
@@ -71,7 +62,7 @@ export default function MeetingScreen() {
         <TouchableOpacity style={styles.backButton} onPress={() => navigation.goBack()}>
           <Icon name="arrow-back" size={24} color="#fff" />
         </TouchableOpacity>
-        <Text style={styles.headerTitle}>All Meetings</Text>
+        <Text style={styles.headerTitle}>{name} Meetings</Text>
       </View>
 
       <View style={styles.container}>
@@ -80,7 +71,7 @@ export default function MeetingScreen() {
         <FlatList
           data={meetings}
           renderItem={renderItem}
-          keyExtractor={item => item.id}
+          keyExtractor={(item, index) => item.id || index.toString()}
           ItemSeparatorComponent={() => <View style={styles.separator} />}
           contentContainerStyle={styles.listContent}
           style={{ flex: 1 }}
@@ -95,7 +86,7 @@ export default function MeetingScreen() {
           onRequestClose={() => setModalVisible(false)}
         >
           <View style={styles.modalOverlay}>
-            <TouchableWithoutFeedback onPress={() => { }}>
+            <TouchableWithoutFeedback>
               <View style={styles.modalContent}>
                 <ScrollView style={{ maxHeight: 400 }}>
                   <Text style={styles.modalTitle}>Meeting Detail</Text>
@@ -150,7 +141,6 @@ export default function MeetingScreen() {
   );
 }
 
-/* ---------- STYLES ---------- */
 const styles = StyleSheet.create({
   container: {
     flex: 1,
