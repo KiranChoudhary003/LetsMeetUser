@@ -85,7 +85,7 @@ const Scanner = ({ navigation }) => {
           loadingRef.current = false;
           setLoading(false);
           setConnectionStatus('fail');
-          setFailureReason('Your meeting request was declined.');
+          setFailureReason('Your meeting request was declined by');
           setShowPopup(true);
           setTimeout(() => {
             setShowPopup(false);
@@ -180,7 +180,7 @@ const Scanner = ({ navigation }) => {
           fallbackTriggered.current = true;
           setLoading(false);
           setConnectionStatus('fail');
-          setFailureReason('Unable to connect. Please try again later.');
+          setFailureReason('Unable to connect. No response from');
           setShowPopup(true);
         }
       }, 10000);
@@ -241,7 +241,7 @@ const Scanner = ({ navigation }) => {
         </View>
 
         <View style={styles.connect}>
-          <Text style={styles.centerText}>Connect New People</Text>
+          <Text style={styles.centerText}>Scan to Connect New People</Text>
         </View>
 
         {loading && (
@@ -284,17 +284,24 @@ const Scanner = ({ navigation }) => {
                   },
                 ]}
               >
-                {connectionStatus === 'success'
-                  ? `Connection established with ${fullName || 'user'}`
-                  : failureReason || 'Connection Not Allowed'}
-
+                {connectionStatus === 'success' ? (
+                  <>
+                    Connection established with{' '}
+                    <Text style={styles.userName}>
+                      {fullName?.length > 12 ? fullName.substring(0, 12) + '...' : fullName}
+                    </Text>
+                  </>
+                ) : scannedData && fullName ? (
+                  <>
+                    {failureReason}{' '}
+                    <Text style={styles.userName}>
+                      {fullName.length > 12 ? fullName.substring(0, 12) + '...' : fullName}
+                    </Text>.
+                  </>
+                ) : (
+                  'Connection Not Allowed'
+                )}
               </Text>
-
-              {scannedData && fullName && (
-                <Text style={styles.userText}>
-                  User: {fullName.length > 12 ? fullName.substring(0, 12) + '...' : fullName}
-                </Text>
-              )}
             </View>
           </View>
         </Modal>
@@ -338,12 +345,11 @@ const styles = StyleSheet.create({
   popupImage: {
     width: 140,
     height: 140,
-    marginBottom: 16
+    marginBottom: 16,
   },
 
   popupText: {
     fontSize: 18,
-    fontWeight: 'bold',
     marginBottom: 8,
     textAlign: 'center',
 
@@ -435,15 +441,9 @@ const styles = StyleSheet.create({
     fontSize: 20,
     paddingHorizontal: 20,
     paddingVertical: 12,
-    backgroundColor: '#34495e',
     borderRadius: 12,
-    color: '#fff',
+    color: '#000000',
     fontWeight: '600',
-    shadowColor: '#000',
-    shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.2,
-    shadowRadius: 4,
-    elevation: 3,
   },
   backButton: {
     paddingLeft: 20,
@@ -454,6 +454,9 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     justifyContent: 'center',
     marginBottom: 50
+  },
+  userName: {
+    fontWeight: 'bold',
   }
 });
 

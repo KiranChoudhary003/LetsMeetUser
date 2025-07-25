@@ -125,22 +125,22 @@ const UserProfile = ({ navigation, route }) => {
 
     const handleLogout = async () => {
         try {
-            setLogoutLoading(true)
+            setLogoutLoading(true);
+
             const token = await AsyncStorage.getItem('token');
 
             await axios.put(
                 'https://letsmeet-backend-47lv.onrender.com/api/user-profile/logout',
                 {},
                 {
-                    headers: {
-                        Authorization: `Bearer ${token}`,
-                    },
+                    headers: token ? { Authorization: `Bearer ${token}` } : {},
                 }
-            );
+            ).catch(() => {
+            });
 
-            await getMessaging().deleteToken();
-            await AsyncStorage.removeItem('token');
-            await AsyncStorage.removeItem('user_photo');
+            await getMessaging().deleteToken().catch(() => { });
+
+            await AsyncStorage.multiRemove(['token', 'user_photo']);
 
             navigation.dispatch(
                 CommonActions.reset({
@@ -148,13 +148,13 @@ const UserProfile = ({ navigation, route }) => {
                     routes: [{ name: 'Welcome' }],
                 })
             );
-        } catch (err) {
-            console.log(err)
-            Alert.alert('Error', 'Logout failed. Try again.');
+        } catch {
         } finally {
-            setLogoutLoading(false)
+            setLogoutLoading(false);
         }
     };
+
+
 
     const handleProfileEdit = () => {
         navigation.navigate('Edit', {

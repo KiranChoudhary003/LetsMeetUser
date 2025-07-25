@@ -5,7 +5,6 @@ import {
   ActivityIndicator, Alert, Animated,
   Pressable, SafeAreaView, ScrollView, StatusBar, StyleSheet, Text, TouchableOpacity, View
 } from 'react-native';
-import MaterialCommunityIcons from 'react-native-vector-icons/MaterialCommunityIcons';
 import { LocationContext } from '../LocationContext/LocationContext';
 
 const backgroundImage = require('../../assets/bgg.png');
@@ -307,20 +306,7 @@ const EventsScreen = ({ navigation }) => {
             <Text style={styles.eventsLabelText}>My Events</Text>
           </View>
 
-          {/* Icon Positioned Absolutely */}
-          <TouchableOpacity
-            onPress={() => navigation.navigate('UserMeetings')}
-            style={styles.iconWrapper}
-          >
-            <MaterialCommunityIcons
-              name="video"
-              size={26}
-              color="#000"
-            />
-          </TouchableOpacity>
         </View>
-
-
 
         <ScrollView contentContainerStyle={styles.scrollView}>
           {loading ? (

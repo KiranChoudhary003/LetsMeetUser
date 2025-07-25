@@ -9,30 +9,37 @@ import {
   ScrollView,
   TouchableWithoutFeedback,
   TextInput,
+  KeyboardAvoidingView,
+  Platform,
+  Keyboard,
+  ActivityIndicator,
 } from 'react-native';
-import { useNavigation } from '@react-navigation/native';
+import { useNavigation, useRoute } from '@react-navigation/native';
 import Feather from 'react-native-vector-icons/Feather';
 import Icon from 'react-native-vector-icons/MaterialIcons';
-
-const initialMeetings = [
-  { id: '1', date: '12/07/2025', time: '10:00 AM', desc: 'Meet 1 dussion Meet 1 discussion Meet 1 discussion Meet 1 discussion  Meet 1 discussion Meet 1 discussion Meet 1 discussion Meet 1 discussion Meet 1 discussion Meet 1 discussion Meet 1 discussion Meet 1 discussion Meet 1 discussion Meet 1 discussion Meet 1 discussion Meet 1 discussion Meet 1 discussion Meet 1 discussion Meet 1 discussion Meet 1 discussion Meet 1 discussion Meet 1 discussion Meet 1 discussion Meet 1 discussion Meet 1 discussion Meet 1 discussion Meet 1 discussion Meet 1 discussion Meet 1 discussion Meet 1 discussion Meet 1 discussion Meet 1 discussion Meet 1 discussion Meet 1 discussion Meet 1 discussion Meet 1 discussion Meet 1 discussion Meet 1 discussion Meet 1 discussion Meet 1 discussion Meet 1 discussion Meet 1 discussion Meet 1 discussion Meet 1 discussion Meet 1 discussion Meet 1 discussion Meet 1 discussion Meet 1 discussion Meet 1 discussion Meet 1 discussion Meet 1 discussion Meet 1 discussion Meet 1 discussion Meet 1 discussion Meet 1 discussion Meet 1 discussion Meet 1 discussion Meet 1 discussion Meet 1 discussion Meet 1 discussion Meet 1 discussion Meet 1 discussion Meet 1 discussion Meet 1 discussion Meet 1 discussion Meet 1 discussion Meet 1 discussion Meet 1 discussion v' },
-  { id: '2', date: '13/07/2025', time: '2:30 PM', desc: 'Meet sion' },
-  { id: '3', date: '14/07/2025', time: '4:00 PM', desc: 'Hackathon planning' },
-  { id: '4', date: '15/07/2025', time: '9:00 AM', desc: 'Daily sync-up' },
-  { id: '5', date: '15/07/2025', time: '11:15 AM', desc: 'Team progress review' },
-  { id: '6', date: '12/07/2025', time: '3:45 PM', desc: 'Project planning' },
-  { id: '7', date: '13/07/2025', time: '5:00 PM', desc: 'Tech discussion' },
-  { id: '8', date: '14/07/2025', time: '6:30 PM', desc: 'Event feedback' },
-  { id: '9', date: '15/07/2025', time: '8:15 PM', desc: 'Retrospective meet' },
-  { id: '10', date: '15/07/2025', time: '10:45 PM', desc: 'Final wrap-up' },
-];
+import AsyncStorage from '@react-native-async-storage/async-storage';
+import axios from 'axios';
 
 export default function MeetingScreen() {
+  const navigation = useNavigation();
+  const route = useRoute();
+  const { meetings: initialMeetings = [], name = 'Event' } = route.params;
+
   const [meetings, setMeetings] = useState(initialMeetings);
   const [selectedMeeting, setSelectedMeeting] = useState(null);
   const [modalVisible, setModalVisible] = useState(false);
   const [isEditing, setIsEditing] = useState(false);
   const [editedText, setEditedText] = useState('');
+  const [isSaving, setIsSaving] = useState(false);
+
+  const MAX_CHARACTERS = 400;
+  const charCount = editedText.length;
+
+  const handleTextChange = (text) => {
+    if (text.length <= MAX_CHARACTERS) {
+      setEditedText(text);
+    }
+  };
 
   const openModal = (item) => {
     setSelectedMeeting(item);
@@ -40,23 +47,45 @@ export default function MeetingScreen() {
     setModalVisible(true);
     setIsEditing(false);
   };
-  const navigation = useNavigation();
-  const saveDescription = () => {
-    const updatedMeetings = meetings.map((meeting) =>
-      meeting.id === selectedMeeting.id
-        ? { ...meeting, desc: editedText }
-        : meeting
-    );
-    setMeetings(updatedMeetings);
-    setSelectedMeeting({ ...selectedMeeting, desc: editedText });
-    setIsEditing(false);
+
+  const saveDescription = async () => {
+    try {
+      setIsSaving(true);
+      const token = await AsyncStorage.getItem('token');
+      const trimmedText = editedText.trim();
+
+      await axios.put(
+        `https://letsmeet-backend-47lv.onrender.com/api/user-connections/meetings/${selectedMeeting.id}/notes`,
+        { notes: trimmedText },
+        {
+          headers: {
+            'Content-Type': 'application/json',
+            Authorization: `Bearer ${token}`,
+          },
+        }
+      );
+
+      const updatedMeetings = meetings.map((meeting) =>
+        meeting.id === selectedMeeting.id
+          ? { ...meeting, desc: trimmedText }
+          : meeting
+      );
+
+      setMeetings(updatedMeetings);
+      setSelectedMeeting({ ...selectedMeeting, desc: trimmedText });
+      setIsEditing(false);
+      setModalVisible(false);
+    } catch (error) {
+      console.error('❌ Error saving notes:', error.response?.data || error.message);
+      alert('Failed to save the note. Please try again.');
+    } finally {
+      setIsSaving(false);
+    }
   };
 
+
   const renderItem = ({ item, index }) => (
-    <TouchableOpacity
-      style={styles.meetingCard}
-      onPress={() => openModal(item)}
-    >
+    <TouchableOpacity style={styles.meetingCard} onPress={() => openModal(item)}>
       <View style={{ flex: 1 }}>
         <Text style={styles.meetingTitle}>Meet {index + 1}</Text>
         <Text style={styles.dateTime}>{item.date} at {item.time}</Text>
@@ -71,16 +100,17 @@ export default function MeetingScreen() {
         <TouchableOpacity style={styles.backButton} onPress={() => navigation.goBack()}>
           <Icon name="arrow-back" size={24} color="#fff" />
         </TouchableOpacity>
-        <Text style={styles.headerTitle}>All Meetings</Text>
+        <Text style={styles.headerTitle} numberOfLines={1} ellipsizeMode="tail">
+          {name.split(' ').slice(0, 2).join(' ') + (name.split(' ').length > 2 ? '...' : '')} Meetings
+        </Text>
       </View>
 
       <View style={styles.container}>
         <Text style={styles.totalCount}>Total Meetings: {meetings.length}</Text>
-
         <FlatList
           data={meetings}
           renderItem={renderItem}
-          keyExtractor={item => item.id}
+          keyExtractor={(item, index) => item.id || index.toString()}
           ItemSeparatorComponent={() => <View style={styles.separator} />}
           contentContainerStyle={styles.listContent}
           style={{ flex: 1 }}
@@ -94,69 +124,94 @@ export default function MeetingScreen() {
           visible={modalVisible}
           onRequestClose={() => setModalVisible(false)}
         >
-          <View style={styles.modalOverlay}>
-            <TouchableWithoutFeedback onPress={() => { }}>
-              <View style={styles.modalContent}>
-                <ScrollView style={{ maxHeight: 400 }}>
+          <KeyboardAvoidingView
+            behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
+            style={{ flex: 1 }}
+            keyboardVerticalOffset={Platform.OS === 'ios' ? 60 : 0}
+          >
+            <TouchableWithoutFeedback onPress={Keyboard.dismiss}>
+              <View style={styles.modalOverlay}>
+                <View style={styles.modalContent}>
                   <Text style={styles.modalTitle}>Meeting Detail</Text>
                   <Text style={styles.modalDescription}>
                     Date: {selectedMeeting.date}{"\n"}
                     Time: {selectedMeeting.time}
                   </Text>
+                  <View style={{ flexDirection: 'row', justifyContent: 'space-between' }}>
+                    <Text style={styles.modalDescription}>Description:</Text>
+                    {isEditing && (
+                      <Text style={styles.wordCounterText}>
+                        {charCount}/{MAX_CHARACTERS} words
+                      </Text>
+                    )}
+                  </View>
 
-                  <Text style={[styles.modalDescription, { marginTop: 10 }]}>Description:</Text>
-                  {isEditing ? (
-                    <TextInput
-                      multiline
-                      style={styles.textInput}
-                      value={editedText}
-                      onChangeText={setEditedText}
-                    />
-                  ) : (
-                    <Text style={styles.modalDescription}>{selectedMeeting.desc}</Text>
-                  )}
-                </ScrollView>
 
-                <View style={styles.modalButtons}>
                   {isEditing ? (
-                    <TouchableOpacity
-                      style={[styles.editButton, { backgroundColor: '#34495e' }]}
-                      onPress={saveDescription}
-                    >
-                      <Text style={styles.editText}>Save</Text>
-                    </TouchableOpacity>
+                    <ScrollView style={styles.scrollArea} nestedScrollEnabled showsVerticalScrollIndicator>
+                      <TextInput
+                        multiline
+                        style={styles.textInput}
+                        value={editedText}
+                        onChangeText={handleTextChange}
+                        placeholder="Edit meeting notes..."
+                        placeholderTextColor="#888"
+                      />
+                    </ScrollView>
                   ) : (
-                    <TouchableOpacity
-                      style={styles.editButton}
-                      onPress={() => setIsEditing(true)}
-                    >
-                      <Text style={styles.editText}>Edit</Text>
-                    </TouchableOpacity>
+                    <View style={styles.descriptionBox}>
+                      <ScrollView style={styles.scrollArea} nestedScrollEnabled showsVerticalScrollIndicator>
+                        <Text style={styles.modalDescription}>{selectedMeeting.desc}</Text>
+                      </ScrollView>
+                    </View>
                   )}
 
-                  <TouchableOpacity
-                    style={styles.closeButton}
-                    onPress={() => setModalVisible(false)}
-                  >
-                    <Text style={{ color: '#fff', fontWeight: 'bold' }}>Close</Text>
-                  </TouchableOpacity>
+                  <View style={styles.modalButtons}>
+                    {isEditing ? (
+                      <TouchableOpacity
+                        style={[styles.editButton, {
+                          flexDirection: 'row',
+                          justifyContent: 'center',
+                          alignItems: 'center',
+                          opacity: isSaving ? 0.8 : 1
+                        }]}
+                        onPress={saveDescription}
+                        disabled={isSaving}
+                      >
+                        {isSaving ? (
+                          <>
+                            <Text style={styles.editText}>Saving</Text>
+                            <ActivityIndicator size="small" color="#fff" style={{ marginLeft: 8 }} />
+                          </>
+                        ) : (
+                          <Text style={styles.editText}>Save</Text>
+                        )}
+                      </TouchableOpacity>
+                    ) : (
+                      <TouchableOpacity style={styles.editButton} onPress={() => setIsEditing(true)}>
+                        <Text style={styles.editText}>Edit</Text>
+                      </TouchableOpacity>
+                    )}
+
+                    <TouchableOpacity style={styles.closeButton} onPress={() => setModalVisible(false)}>
+                      <Text style={{ color: '#fff', fontWeight: 'bold' }}>Close</Text>
+                    </TouchableOpacity>
+                  </View>
                 </View>
               </View>
             </TouchableWithoutFeedback>
-          </View>
+          </KeyboardAvoidingView>
         </Modal>
       )}
     </View>
   );
 }
 
-/* ---------- STYLES ---------- */
 const styles = StyleSheet.create({
   container: {
     flex: 1,
     backgroundColor: '#e8effc',
     paddingHorizontal: 16,
-
   },
   topBar: {
     flexDirection: 'row',
@@ -167,13 +222,11 @@ const styles = StyleSheet.create({
     backgroundColor: '#34495e',
     position: 'relative',
   },
-
   backButton: {
     position: 'absolute',
     left: 16,
     zIndex: 1,
   },
-
   headerTitle: {
     fontSize: 20,
     fontWeight: 'bold',
@@ -184,7 +237,7 @@ const styles = StyleSheet.create({
   totalCount: {
     textAlign: 'left',
     fontSize: 16,
-    fontWeight: 600,
+    fontWeight: '600',
     color: '#34495e',
     marginBottom: 10,
     marginTop: 20,
@@ -206,7 +259,6 @@ const styles = StyleSheet.create({
   },
   separator: { height: 10 },
   listContent: { paddingBottom: 20, paddingTop: 4 },
-
   modalOverlay: {
     flex: 1,
     backgroundColor: 'rgba(0,0,0,0.5)',
@@ -231,8 +283,14 @@ const styles = StyleSheet.create({
     color: '#555',
     lineHeight: 20,
   },
+  descriptionBox: {
+    borderWidth: 1,
+    borderColor: '#ccc',
+    borderRadius: 8,
+    padding: 6,
+    maxHeight: 180,
+  },
   textInput: {
-    marginTop: 6,
     fontSize: 14,
     color: '#333',
     borderWidth: 1,
@@ -265,7 +323,14 @@ const styles = StyleSheet.create({
   },
   editText: {
     color: '#fff',
-
     fontWeight: 'bold',
+  },
+  scrollArea: {
+    maxHeight: 180,
+  },
+  wordCounterText: {
+    fontSize: 12,
+    fontWeight: 'bold',
+    color: '#34495e',
   },
 });

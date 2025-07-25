@@ -5,8 +5,6 @@ import axios from 'axios';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import scanner from '../../assets/vector.png';
 import MaterialIcons from 'react-native-vector-icons/MaterialIcons';
-import RNFS from 'react-native-fs';
-import Share from 'react-native-share';
 
 const QRCodeScreen = ({ navigation }) => {
   const [userData, setUserData] = useState({});
@@ -45,28 +43,6 @@ const QRCodeScreen = ({ navigation }) => {
 
   const qrValue = userData ? JSON.stringify(userData) : '';
 
-  const handleShare = async () => {
-    if (!qrCodeRef.current) return;
-
-    qrCodeRef.current.toDataURL(async (data) => {
-      try {
-        const path = `${RNFS.CachesDirectoryPath}/qrcode.png`;
-        await RNFS.writeFile(path, data, 'base64');
-
-        const shareOptions = {
-          title: 'Share QR Code',
-          message: 'Here is my QR Code!',
-          url: 'file://' + path,
-          type: 'image/png',
-          failOnCancel: false,
-        };
-
-        await Share.open(shareOptions);
-      } catch (error) {
-      }
-    });
-  };
-
   return (
     <>
       <StatusBar barStyle="light-content" backgroundColor="#34495e" translucent={false} />
@@ -99,12 +75,6 @@ const QRCodeScreen = ({ navigation }) => {
                 getRef={(c) => (qrCodeRef.current = c)}
               />
             )}
-          </View>
-
-          <View style={styles.buttonRow}>
-            <TouchableOpacity style={styles.button} onPress={handleShare}>
-              <Text style={styles.buttonText}>Share</Text>
-            </TouchableOpacity>
           </View>
         </View>
       </View>
@@ -155,7 +125,7 @@ const styles = StyleSheet.create({
     padding: 20,
     alignItems: 'center',
     width: 295,
-    height: 485,
+    height: 350,
   },
   cardTitle: {
     color: '#fff',

@@ -13,6 +13,7 @@ import {
 } from 'react-native';
 import MaterialIcons from 'react-native-vector-icons/MaterialIcons';
 import { getSocket } from '../../socket';
+import { CommonActions } from '@react-navigation/native';
 const MAX_CHARACTERS = 400;
 
 const MeetingNoteScreen = ({ route, navigation }) => {
@@ -29,7 +30,7 @@ const MeetingNoteScreen = ({ route, navigation }) => {
   };
 
   const submitNote = async () => {
-    if (!socket || !socket.connected) {return;}
+    if (!socket || !socket.connected) { return; }
 
     try {
       socket.emit('write_meeting_notes', { meetingId, notes: note });
@@ -51,8 +52,14 @@ const MeetingNoteScreen = ({ route, navigation }) => {
 
   const handleCloseModal = () => {
     setShowSuccessModal(false);
-    navigation.goBack();
+    navigation.dispatch(
+      CommonActions.reset({
+        index: 0,
+        routes: [{ name: 'Layout', params: { screen: 'Home' } }],
+      })
+    );
   };
+
 
   return (
     <KeyboardAvoidingView

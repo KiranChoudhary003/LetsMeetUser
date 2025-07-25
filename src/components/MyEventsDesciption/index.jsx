@@ -4,7 +4,6 @@ import {
     Text,
     StyleSheet,
     Image,
-    ImageBackground,
     TouchableOpacity,
     ScrollView,
     SafeAreaView,
@@ -12,8 +11,11 @@ import {
     StatusBar,
 } from 'react-native';
 import Ionicons from 'react-native-vector-icons/Ionicons';
+import MaterialCommunityIcons from 'react-native-vector-icons/MaterialCommunityIcons';
+import axios from 'axios';
+import AsyncStorage from '@react-native-async-storage/async-storage';
+import { Alert } from 'react-native';
 
-const backgroundImage = require('../../assets/bgg.png');
 
 const MyEventsDesciption = ({ navigation, route }) => {
     const {
@@ -54,6 +56,7 @@ const MyEventsDesciption = ({ navigation, route }) => {
     });
 
     const [isLoading, setIsLoading] = useState(false);
+    
 
     const handlePress = async () => {
         if (isLoading) return;
@@ -65,7 +68,6 @@ const MyEventsDesciption = ({ navigation, route }) => {
 
             setIsLoading(true);
             try {
-                await handleRegister(id);
                 setButtonState('checkin');
             } catch (error) { }
             setIsLoading(false);
@@ -132,7 +134,20 @@ const MyEventsDesciption = ({ navigation, route }) => {
                                 <Ionicons name="arrow-back-outline" size={24} color="#f9efef" />
                             </Text>
                         </TouchableOpacity>
-                        <Text style={styles.headerTitle}>{name}</Text>
+                        <Text style={styles.headerTitle} numberOfLines={1}
+                            ellipsizeMode="tail"> {name.split(' ').slice(0, 4).join(' ') + (name.split(' ').length > 4 ? '...' : '')}</Text>
+                        <TouchableOpacity
+                            onPress={() => navigation.navigate('UserMeetings', {
+                                event: { id }
+                            })}
+                            style={styles.iconWrapper}
+                        >
+                            <MaterialCommunityIcons
+                                name="card-account-details"
+                                size={26}
+                                color="#fff"
+                            />
+                        </TouchableOpacity>
                     </View>
 
                     <ScrollView contentContainerStyle={styles.scrollContainer}>
@@ -264,6 +279,14 @@ const styles = StyleSheet.create({
         color: 'white',
         fontSize: 18,
         fontWeight: 'bold',
+        flex: 1,
+        textAlign: 'center',
+    },
+    iconWrapper: {
+        position: 'absolute',
+        right: 10,
+        top: '30%',
+        paddingHorizontal: 4,
     },
     scrollContainer: {
         padding: 16,
@@ -303,6 +326,7 @@ const styles = StyleSheet.create({
         backgroundColor: '#f0f0f0',
         alignItems: 'center',
         marginTop: 10,
+        width: 300,
     },
     tickText: {
         fontWeight: 'bold',

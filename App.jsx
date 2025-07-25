@@ -36,6 +36,8 @@ import UserEvents from './src/components/UserEvents';
 import UserProfile from './src/components/UserProfile';
 import Welcome from './src/components/Welcome';
 import { connectSocket, getSocket } from './src/socket';
+import UserMeetings from './src/components/UserMeetings';
+import MeetingRecords from './src/components/MeetingRecords';
 
 enableScreens();
 const Stack = createStackNavigator();
@@ -80,7 +82,7 @@ const App = () => {
                     useNativeDriver: false,
                   }).start();
 
-                  if (timeoutIdRef.current) {clearTimeout(timeoutIdRef.current);}
+                  if (timeoutIdRef.current) { clearTimeout(timeoutIdRef.current); }
                   timeoutIdRef.current = setTimeout(() => {
                     setMeetingExpired(true);
                   }, 9000);
@@ -99,6 +101,18 @@ const App = () => {
       }
     }, 5000);
     return () => clearInterval(intervalId);
+  }, []);
+
+
+  useEffect(() => {
+    const pingInterval = setInterval(() => {
+      const socket = getSocket();
+      if (socket && socket.connected) {
+        socket.emit('ping');
+      }
+    }, 60000); // 60 seconds
+
+    return () => clearInterval(pingInterval);
   }, []);
 
 
@@ -162,6 +176,8 @@ const App = () => {
               <Stack.Screen name="UserEvents" component={UserEvents} />
               <Stack.Screen name="MeetingScreen" component={MeetingScreen} />
               <Stack.Screen name="MeetingNoteScreen" component={MeetingNoteScreen} />
+              <Stack.Screen name="UserMeetings" component={UserMeetings} />
+              <Stack.Screen name="MeetingRecord" component={MeetingRecords} />
             </Stack.Navigator>
 
             {/* Modal for Meeting Request */}
