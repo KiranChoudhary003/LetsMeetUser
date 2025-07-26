@@ -1,6 +1,8 @@
 import { BlurView } from '@react-native-community/blur';
+import { CommonActions } from '@react-navigation/native';
 import React, { useEffect, useState } from 'react';
 import {
+  ActivityIndicator,
   KeyboardAvoidingView,
   Modal,
   Platform,
@@ -13,7 +15,6 @@ import {
 } from 'react-native';
 import MaterialIcons from 'react-native-vector-icons/MaterialIcons';
 import { getSocket } from '../../socket';
-import { CommonActions } from '@react-navigation/native';
 const MAX_CHARACTERS = 400;
 
 const MeetingNoteScreen = ({ route, navigation }) => {
@@ -22,7 +23,7 @@ const MeetingNoteScreen = ({ route, navigation }) => {
   const [showSuccessModal, setShowSuccessModal] = useState(false);
   const socket = getSocket();
   const charCount = note.length;
-
+  const [loading, setLoading] = useState(false);
   const handleNoteChange = (text) => {
     if (text.length <= MAX_CHARACTERS) {
       setNote(text);
@@ -31,7 +32,7 @@ const MeetingNoteScreen = ({ route, navigation }) => {
 
   const submitNote = async () => {
     if (!socket || !socket.connected) { return; }
-
+    setLoading(true);
     try {
       socket.emit('write_meeting_notes', { meetingId, notes: note });
     } catch (err) { }
@@ -40,6 +41,7 @@ const MeetingNoteScreen = ({ route, navigation }) => {
   useEffect(() => {
     const handleNoteSaved = ({ meetingId: returnedId }) => {
       if (returnedId === meetingId) {
+        setLoading(false);
         setShowSuccessModal(true);
       }
     };
@@ -87,8 +89,12 @@ const MeetingNoteScreen = ({ route, navigation }) => {
           />
         </ScrollView>
 
-        <TouchableOpacity style={styles.submitButton} onPress={submitNote}>
-          <Text style={styles.submitButtonText}>Submit Notes</Text>
+        <TouchableOpacity style={styles.submitButton} onPress={submitNote} disabled={loading}>
+          <Text style={styles.submitButtonText}>{loading ? (
+            <ActivityIndicator size="small" color="#fff" />
+          ) : (
+            <Text style={styles.submitButtonText}>Submit Notes</Text>
+          )}</Text>
         </TouchableOpacity>
       </View>
 
