@@ -9,6 +9,7 @@ import {
     SafeAreaView,
     Platform,
     StatusBar,
+    ActivityIndicator,
 } from 'react-native';
 import Ionicons from 'react-native-vector-icons/Ionicons';
 import MaterialCommunityIcons from 'react-native-vector-icons/MaterialCommunityIcons';
@@ -35,10 +36,9 @@ const MyEventsDesciption = ({ navigation, route }) => {
         totalConnections,
         approvedRequests,
         pendingRequests,
+        checkInDistance,
         fetchUpcomingEvents,
     } = route.params;
-
-    console.log("🔍 Description Screen — checkInAvailable:", checkInAvailable);
 
     const [buttonState, setButtonState] = useState(() => {
         if (already_checked_in) {
@@ -56,7 +56,7 @@ const MyEventsDesciption = ({ navigation, route }) => {
     });
 
     const [isLoading, setIsLoading] = useState(false);
-    
+
 
     const handlePress = async () => {
         if (isLoading) return;
@@ -75,7 +75,7 @@ const MyEventsDesciption = ({ navigation, route }) => {
             if (!checkInAvailable) {
                 Alert.alert(
                     'Check-In Unavailable',
-                    `Check-in is not available at the moment.\nYou must be within 1000 meters of the event location on the day of the event.`,
+                    `Check-in is not available at the moment.\nYou must be within ${checkInDistance} km range of the event location on the day of the event.`,
                     [{ text: 'OK' }]
                 );
                 return;
@@ -129,17 +129,20 @@ const MyEventsDesciption = ({ navigation, route }) => {
                 <SafeAreaView style={styles.container}>
 
                     <View style={styles.header}>
-                        <TouchableOpacity onPress={() => navigation.goBack()}>
-                            <Text style={styles.backArrow}>
-                                <Ionicons name="arrow-back-outline" size={24} color="#f9efef" />
-                            </Text>
+                        <TouchableOpacity style={styles.backArrow} onPress={() => navigation.goBack()}>
+                            <Ionicons name="arrow-back-outline" size={24} color="#f9efef" />
                         </TouchableOpacity>
-                        <Text style={styles.headerTitle} numberOfLines={1}
-                            ellipsizeMode="tail"> {name.split(' ').slice(0, 4).join(' ') + (name.split(' ').length > 4 ? '...' : '')}</Text>
+
+                        <Text
+                            style={styles.headerTitle}
+                            numberOfLines={1}
+                            ellipsizeMode="tail"
+                        >
+                            {name.split(' ').slice(0, 4).join(' ') + (name.split(' ').length > 4 ? '...' : '')}
+                        </Text>
+
                         <TouchableOpacity
-                            onPress={() => navigation.navigate('UserMeetings', {
-                                event: { id }
-                            })}
+                            onPress={() => navigation.navigate('UserMeetings', { event: { id } })}
                             style={styles.iconWrapper}
                         >
                             <MaterialCommunityIcons
@@ -210,7 +213,7 @@ const MyEventsDesciption = ({ navigation, route }) => {
                                 },
                             ]}
                             onPress={handlePress}
-                            disabled={isLoading || buttonState !== 'checkin' || !checkInAvailable}
+                            disabled={isLoading || buttonState !== 'checkin'}
                         >
                             {isLoading ? (
                                 <ActivityIndicator size="small" color="#34495e" />
@@ -265,28 +268,23 @@ const styles = StyleSheet.create({
     },
     header: {
         height: 70,
-        flexDirection: 'row',
+        justifyContent: 'center',
         alignItems: 'center',
-        paddingHorizontal: 15,
         backgroundColor: '#34495e',
+        position: 'relative',
     },
     backArrow: {
-        color: 'white',
-        fontSize: 24,
-        marginRight: 15,
+        position: 'absolute',
+        left: 15,
+    },
+    iconWrapper: {
+        position: 'absolute',
+        right: 15,
     },
     headerTitle: {
         color: 'white',
         fontSize: 18,
         fontWeight: 'bold',
-        flex: 1,
-        textAlign: 'center',
-    },
-    iconWrapper: {
-        position: 'absolute',
-        right: 10,
-        top: '30%',
-        paddingHorizontal: 4,
     },
     scrollContainer: {
         padding: 16,

@@ -32,6 +32,8 @@ const Description = ({ navigation, route }) => {
         checkInDistance,
     } = route.params;
 
+    console.log("🔍 Description Screen — checkInAvailable:", checkInDistance);
+
     const [buttonState, setButtonState] = useState(() => {
         if (!isRegistered) return 'register';
         if (already_checked_in) return 'checkedin';
@@ -58,7 +60,7 @@ const Description = ({ navigation, route }) => {
             if (!checkInAvailable) {
                 Alert.alert(
                     'Check-In Unavailable',
-                    `Check-in is not available at the moment.\nYou must be within ${checkInDistance} meters of the event location on the day of the event.`,
+                    `Check-in is not available at the moment.\nYou must be within ${checkInDistance} km range of the event location on the day of the event.`,
                     [{ text: 'OK' }]
                 );
                 return;
@@ -91,7 +93,7 @@ const Description = ({ navigation, route }) => {
 
             Alert.alert(
                 'Registration Successful',
-                `Check-in will be enabled when you are within ${checkInDistance} meters of the event location on the day of the event.`,
+                `Check-in will be enabled when you are within ${(checkInDistance / 1000).toFixed(2)} km of the event on the day of the event.`,
                 [{ text: 'OK' }]
             );
             navigation.goBack();
@@ -142,13 +144,18 @@ const Description = ({ navigation, route }) => {
             <View style={styles.background}>
 
                 <View style={styles.header}>
-                    <TouchableOpacity onPress={() => navigation.goBack()}>
-                        <Text style={styles.backArrow}>
-                            <Ionicons name="arrow-back-outline" size={24} color="#f9efef" />
-                        </Text>
+                    <TouchableOpacity style={styles.backArrow} onPress={() => navigation.goBack()}>
+                        <Ionicons name="arrow-back-outline" size={24} color="#f9efef" />
                     </TouchableOpacity>
-                    <Text style={styles.headerTitle}>{name}</Text>
+                    <Text
+                        style={styles.headerTitle}
+                        numberOfLines={1}
+                        ellipsizeMode="tail"
+                    >
+                        {name.split(' ').slice(0, 4).join(' ') + (name.split(' ').length > 4 ? '...' : '')}
+                    </Text>
                 </View>
+
 
                 <SafeAreaView style={styles.container}>
                     <ScrollView contentContainerStyle={styles.scrollContainer}>
@@ -259,8 +266,10 @@ const styles = StyleSheet.create({
         height: 70,
         flexDirection: 'row',
         alignItems: 'center',
+        justifyContent: 'center',
         paddingHorizontal: 15,
         backgroundColor: '#34495e',
+        position: 'relative',
     },
     headerTitle: {
         color: 'white',
@@ -268,9 +277,8 @@ const styles = StyleSheet.create({
         fontWeight: 'bold',
     },
     backArrow: {
-        color: 'white',
-        fontSize: 24,
-        marginRight: 15,
+        position: 'absolute',
+        left: 15,
     },
     scrollContainer: {
         padding: 16,

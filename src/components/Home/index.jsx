@@ -306,7 +306,7 @@ const Home = ({ navigation }) => {
 
             Alert.alert(
                 'Registration Successful',
-                `Check-in will be enabled when you are within ${checkInDistance} meters of the event on the day of the event.`,
+                `Check-in will be enabled when you are within ${checkInDistance} km of the event on the day of the event.`,
                 [{ text: 'OK' }]
             );
             fetchUpcomingEvents();
@@ -385,10 +385,10 @@ const Home = ({ navigation }) => {
                 is_registered: event.is_registered,
                 check_in_available: event.check_in_available,
                 already_checked_in: event.already_checked_in,
-                check_in_distance: checkInDistance,
+                check_in_distance: checkInDistance / 1000,
             }));
 
-            setCheckInDistance(checkInDistance);
+            setCheckInDistance(checkInDistance / 1000);
             setEventData(formattedEvents);
             setFilteredEvents(filterEvents(formattedEvents, selectedFilter, customDate, location));
         } catch (error) {

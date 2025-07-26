@@ -228,12 +228,11 @@ const styles = StyleSheet.create({
     zIndex: 1,
   },
   headerTitle: {
-    fontSize: 20,
-    fontWeight: 'bold',
-    color: '#fff',
-    textAlign: 'center',
-    flex: 1,
+        color: 'white',
+        fontSize: 18,
+        fontWeight: 'bold',
   },
+
   totalCount: {
     textAlign: 'left',
     fontSize: 16,

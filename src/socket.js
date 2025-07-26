@@ -1,6 +1,6 @@
-import {io} from 'socket.io-client';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import {jwtDecode} from 'jwt-decode';
+import {io} from 'socket.io-client';
 
 let socket = null;
 let initialized = false;
@@ -58,7 +58,10 @@ export const connectSocket = async (passedToken = null) => {
     reconnection: true,
     reconnectionAttempts: Infinity,
     reconnectionDelay: 2000,
-    timeout: 10000,
+    reconnectionDelayMax: 5000,
+    timeout: 20000,
+    pingTimeout: 25000,
+    pingInterval: 10000,
   });
 
   socket.on('connect', () => {

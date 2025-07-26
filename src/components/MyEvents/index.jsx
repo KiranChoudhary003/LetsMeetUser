@@ -22,6 +22,7 @@ const EventCard = ({
   userLon,
   onCheckIn,
   onPress,
+  checkInDistance,
 }) => {
   const scale = useRef(new Animated.Value(1)).current;
   const [withinRange, setWithinRange] = useState(false);
@@ -61,17 +62,26 @@ const EventCard = ({
     const today = new Date();
     setIsFutureEvent(eventDate > today);
 
-    if (userLat != null && userLon != null && lat != null && lon != null) {
+    if (
+      userLat != null &&
+      userLon != null &&
+      lat != null &&
+      lon != null &&
+      checkInDistance != null
+    ) {
       const distance = calculateDistance(userLat, userLon, lat, lon);
-      setWithinRange(distance <= 0.5);
+      setWithinRange(distance <= checkInDistance);
     } else {
       setWithinRange(false);
     }
   };
 
+
+
   useEffect(() => {
     checkProximityAndDate();
-  }, [userLat, userLon, lat, lon, end_date]);
+  }, [userLat, userLon, lat, lon, end_date, checkInDistance]);
+
 
   return (
     <Pressable onPress={onPress} onPressIn={handlePressIn} onPressOut={handlePressOut}>
@@ -111,8 +121,8 @@ const EventCard = ({
                   onCheckIn();
                 } else {
                   Alert.alert(
-                    'Out of Range',
-                    'You are outside the check-in range. Please move closer to the event location to check in.',
+                    'Check-In Unavailable',
+                    `Check-in is not available at the moment.\nYou must be within ${checkInDistance} km range of the event location on the day of the event.`,
                     [{ text: 'OK' }]
                   );
                 }
@@ -243,9 +253,16 @@ const EventsScreen = ({ navigation }) => {
           },
         }
       );
-
+      let checkInDistance = response.data.check_in_distance;
+      if (checkInDistance == null) {
+        const storedDistance = await AsyncStorage.getItem('check_in_distance');
+        if (storedDistance) {
+          checkInDistance = parseFloat(storedDistance);
+        }
+      } else {
+        await AsyncStorage.setItem('check_in_distance', checkInDistance.toString());
+      }
       const rawEvents = response.data.events;
-
       const formattedEvents = rawEvents.map(event => ({
         id: event.id,
         name: event.name,
@@ -263,18 +280,18 @@ const EventsScreen = ({ navigation }) => {
         approvedRequests: event.approved_requests,
         pendingRequests: event.pending_requests,
         already_checked_in: event.already_checked_in,
+        check_in_distance: checkInDistance / 1000,
       }));
 
-      console.log(formattedEvents)
       setEventData(formattedEvents);
-
       await AsyncStorage.setItem('eventsData', JSON.stringify(formattedEvents));
-      console.log(formattedEvents)
     } catch (error) {
+      console.error('🚨 fetchUpcomingEvents error:', error);
     } finally {
       setLoading(false);
     }
   };
+
 
   useEffect(() => {
     const loadData = async () => {
@@ -342,6 +359,7 @@ const EventsScreen = ({ navigation }) => {
                     userLat={location?.latitude}
                     userLon={location?.longitude}
                     onCheckIn={() => handleCheckIn(event.id)}
+                    checkInDistance={event.check_in_distance}
                     onPress={() =>
                       navigation.navigate('MyEventsDescription', {
                         id: event.id,
@@ -360,6 +378,7 @@ const EventsScreen = ({ navigation }) => {
                         totalConnections: event.totalConnections,
                         approvedRequests: event.approvedRequests,
                         pendingRequests: event.pendingRequests,
+                        checkInDistance: event.check_in_distance,
                         fetchUpcomingEvents,
                       })}
                   />
