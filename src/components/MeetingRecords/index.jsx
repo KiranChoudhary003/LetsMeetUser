@@ -1,24 +1,24 @@
-import React, { useState, useEffect } from 'react';
-import {
-    View,
-    Text,
-    FlatList,
-    TouchableOpacity,
-    StyleSheet,
-    Modal,
-    ScrollView,
-    TouchableWithoutFeedback,
-    TextInput,
-    KeyboardAvoidingView,
-    Platform,
-    Keyboard,
-} from 'react-native';
+import AsyncStorage from '@react-native-async-storage/async-storage';
 import { useNavigation, useRoute } from '@react-navigation/native';
+import axios from 'axios';
+import React, { useEffect, useState } from 'react';
+import {
+    ActivityIndicator,
+    FlatList,
+    Keyboard,
+    KeyboardAvoidingView,
+    Modal,
+    Platform,
+    ScrollView,
+    StyleSheet,
+    Text,
+    TextInput,
+    TouchableOpacity,
+    TouchableWithoutFeedback,
+    View,
+} from 'react-native';
 import Feather from 'react-native-vector-icons/Feather';
 import Icon from 'react-native-vector-icons/MaterialIcons';
-import AsyncStorage from '@react-native-async-storage/async-storage';
-import axios from 'axios';
-import { ActivityIndicator } from 'react-native';
 
 
 export default function MeetingRecords() {
@@ -62,6 +62,7 @@ export default function MeetingRecords() {
         setIsEditing(false);
     };
 
+    // description
     const saveDescription = async () => {
         try {
             setIsSaving(true);
