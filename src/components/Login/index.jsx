@@ -21,6 +21,7 @@ import axios from 'axios';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import MaterialIcons from 'react-native-vector-icons/MaterialIcons';
 import { BlurView } from '@react-native-community/blur';
+import validator from 'validator';
 
 const { width } = Dimensions.get('window');
 const INPUT_WIDTH = width * 0.85;
@@ -151,16 +152,38 @@ const Login = ({ navigation, route }) => {
     };
 
 
-    const handleForgotPassword = async () => {
-        if (!forgotEmail) {
-            setalertMessage('Please enter your email.');
-            setalertModalVisible(true);
-            return;
+    const validateEmail = (emailToValidate) => {
+        if (!emailToValidate.trim()) {
+            return 'Email is required';
         }
 
-        const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
-        if (!emailRegex.test(forgotEmail.toLowerCase())) {
-            setalertMessage('Please enter a valid email address.');
+        const trimmedEmail = emailToValidate.trim().toLowerCase();
+
+        if (trimmedEmail.length > 254) {
+            return 'Email address is too long';
+        }
+
+        if (/[^a-zA-Z0-9@._-]/.test(trimmedEmail)) {
+            return 'Email contains invalid characters';
+        }
+
+        if (trimmedEmail.includes('..')) {
+            return 'Please enter a valid email address';
+        }
+
+        if (!validator.isEmail(trimmedEmail)) {
+            return 'Please enter a valid email address';
+        }
+
+        return true;
+    };
+
+
+    const handleForgotPassword = async () => {
+
+        const emailValidationResult = validateEmail(forgotEmail);
+        if (emailValidationResult !== true) {
+            setalertMessage(emailValidationResult);
             setalertModalVisible(true);
             return;
         }
@@ -317,7 +340,7 @@ const Login = ({ navigation, route }) => {
                             />
                         )}
                         <View style={styles.modalBox}>
-                            <Text style={styles.modalTitle}>Login Error</Text>
+                            <Text style={styles.modalTitle}>Message</Text>
                             <Text style={styles.modalMessage}>
                                 {isRetryLocked
                                     ? `Please wait ${retryCountdown} seconds before trying again.`
