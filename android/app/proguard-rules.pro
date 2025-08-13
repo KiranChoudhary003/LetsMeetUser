@@ -12,5 +12,16 @@
 # Firebase
 -keep class com.google.firebase.** { *; }
 -keep class com.google.android.gms.** { *; }
--keep class com.google.firebase.messaging.** { *; }
--keep class com.google.firebase.iid.** { *; }
+
+# ML Kit
+-keep class com.google.mlkit.** { *; }
+-dontwarn com.google.mlkit.**
+
+# react-native-camera
+-keep class org.reactnative.camera.** { *; }
+-keep class org.reactnative.camera.tasks.** { *; }
+-dontwarn org.reactnative.camera.**
+-dontwarn org.reactnative.camera.tasks.**
+
+# Annotations
+-keepattributes *Annotation*

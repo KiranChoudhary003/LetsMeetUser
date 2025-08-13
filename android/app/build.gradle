@@ -61,10 +61,9 @@ android {
             enable true
             reset()
             include 'armeabi-v7a', 'arm64-v8a', 'x86', 'x86_64'
-            universalApk false // set true if you also want universal APK
+            universalApk true // include universal APK
         }
 
-        // Optional: Split by screen density if you have large images
         density {
             enable false
             reset()
@@ -77,6 +76,11 @@ dependencies {
     implementation("com.facebook.react:react-android")
     implementation("com.google.firebase:firebase-messaging:23.4.0")
 
+    // ML Kit for barcode scanning
+    implementation 'com.google.mlkit:barcode-scanning:17.2.0'
+    implementation 'com.google.mlkit:common:16.2.0'          // common classes
+    implementation 'com.google.mlkit:face-detection:16.1.5'  // if face detection is used
+
     if (hermesEnabled.toBoolean()) {
         implementation("com.facebook.react:hermes-android")
     } else {
@@ -86,14 +90,4 @@ dependencies {
 
 apply from: "../../node_modules/react-native-vector-icons/fonts.gradle"
 
-gradle.beforeProject { project ->
-    if (project.name == "react-native-camera") {
-        project.plugins.withId("com.android.library") {
-            project.extensions.findByType(com.android.build.gradle.LibraryExtension)?.variantFilter { variant ->
-                if (variant.name.toLowerCase().contains("mlkit")) {
-                    variant.ignore = true
-                }
-            }
-        }
-    }
-}
+// ✅ Removed gradle.beforeProject block that ignored ML Kit
