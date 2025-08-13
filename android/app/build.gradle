@@ -1,93 +1,128 @@
 apply plugin: "com.android.application"
 apply plugin: "org.jetbrains.kotlin.android"
 apply plugin: "com.facebook.react"
-apply plugin: 'com.google.gms.google-services'
+apply plugin: "com.google.gms.google-services"
 
 react {
-    autolinkLibrariesWithApp()
+  // RN Gradle plugin handles Hermes & autolinking
+  autolinkLibrariesWithApp()
 }
 
-def enableProguardInReleaseBuilds = true
+def hermesEnabled = true
 def jscFlavor = 'io.github.react-native-community:jsc-android:2026004.+'
-def hermesEnabled = true // Enable Hermes for smaller JS bundle
 
 android {
-    ndkVersion rootProject.ext.ndkVersion
-    buildToolsVersion rootProject.ext.buildToolsVersion
-    compileSdk rootProject.ext.compileSdkVersion
+  ndkVersion rootProject.ext.ndkVersion
+  buildToolsVersion rootProject.ext.buildToolsVersion
+  compileSdk rootProject.ext.compileSdkVersion
 
-    namespace "com.letsmeet"
-    defaultConfig {
-        applicationId "com.letsmeet"
-        minSdkVersion rootProject.ext.minSdkVersion
-        targetSdkVersion rootProject.ext.targetSdkVersion
-        versionCode 1
-        versionName "1.0"
-        missingDimensionStrategy 'react-native-camera', 'general'
+  namespace "com.letsmeet"
+
+  defaultConfig {
+    applicationId "com.letsmeet"
+    minSdkVersion rootProject.ext.minSdkVersion
+    targetSdkVersion rootProject.ext.targetSdkVersion
+    versionCode 1
+    versionName "1.0"
+
+    // For react-native-camera’s productFlavors (avoid mlkit flavor mismatch)
+    missingDimensionStrategy 'react-native-camera', 'general'
+    // If you have multidex needs in the future:
+    // multiDexEnabled true
+  }
+
+  signingConfigs {
+    release {
+      if (project.hasProperty('MYAPP_RELEASE_STORE_FILE')) {
+        storeFile file(MYAPP_RELEASE_STORE_FILE)
+        storePassword MYAPP_RELEASE_STORE_PASSWORD
+        keyAlias MYAPP_RELEASE_KEY_ALIAS
+        keyPassword MYAPP_RELEASE_KEY_PASSWORD
+      }
     }
-
-    signingConfigs {
-        release {
-            if (project.hasProperty('MYAPP_RELEASE_STORE_FILE')) {
-                storeFile file(MYAPP_RELEASE_STORE_FILE)
-                storePassword MYAPP_RELEASE_STORE_PASSWORD
-                keyAlias MYAPP_RELEASE_KEY_ALIAS
-                keyPassword MYAPP_RELEASE_KEY_PASSWORD
-            }
-        }
-        debug {
-            storeFile file('debug.keystore')
-            storePassword 'android'
-            keyAlias 'androiddebugkey'
-            keyPassword 'android'
-        }
+    debug {
+      storeFile file('debug.keystore')
+      storePassword 'android'
+      keyAlias 'androiddebugkey'
+      keyPassword 'android'
     }
+  }
 
-    buildTypes {
-        debug {
-            signingConfig signingConfigs.debug
-        }
-        release {
-            signingConfig signingConfigs.release
-            minifyEnabled true
-            shrinkResources true
-            proguardFiles getDefaultProguardFile('proguard-android-optimize.txt'), 'proguard-rules.pro'
-        }
+  buildTypes {
+    debug {
+      signingConfig signingConfigs.debug
+      // Keep shrinking off in debug for faster builds
+      minifyEnabled false
+      shrinkResources false
     }
+    release {
+      signingConfig signingConfigs.release
 
-    // ===== Split APKs by ABI =====
-    splits {
-        abi {
-            enable true
-            reset()
-            include 'armeabi-v7a', 'arm64-v8a', 'x86', 'x86_64'
-            universalApk true // include universal APK
-        }
+      // ✅ enable shrinking/obfuscation
+      minifyEnabled true
+      shrinkResources true
 
-        density {
-            enable false
-            reset()
-            include "ldpi", "mdpi", "hdpi", "xhdpi", "xxhdpi", "xxxhdpi"
-        }
+      // ✅ include RN’s default proguard rules to avoid Fabric/Turbo/Reanimated stripping
+      proguardFiles getDefaultProguardFile('proguard-android-optimize.txt'),
+                    'proguard-rules.pro',
+                    file("../../node_modules/react-native/ReactAndroid/proguard-rules.pro")
+
+      // (optional) If you use Crashlytics/Mapping uploads etc., add tasks here
     }
+  }
+
+  // ✅ Split by ABI AND also generate a universal APK
+  splits {
+    abi {
+      enable true
+      reset()
+      include 'armeabi-v7a', 'arm64-v8a', 'x86', 'x86_64'
+      universalApk true
+    }
+    // Density splits off (keeps one APK per ABI)
+    density {
+      enable false
+    }
+  }
+
+  // Be gentle with packaging; avoid META-INF duplicates and keep JNI libs intact
+  packagingOptions {
+    resources {
+      excludes += [
+        'META-INF/LICENSE*',
+        'META-INF/NOTICE*',
+        'META-INF/*.kotlin_module'
+      ]
+    }
+    // If you ever hit "duplicate libhermes.so" errors, uncomment:
+    // jniLibs {
+    //   useLegacyPackaging = true
+    // }
+  }
+
+  // (Optional) Make vector drawables backwards compatible
+  // defaultConfig { vectorDrawables.useSupportLibrary = true }
 }
 
 dependencies {
-    implementation("com.facebook.react:react-android")
-    implementation("com.google.firebase:firebase-messaging:23.4.0")
+  // RN runtime (version managed by RN Gradle plugin)
+  implementation("com.facebook.react:react-android")
 
-    // ML Kit for barcode scanning
-    implementation 'com.google.mlkit:barcode-scanning:17.2.0'
-    implementation 'com.google.mlkit:common:16.2.0'          // common classes
-    implementation 'com.google.mlkit:face-detection:16.1.5'  // if face detection is used
+  // Push
+  implementation("com.google.firebase:firebase-messaging:23.4.0")
 
-    if (hermesEnabled.toBoolean()) {
-        implementation("com.facebook.react:hermes-android")
-    } else {
-        implementation jscFlavor
-    }
+  // ✅ Only include ML Kit APIs you actually use
+  // Barcode scanning:
+  implementation('com.google.mlkit:barcode-scanning:17.2.0')
+  // Face detection (remove if unused):
+  implementation('com.google.mlkit:face-detection:16.1.5')
+
+  if (hermesEnabled.toBoolean()) {
+    implementation("com.facebook.react:hermes-android")
+  } else {
+    implementation(jscFlavor)
+  }
 }
 
+// Copies vector-icons fonts into assets
 apply from: "../../node_modules/react-native-vector-icons/fonts.gradle"
-
-// ✅ Removed gradle.beforeProject block that ignored ML Kit
