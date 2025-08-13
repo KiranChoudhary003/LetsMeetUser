@@ -11,6 +11,7 @@ import { Checkbox, Menu, Modal as PaperModal, Provider } from 'react-native-pape
 import axios from 'axios';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import Ionicons from 'react-native-vector-icons/Ionicons';
+import validator from 'validator';
 
 const Edit = ({ route, navigation }) => {
     const {
@@ -79,6 +80,33 @@ const Edit = ({ route, navigation }) => {
         setErrorModalVisible(true);
     };
 
+    const validateEmail = (emailToValidate) => {
+        if (!emailToValidate.trim()) {
+            return 'Email is required';
+        }
+
+        const trimmedEmail = emailToValidate.trim().toLowerCase();
+
+        if (trimmedEmail.length > 254) {
+            return 'Email address is too long';
+        }
+
+        if (/[^a-zA-Z0-9@._-]/.test(trimmedEmail)) {
+            return 'Email contains invalid characters';
+        }
+
+        if (trimmedEmail.includes('..')) {
+            return 'Please enter a valid email address';
+        }
+
+        if (!validator.isEmail(trimmedEmail)) {
+            return 'Please enter a valid email address';
+        }
+
+        return true;
+    };
+
+
     const validateFields = () => {
         if (!newFirstName.trim()) {
             showError('First Name is required');
@@ -88,14 +116,10 @@ const Edit = ({ route, navigation }) => {
             showError('Last Name is required');
             return false;
         }
-        if (!newEmail.trim()) {
-            showError('Email is required');
-            return false;
-        }
 
-        const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
-        if (!emailRegex.test(newEmail.trim())) {
-            showError('Please enter a valid email address');
+        const emailValidationResult = validateEmail(email);
+        if (emailValidationResult !== true) {
+            showError(emailValidationResult);
             return false;
         }
         if (!linkedInUsername) {
@@ -121,13 +145,13 @@ const Edit = ({ route, navigation }) => {
     };
 
     const capitalizeName = (name) => {
-        if (!name) {return '';}
+        if (!name) { return ''; }
         return name.charAt(0).toUpperCase() + name.slice(1).toLowerCase();
     };
 
 
     const handleEdit = async () => {
-        if (isSaving || modalVisible) {return;}
+        if (isSaving || modalVisible) { return; }
 
         if (!validateFields()) {
             return;

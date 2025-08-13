@@ -1,8 +1,10 @@
 /* eslint-disable react-hooks/exhaustive-deps */
 import React, { useEffect, useRef, useState } from 'react';
-import { StyleSheet, Text, TextInput, TouchableOpacity, View,KeyboardAvoidingView, StatusBar, Platform, Modal as RNModal } from 'react-native';
-import { ActivityIndicator, Checkbox,Menu, Modal, Provider } from 'react-native-paper';
+import { StyleSheet, Text, TextInput, TouchableOpacity, View, KeyboardAvoidingView, StatusBar, Platform, Modal as RNModal } from 'react-native';
+import { ActivityIndicator, Checkbox, Menu, Modal, Provider } from 'react-native-paper';
+import MaterialIcons from 'react-native-vector-icons/MaterialIcons';
 import { ScrollView } from 'react-native-gesture-handler';
+import validator from 'validator';
 import axios from 'axios';
 
 const SignUp = ({ navigation, route }) => {
@@ -20,6 +22,7 @@ const SignUp = ({ navigation, route }) => {
     const linkedInPrefix = 'https://www.linkedin.com/in/';
     const [linkedInUsername, setLinkedInUsername] = useState('');
     const [password, setPassword] = useState('');
+    const [showPassword, setShowPassword] = useState(false);
     const [companyName, setCompanyName] = useState('');
     const [roles, setRoles] = useState([]);
     const [loadingRoles, setLoadingRoles] = useState(true);
@@ -61,6 +64,118 @@ const SignUp = ({ navigation, route }) => {
         }
     };
 
+
+    const validateEmail = (emailToValidate) => {
+        if (!emailToValidate.trim()) {
+            return 'Email is required';
+        }
+
+        const trimmedEmail = emailToValidate.trim().toLowerCase();
+
+        if (trimmedEmail.length > 254) {
+            return 'Email address is too long';
+        }
+
+        if (/[^a-zA-Z0-9@._-]/.test(trimmedEmail)) {
+            return 'Email contains invalid characters';
+        }
+
+        if (trimmedEmail.includes('..')) {
+            return 'Please enter a valid email address';
+        }
+
+        if (!validator.isEmail(trimmedEmail)) {
+            return 'Please enter a valid email address';
+        }
+
+        return true;
+    };
+
+    const validatePassword = (passwordToValidate) => {
+        const commonPasswords = [
+            'Password@123', 'Admin@123', 'Welcome@123', 'Test@123', 'Qwerty@123',
+            'Aa@12345', 'Pass@123', 'India@123', 'User@123', 'Hello@123', 'P@ssw0rd',
+            'P@ssword1', 'Abc@1234', 'Temp@123', 'Demo@123', 'Sample@123',
+            'Login@123', 'Letmein@123'
+        ];
+
+        const dictionaryWords = [
+            'password', 'admin', 'welcome', 'test', 'qwerty', 'abc', 'abcd',
+            'letmein', 'user', 'temp', 'demo', 'login', 'india', 'hello', 'sample',
+            'football', 'iloveyou', 'monkey', 'dragon', 'sunshine', 'princess',
+            'master', 'shadow', 'superman', 'batman', 'pokemon', 'naruto',
+        ];
+
+        const isCommonPattern = (password) => {
+            const lower = password.toLowerCase();
+            for (let word of dictionaryWords) {
+                const pattern = new RegExp(`^[^a-zA-Z]*${word}[^a-zA-Z]*$`, 'i');
+                if (pattern.test(password)) {
+                    return true;
+                }
+            }
+            const currentYear = new Date().getFullYear();
+            const years = [];
+            for (let y = 2000; y <= currentYear + 2; y++) {
+                years.push(String(y));
+            }
+            for (let year of years) {
+                if (
+                    lower.startsWith(year) ||
+                    lower.endsWith(year) ||
+                    /^[^a-zA-Z]*\d{4}[^a-zA-Z]*$/.test(lower)
+                ) {
+                    return true;
+                }
+            }
+            if (lower.includes('123') || lower.includes('abc') || lower.includes('qwerty')) {
+                return true;
+            }
+            return false;
+        };
+
+        if (!passwordToValidate.trim()) {
+            return 'Password is required';
+        }
+
+        const password = passwordToValidate.trim();
+        if (password.length < 8) {
+            return 'Password must be at least 8 characters long';
+        }
+        if (password.length > 20) {
+            return 'Password cannot exceed 20 characters';
+        }
+        if (/\s/.test(password)) {
+            return 'Spaces are not allowed in password';
+        }
+        if (!/[A-Z]/.test(password)) {
+            return 'Password must include at least one uppercase letter';
+        }
+        if (!/[a-z]/.test(password)) {
+            return 'Password must include at least one lowercase letter';
+        }
+        if (!/[0-9]/.test(password)) {
+            return 'Password must include at least one number';
+        }
+        if (!/[!@#$%^&*(),.?":{}|<>]/.test(password)) {
+            return 'Password must include at least one special character';
+        }
+        if (/[^A-Za-z0-9!@#$%^&*(),.?":{}|<>]/.test(password)) {
+            return 'Password contains invalid characters';
+        }
+        if (commonPasswords.includes(password)) {
+            return 'Password is too common. Choose a stronger one';
+        }
+        if (isCommonPattern(password)) {
+            return 'Password is too predictable. Choose a stronger one';
+        }
+        return true;
+    };
+
+
+
+
+
     const handleSubmit = async () => {
         const showError = (message) => {
             setErrorMessage(message);
@@ -73,26 +188,19 @@ const SignUp = ({ navigation, route }) => {
                 return false;
             }
 
-            if (!email.trim()) {
-                showError('Email is required');
+            const emailValidationResult = validateEmail(email);
+            if (emailValidationResult !== true) {
+                showError(emailValidationResult);
                 return false;
             }
 
-            const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
-            if (!emailRegex.test(email.trim())) {
-                showError('Please enter a valid email address');
-                return false;
+
+            const passwordValidation = validatePassword(password);
+            if (passwordValidation !== true) {
+                showError(passwordValidation);
+                return;
             }
 
-            if (!password.trim()) {
-                showError('Password is required');
-                return false;
-            }
-            const passwordRegex = /^(?=.*[!@#$%^&*(),.?":{}|<>])[A-Za-z\d!@#$%^&*(),.?":{}|<>]{8,}$/;
-            if (!passwordRegex.test(password.trim())) {
-                showError('Password must be at least 8 characters long and include at least one special character.');
-                return false;
-            }
             if (!linkedInUsername) {
                 showError('Please enter your LinkedIn username.');
                 return false;
@@ -244,26 +352,39 @@ const SignUp = ({ navigation, route }) => {
                                 onChangeText={onFullNameChange}
                             />
                             <TextInput style={styles.input} placeholder="E-mail*" placeholderTextColor="#888" value={email} onChangeText={(text) => setEmail(text.toLowerCase())} />
-                            <TextInput style={styles.input} placeholder="Password*" placeholderTextColor="#888" value={password} onChangeText={setPassword} />
+                            <View style={[styles.inputContainer]}>
+                                <TextInput
+                                    style={styles.passwordInput}
+                                    placeholder="Password*"
+                                    placeholderTextColor="#888"
+                                    secureTextEntry={!showPassword}
+                                    value={password}
+                                    onChangeText={setPassword}
+                                />
+                                <TouchableOpacity onPress={() => setShowPassword(!showPassword)}>
+                                    <MaterialIcons
+                                        name={showPassword ? 'visibility-off' : 'visibility'}
+                                        size={22}
+                                        color="#888"
+                                    />
+                                </TouchableOpacity>
+                            </View>
                             <TextInput
                                 style={styles.input}
                                 placeholder={'LinkedIn*'}
                                 placeholderTextColor="#888"
                                 value={linkedInUsername ? linkedInPrefix + linkedInUsername : ''}
                                 onChangeText={(text) => {
-                                    // Case 0: If user has started typing and prefix is broken, restore it
                                     if (linkedInUsername && !text.startsWith(linkedInPrefix)) {
-                                        setLinkedInUsername(linkedInUsername); // keep previous username, prefix will auto-add from value
+                                        setLinkedInUsername(linkedInUsername);
                                         return;
                                     }
 
-                                    // Case 1: If empty, reset username (placeholder will show)
                                     if (text.trim() === '') {
                                         setLinkedInUsername('');
                                         return;
                                     }
 
-                                    // Case 2: Handle full LinkedIn URL pasted
                                     if (text.includes('linkedin.com/in/')) {
                                         let usernamePart = text.split('linkedin.com/in/')[1] || '';
                                         usernamePart = usernamePart.replace(/\/+$/, '').trim();
@@ -271,18 +392,15 @@ const SignUp = ({ navigation, route }) => {
                                         return;
                                     }
 
-                                    // Case 3: If prefix is missing but user types something, restore prefix
                                     if (!text.startsWith(linkedInPrefix)) {
-                                        setLinkedInUsername(text.trim()); // store as username
+                                        setLinkedInUsername(text.trim());
                                         return;
                                     }
 
-                                    // Case 4: Normal typing after prefix
                                     let usernamePart = text.slice(linkedInPrefix.length).trim();
                                     setLinkedInUsername(usernamePart);
                                 }}
                                 onSelectionChange={({ nativeEvent: { selection } }) => {
-                                    // Lock cursor after prefix only when username exists
                                     if (linkedInUsername && selection.start < linkedInPrefix.length) {
                                         selection.start = linkedInPrefix.length;
                                         selection.end = linkedInPrefix.length;
@@ -503,10 +621,17 @@ const styles = StyleSheet.create({
         backgroundColor: '#e8effc',
     },
     inputContainer: {
-        flexGrow: 1,
-        justifyContent: 'flex-start',
-        paddingHorizontal: 20,
-        paddingTop: 50,
+        borderWidth: 1,
+        borderColor: '#ccc',
+        paddingHorizontal: 8,
+        borderRadius: 8,
+        marginBottom: 12,
+        alignSelf: 'center',
+        width: '85%',
+        height: 45,
+        backgroundColor: '#f7faff',
+        flexDirection: 'row',
+        alignItems: 'center',
     },
     text: {
         fontSize: 24,
@@ -528,7 +653,9 @@ const styles = StyleSheet.create({
         backgroundColor: '#f7faff',
         color: '#000',
     },
-
+    passwordInput: {
+        flex: 1,
+    },
     anchorText: {
         color: '#888',
     },
