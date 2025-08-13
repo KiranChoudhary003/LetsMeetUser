@@ -10,7 +10,7 @@ import {
     Text,
     TextInput,
     TouchableOpacity,
-    View
+    View,
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import Entypo from 'react-native-vector-icons/Entypo';
@@ -51,7 +51,7 @@ export default function UserListScreen() {
         let socket;
         const setupSocket = async () => {
             const token = await AsyncStorage.getItem('token');
-            if (!token) return;
+            if (!token) {return;}
 
             socket = io('https://letsmeet-backend-47lv.onrender.com/', {
                 auth: { token },
@@ -147,7 +147,7 @@ export default function UserListScreen() {
                     <View style={styles.headerRow}>
                         <TouchableOpacity
                             onPress={() => {
-                                if (navigation.canGoBack()) navigation.goBack();
+                                if (navigation.canGoBack()) {navigation.goBack();}
                             }}
                             style={styles.backButton}
                         >
@@ -200,7 +200,7 @@ const styles = StyleSheet.create({
         backgroundColor: '#34495E',
         paddingVertical: 12,
         paddingHorizontal: 16,
-        height: 70
+        height: 70,
     },
     headerRow: {
         flexDirection: 'row',

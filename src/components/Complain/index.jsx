@@ -11,17 +11,17 @@ const ComplainCard = ({ description, status, updatedAt }) => {
     const formattedStatus = status.replace(/_/g, ' ').toUpperCase();
     let statusColor = '#000';
     let backgroundColor = '#fff';
-    let borderColor = "#e74c3c"
+    let borderColor = '#e74c3c';
 
     if (status === 'pending') {
         backgroundColor = '#f8c8c1';
     } else if (status === 'in_progress') {
         statusColor = '#333';
         backgroundColor = '#fcf3cf';
-        borderColor = "#f1c40f"
+        borderColor = '#f1c40f';
     } else if (status === 'complete') {
         backgroundColor = '#bdf4c1';
-        borderColor = "#07bc0c"
+        borderColor = '#07bc0c';
     }
 
     return (
@@ -282,8 +282,8 @@ const styles = StyleSheet.create({
     desk: {
         fontSize: 18,
         fontWeight: 'bold',
-        color: "#fff",
-        backgroundColor: "#34495e",
+        color: '#fff',
+        backgroundColor: '#34495e',
         paddingHorizontal: 16,
         paddingVertical: 6,
         borderWidth: 1,
@@ -374,7 +374,7 @@ const styles = StyleSheet.create({
         fontSize: 18,
         fontWeight: '600',
         marginBottom: 10,
-        color: "#34495e"
+        color: '#34495e',
     },
     input: {
         height: 45,
@@ -384,7 +384,7 @@ const styles = StyleSheet.create({
         textAlignVertical: 'top',
         padding: 10,
         marginBottom: 15,
-        color: "#000"
+        color: '#000',
     },
     saveButton: {
         backgroundColor: '#34495e',
@@ -434,7 +434,7 @@ const styles = StyleSheet.create({
         paddingHorizontal: 12,
         marginHorizontal: 16,
         elevation: 50,
-        width : 150
+        width : 150,
     },
     filterOption: {
         paddingVertical: 10,
@@ -443,7 +443,7 @@ const styles = StyleSheet.create({
     },
     filterActive: {
         backgroundColor: 'rgba(255,255,255,.29)',
-        width: "100%",
+        width: '100%',
         paddingVertical: 10,
         paddingLeft : 5,
         borderRadius: 10,
@@ -465,10 +465,10 @@ const styles = StyleSheet.create({
     },
     updatedDate: {
         fontSize: 12,
-        color: "#888"
+        color: '#888',
     },
     lastDate: {
         fontSize: 12,
-        color: "#888"
-    }
+        color: '#888',
+    },
 });

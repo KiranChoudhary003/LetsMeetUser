@@ -80,7 +80,7 @@ const Scanner = ({ navigation }) => {
           setShowPopup(true);
         });
 
-        socket.on('meeting_declined', ({ by }) => {
+        socket.on('meeting_declined', () => {
           clearTimeout(timeoutIdRef.current);
           loadingRef.current = false;
           setLoading(false);
@@ -294,9 +294,13 @@ const Scanner = ({ navigation }) => {
                 ) : scannedData && fullName ? (
                   <>
                     {failureReason}{' '}
-                    <Text style={styles.userName}>
-                      {fullName.length > 12 ? fullName.substring(0, 12) + '...' : fullName}
-                    </Text>.
+                    {failureReason.toLowerCase() !== "you're too far from the event." ? (
+                      <Text style={styles.userName}>
+                        {fullName.length > 12 ? fullName.substring(0, 12) + '...' : fullName}
+                      </Text>
+                    ) : (
+                      ' '
+                    )}
                   </>
                 ) : (
                   'Connection Not Allowed'
@@ -453,11 +457,11 @@ const styles = StyleSheet.create({
     display: 'flex',
     alignItems: 'center',
     justifyContent: 'center',
-    marginBottom: 50
+    marginBottom: 50,
   },
   userName: {
     fontWeight: 'bold',
-  }
+  },
 });
 
 export default Scanner;

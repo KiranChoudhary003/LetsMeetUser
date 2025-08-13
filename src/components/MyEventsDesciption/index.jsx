@@ -59,7 +59,7 @@ const MyEventsDesciption = ({ navigation, route }) => {
 
 
     const handlePress = async () => {
-        if (isLoading) return;
+        if (isLoading) {return;}
 
         if (buttonState === 'register') {
             if (!id) {
@@ -169,25 +169,25 @@ const MyEventsDesciption = ({ navigation, route }) => {
 
                         <Text style={styles.descriptionHeading}>Start Date</Text>
                         <Text style={styles.descriptionText}>
-                            {new Date(start_date).toLocaleString("en-GB", {
+                            {new Date(start_date).toLocaleString('en-GB', {
                                 day: '2-digit',
                                 month: 'short',
                                 year: 'numeric',
                                 hour: '2-digit',
                                 minute: '2-digit',
-                                hour12: false
+                                hour12: false,
                             })}
                         </Text>
 
                         <Text style={styles.descriptionHeading}>End Date</Text>
                         <Text style={styles.descriptionText}>
-                            {new Date(end_date).toLocaleString("en-GB", {
+                            {new Date(end_date).toLocaleString('en-GB', {
                                 day: '2-digit',
                                 month: 'short',
                                 year: 'numeric',
                                 hour: '2-digit',
                                 minute: '2-digit',
-                                hour12: false
+                                hour12: false,
                             })}
                         </Text>
 

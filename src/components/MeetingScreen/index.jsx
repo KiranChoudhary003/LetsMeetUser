@@ -134,7 +134,7 @@ export default function MeetingScreen() {
                 <View style={styles.modalContent}>
                   <Text style={styles.modalTitle}>Meeting Detail</Text>
                   <Text style={styles.modalDescription}>
-                    Date: {selectedMeeting.date}{"\n"}
+                    Date: {selectedMeeting.date}{'\n'}
                     Time: {selectedMeeting.time}
                   </Text>
                   <View style={{ flexDirection: 'row', justifyContent: 'space-between' }}>
@@ -173,7 +173,7 @@ export default function MeetingScreen() {
                           flexDirection: 'row',
                           justifyContent: 'center',
                           alignItems: 'center',
-                          opacity: isSaving ? 0.8 : 1
+                          opacity: isSaving ? 0.8 : 1,
                         }]}
                         onPress={saveDescription}
                         disabled={isSaving}

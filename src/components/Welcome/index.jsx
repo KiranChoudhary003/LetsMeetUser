@@ -107,7 +107,7 @@ const Welcome = ({ navigation }) => {
 
     const askAgain = async () => {
       const newStatus = await request(permission);
-      if (newStatus === RESULTS.GRANTED) return true;
+      if (newStatus === RESULTS.GRANTED) {return true;}
       if (newStatus === RESULTS.BLOCKED) {
         Alert.alert(
           'Location Permission Required',
@@ -143,7 +143,7 @@ const Welcome = ({ navigation }) => {
       Platform.OS === 'android' ? PERMISSIONS.ANDROID.CAMERA : PERMISSIONS.IOS.CAMERA;
 
     const result = await request(permission);
-    if (result === RESULTS.GRANTED) return true;
+    if (result === RESULTS.GRANTED) {return true;}
 
     Alert.alert(
       'Camera Permission',
@@ -160,7 +160,7 @@ const Welcome = ({ navigation }) => {
         // Android 13+ (API level 33+)
         const result = await request(PERMISSIONS.ANDROID.READ_MEDIA_IMAGES);
 
-        if (result === RESULTS.GRANTED) return true;
+        if (result === RESULTS.GRANTED) {return true;}
 
         if (result === RESULTS.BLOCKED) {
           Alert.alert(
@@ -168,7 +168,7 @@ const Welcome = ({ navigation }) => {
             'Please enable storage access from settings.',
             [
               { text: 'Open Settings', onPress: () => openSettings() },
-              { text: 'Cancel', style: 'cancel' }
+              { text: 'Cancel', style: 'cancel' },
             ]
           );
         }
@@ -178,7 +178,7 @@ const Welcome = ({ navigation }) => {
         // Android 12 and below
         const write = await request(PERMISSIONS.ANDROID.WRITE_EXTERNAL_STORAGE);
 
-        if (write === RESULTS.GRANTED) return true;
+        if (write === RESULTS.GRANTED) {return true;}
 
         if (write === RESULTS.BLOCKED) {
           Alert.alert(
@@ -186,7 +186,7 @@ const Welcome = ({ navigation }) => {
             'Please enable storage access from settings.',
             [
               { text: 'Open Settings', onPress: () => openSettings() },
-              { text: 'Cancel', style: 'cancel' }
+              { text: 'Cancel', style: 'cancel' },
             ]
           );
         }
@@ -230,7 +230,7 @@ const Welcome = ({ navigation }) => {
       const result = await PermissionsAndroid.request(
         PermissionsAndroid.PERMISSIONS.POST_NOTIFICATIONS
       );
-      if (result !== PermissionsAndroid.RESULTS.GRANTED) return null;
+      if (result !== PermissionsAndroid.RESULTS.GRANTED) {return null;}
     }
 
     try {

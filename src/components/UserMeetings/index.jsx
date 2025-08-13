@@ -34,7 +34,7 @@ const UserMeetings = ({ route, navigation }) => {
 
     useEffect(() => {
         const fetchMeetings = async () => {
-            if (!event?.id) return;
+            if (!event?.id) {return;}
 
             try {
                 const token = await AsyncStorage.getItem('token');
@@ -119,7 +119,7 @@ const UserMeetings = ({ route, navigation }) => {
                                 email: item.email,
                                 linkedin_url: item.linkedin,
                                 preference: Array.isArray(item.preference) ? item.preference : [],
-                                meetings: item.meetings, 
+                                meetings: item.meetings,
                             },
                         })}
 

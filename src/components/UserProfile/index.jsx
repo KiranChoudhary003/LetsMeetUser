@@ -19,15 +19,15 @@ const { width } = Dimensions.get('window');
 const UserProfile = ({ navigation, route }) => {
     const [userProfile, setUserProfile] = useState({});
     const [profileView, setProfileView] = useState(false);
-    const [loading, setloading] = useState('')
-    const [logoutLoading, setLogoutLoading] = useState('')
+    const [loading, setloading] = useState('');
+    const [logoutLoading, setLogoutLoading] = useState('');
 
     const passedUser = route?.params?.user;
     const isViewingOwnProfile = !passedUser;
 
     const fetchProfileData = async () => {
         try {
-            setloading(true)
+            setloading(true);
             const token = await AsyncStorage.getItem('token');
             const response = await axios.get('https://letsmeet-backend-47lv.onrender.com/api/user-profile', {
                 headers: {
@@ -47,7 +47,7 @@ const UserProfile = ({ navigation, route }) => {
         } catch (err) {
             console.error('Error fetching profile:', err);
         } finally {
-            setloading(false)
+            setloading(false);
         }
     };
 
@@ -159,8 +159,10 @@ const UserProfile = ({ navigation, route }) => {
     const handleProfileEdit = () => {
         navigation.navigate('Edit', {
             first_name: userProfile.first_name,
+            middle_name: userProfile.middle_name,
             last_name: userProfile.last_name,
             email: userProfile.email,
+            company_name: userProfile.company_name,
             linkedin_url: userProfile.linkedin_url,
             attendees_role: userProfile.attendees_role,
             preference:
@@ -197,8 +199,9 @@ const UserProfile = ({ navigation, route }) => {
                         )}
                     </View>
                     <View style={styles.userName}>
-                        <Text style={styles.userDetail}>{userProfile.first_name}</Text>
-                        <Text style={styles.userDetail}> {userProfile.last_name}</Text>
+                        <Text style={styles.userDetail}>
+                            {userProfile.first_name} {userProfile.middle_name} {userProfile.last_name}
+                        </Text>
                     </View>
                     <View style={styles.userRole}>
                         <Text style={styles.userDetail}>{userProfile.attendees_role}</Text>
@@ -259,6 +262,15 @@ const UserProfile = ({ navigation, route }) => {
 
                         <View style={styles.preferenceSection}>
                             <View style={styles.preferenceRow}>
+                                <Text style={styles.preferenceLabel}>Company Name: </Text>
+                                <Text style={styles.companyDetails}>
+                                    {userProfile.company_name && userProfile.company_name.trim() !== ''
+                                        ? userProfile.company_name
+                                        : 'Not Provided'}
+                                </Text>
+                            </View>
+
+                            <View style={styles.preferenceRow}>
                                 <Text style={styles.preferenceLabel}>Preferences:</Text>
 
                                 {userProfile.preference?.length > 0 ? null : (
@@ -292,7 +304,7 @@ const UserProfile = ({ navigation, route }) => {
                     </View>
                 )}
             </ScrollView>
-        </SafeAreaView>
+        </SafeAreaView >
     );
 };
 
@@ -346,6 +358,12 @@ const styles = StyleSheet.create({
         fontSize: 18,
         fontWeight: '500',
     },
+    companyDetails: {
+        color: '#000',
+        textAlign: 'center',
+        fontSize: 15,
+        fontWeight: '500',
+    },
     userRole: {
         alignItems: 'center',
         marginTop: 8,
@@ -354,20 +372,10 @@ const styles = StyleSheet.create({
         marginTop: 30,
         paddingHorizontal: 20,
     },
-    userDetails: {
-        flexDirection: 'row',
-        marginBottom: 15,
-        flexWrap: 'wrap',
-    },
     data: {
         fontWeight: 'bold',
         fontSize: 15,
         color: '#222',
-    },
-    details: {
-        fontSize: 15,
-        color: '#333',
-        flexShrink: 1,
     },
     linkedinCard: {
         flexDirection: 'row',

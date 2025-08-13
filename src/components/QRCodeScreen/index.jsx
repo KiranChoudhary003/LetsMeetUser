@@ -1,9 +1,8 @@
 import React, { useEffect, useRef, useState } from 'react';
-import { View, Text, StyleSheet, TouchableOpacity, Image, ActivityIndicator, StatusBar } from 'react-native';
+import { View, Text, StyleSheet, TouchableOpacity, ActivityIndicator, StatusBar } from 'react-native';
 import QRCode from 'react-native-qrcode-svg';
 import axios from 'axios';
 import AsyncStorage from '@react-native-async-storage/async-storage';
-import scanner from '../../assets/vector.png';
 import MaterialIcons from 'react-native-vector-icons/MaterialIcons';
 
 const QRCodeScreen = ({ navigation }) => {
@@ -55,10 +54,9 @@ const QRCodeScreen = ({ navigation }) => {
           </TouchableOpacity>
           <TouchableOpacity
             style={styles.headerTitle}
-            onPress={() => navigation.replace("Scanner")}
+            onPress={() => navigation.replace('Scanner')}
           >
-            <Image source={scanner} />
-            <Text style={{ fontSize: 20, paddingLeft: 10, color: "#000" }}>Scan</Text>
+            <Text style={{ fontSize: 20, paddingLeft: 10, color: '#000' }}>Scan</Text>
           </TouchableOpacity>
           <View style={{ width: 24 }} />
         </View>
@@ -141,7 +139,7 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     justifyContent: 'center',
     minHeight: 200,
-    minWidth: 200
+    minWidth: 200,
   },
   buttonRow: {
     flexDirection: 'row',

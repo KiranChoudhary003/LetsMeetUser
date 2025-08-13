@@ -27,7 +27,7 @@ const BottomTab = () => {
             label: 'Events',
         },
                 {
-            name: 'Meetings', 
+            name: 'Meetings',
             iconActive: 'card-account-details',
             iconInactive: 'card-account-details-outline',
             label: 'Meetings',

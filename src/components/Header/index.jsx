@@ -6,7 +6,6 @@ import {
   TouchableOpacity,
   View,
   Alert,
-  Platform,
   StatusBar,
 } from 'react-native';
 import profile from '../../assets/profile.png';
@@ -24,12 +23,12 @@ const Header = () => {
 
   const handleProfile = () => {
     navigation.navigate('UserProfile');
-  };  
+  };
 
   const fetchUserProfile = async () => {
     try {
       const token = await AsyncStorage.getItem('token');
-      if (!token) return;
+      if (!token) {return;}
 
       const response = await axios.get(
         'https://letsmeet-backend-47lv.onrender.com/api/user-profile',
@@ -55,7 +54,7 @@ const Header = () => {
 
   const getProfileImageSource = () => {
     const photo = userProfile?.photo?.trim();
-    if (!photo) return profile;
+    if (!photo) {return profile;}
 
     if (photo.startsWith('data:image') || photo.startsWith('http')) {
       return { uri: photo };

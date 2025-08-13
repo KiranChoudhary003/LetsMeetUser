@@ -1,9 +1,9 @@
+/* eslint-disable react-hooks/exhaustive-deps */
 import React, { useEffect, useRef, useState } from 'react';
-import { StyleSheet, Text, TextInput, TouchableOpacity, View, Image, KeyboardAvoidingView, Dimensions, StatusBar, Platform } from 'react-native';
-import { ActivityIndicator, Checkbox, IconButton, Menu, Modal, Provider } from 'react-native-paper';
+import { StyleSheet, Text, TextInput, TouchableOpacity, View,KeyboardAvoidingView, StatusBar, Platform, Modal as RNModal } from 'react-native';
+import { ActivityIndicator, Checkbox,Menu, Modal, Provider } from 'react-native-paper';
 import { ScrollView } from 'react-native-gesture-handler';
 import axios from 'axios';
-import MaterialIcons from 'react-native-vector-icons/MaterialIcons';
 
 const SignUp = ({ navigation, route }) => {
     const { deviceToken } = route.params || {};
@@ -12,21 +12,24 @@ const SignUp = ({ navigation, route }) => {
     const [visible, setVisible] = useState(false);
     const [modalVisible, setModalVisible] = useState(false);
     const [selectedRoles, setSelectedRoles] = useState([]);
-    const [firstName, setFirstName] = useState('');
-    const [lastName, setLastName] = useState('');
+    const [fullName, setFullName] = React.useState('');
+    const [firstName, setFirstName] = React.useState('');
+    const [middleName, setMiddleName] = React.useState('');
+    const [lastName, setLastName] = React.useState('');
     const [email, setEmail] = useState('');
-    const [linkedin, setLinkedin] = useState('');
+    const linkedInPrefix = 'https://www.linkedin.com/in/';
+    const [linkedInUsername, setLinkedInUsername] = useState('');
     const [password, setPassword] = useState('');
-    const [middleName, setMiddleName] = useState('');
     const [companyName, setCompanyName] = useState('');
     const [roles, setRoles] = useState([]);
     const [loadingRoles, setLoadingRoles] = useState(true);
     const [loading, setLoading] = useState(false);
     const [policyModalVisible, setPolicyModalVisible] = useState(false);
-    const [modalContent, setModalContent] = useState('');
+    const [errorModalVisible, setErrorModalVisible] = useState(false);
+    const [errorMessage, setErrorMessage] = useState('');
     const [anchorLayout, setAnchorLayout] = useState(null);
     const [inputWidth, setInputWidth] = useState(0);
-
+    const [privacyPolicy, setPrivacyPolicy] = useState('');
     const [alertModalVisible, setalertModalVisible] = useState(false);
     const [alertMessage, setalertMessage] = useState('');
     const [alertAction, setAlertAction] = useState(null);
@@ -43,22 +46,89 @@ const SignUp = ({ navigation, route }) => {
         });
     };
 
-    const handleSubmit = async () => {
-        setLoading(true);
+    const onFullNameChange = (text) => {
+        setFullName(text);
 
-        if (!firstName || !lastName || !email || !password || !linkedin || !jobRole || selectedRoles.length === 0) {
-            setalertMessage('All fields must be filled, including at least one preference.');
-            setalertModalVisible(true);
-            setLoading(false);
+        const parts = text.trim().split(/\s+/);
+
+        setFirstName(parts[0] || '');
+        setMiddleName(parts[1] || '');
+
+        if (parts.length > 2) {
+            setLastName(parts.slice(2).join(' '));
+        } else {
+            setLastName('');
+        }
+    };
+
+    const handleSubmit = async () => {
+        const showError = (message) => {
+            setErrorMessage(message);
+            setErrorModalVisible(true);
+        };
+
+        const validateFields = () => {
+            if (!fullName.trim()) {
+                showError('Full Name is required');
+                return false;
+            }
+
+            if (!email.trim()) {
+                showError('Email is required');
+                return false;
+            }
+
+            const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+            if (!emailRegex.test(email.trim())) {
+                showError('Please enter a valid email address');
+                return false;
+            }
+
+            if (!password.trim()) {
+                showError('Password is required');
+                return false;
+            }
+            const passwordRegex = /^(?=.*[!@#$%^&*(),.?":{}|<>])[A-Za-z\d!@#$%^&*(),.?":{}|<>]{8,}$/;
+            if (!passwordRegex.test(password.trim())) {
+                showError('Password must be at least 8 characters long and include at least one special character.');
+                return false;
+            }
+            if (!linkedInUsername) {
+                showError('Please enter your LinkedIn username.');
+                return false;
+            }
+
+            const fullLinkedInURL = linkedInPrefix + linkedInUsername;
+            if (!/^https:\/\/www\.linkedin\.com\/in\/[A-Za-z0-9-_.]+$/.test(fullLinkedInURL)) {
+                showError('Invalid LinkedIn username format.');
+                return false;
+            }
+            if (!jobRole) {
+                showError('Role is required');
+                return false;
+            }
+            if (!selectedRoles || selectedRoles.length === 0) {
+                showError('Please select at least one preference');
+                return false;
+            }
+            return true;
+        };
+
+        if (!validateFields()) {
             return;
         }
+
+        setLoading(true);
+
         try {
             const payload = {
-                first_name: firstName,
-                last_name: lastName,
-                email: email,
-                password: password,
-                linkedin_url: linkedin,
+                first_name: firstName.trim(),
+                middle_name: middleName.trim(),
+                last_name: lastName.trim(),
+                email: email.trim().toLowerCase(),
+                password: password.trim(),
+                company_name: companyName.trim(),
+                linkedin_url: linkedInPrefix + linkedInUsername.trim(),
                 role_id: typeof jobRole === 'object' ? parseInt(jobRole.id) : parseInt(jobRole),
                 attendees_role: typeof jobRole === 'object' ? jobRole.label : jobRole,
                 preference: selectedRoles,
@@ -89,12 +159,9 @@ const SignUp = ({ navigation, route }) => {
         }
     };
 
-    const removeRole = (role) => {
-        setSelectedRoles(selectedRoles.filter((r) => r !== role));
-    };
-
     useEffect(() => {
         const fetchRoles = async () => {
+            loadingRoles;
             try {
                 const response = await axios.get('https://letsmeet-backend-47lv.onrender.com/api/user-profile/roles', {
                     headers: {
@@ -114,10 +181,49 @@ const SignUp = ({ navigation, route }) => {
         fetchRoles();
     }, []);
 
+    useEffect(() => {
+        const fetchPrivacyPolicy = async () => {
+            try {
+                const response = await axios.get('https://letsmeet-backend-47lv.onrender.com/api/user-profile/privacy-policy', {
+                    headers: {
+                        'Content-Type': 'application/json',
+                    },
+                });
+                setPrivacyPolicy(response.data.privacy_policy);
+
+            } catch (error) {
+                // Optionally handle error here
+                console.error('Failed to fetch privacy policy:', error);
+            }
+        };
+
+        fetchPrivacyPolicy();
+    }, []);
+
+
     return (
         <>
             <StatusBar barStyle="light-content" backgroundColor="#34495e" translucent={false} />
             <Provider>
+                <RNModal
+                    transparent
+                    visible={errorModalVisible}
+                    animationType="fade"
+                    onRequestClose={() => setErrorModalVisible(false)}
+                >
+                    <View style={styles.errorOverlay}>
+                        <View style={styles.errorBox}>
+                            <Text style={styles.errorTitle}>Required Field Missing</Text>
+                            <Text style={styles.errorText}>{errorMessage}</Text>
+                            <TouchableOpacity
+                                style={styles.errorButton}
+                                onPress={() => setErrorModalVisible(false)}
+                            >
+                                <Text style={styles.errorButtonText}>OK</Text>
+                            </TouchableOpacity>
+                        </View>
+                    </View>
+                </RNModal>
                 <View style={styles.container}>
                     <Text style={styles.text}>Create Account</Text>
 
@@ -130,13 +236,62 @@ const SignUp = ({ navigation, route }) => {
                             keyboardShouldPersistTaps="handled"
                             showsVerticalScrollIndicator={false}
                         >
-                            <TextInput style={styles.input} placeholder="First Name*" placeholderTextColor="#888" value={firstName} onChangeText={setFirstName} />
-                            <TextInput style={styles.input} placeholder="Middle Name" placeholderTextColor="#888" value={middleName} onChangeText={setMiddleName} />
-                            <TextInput style={styles.input} placeholder="Last Name*" placeholderTextColor="#888" value={lastName} onChangeText={setLastName} />
+                            <TextInput
+                                style={styles.input}
+                                placeholder="Full Name*"
+                                placeholderTextColor="#888"
+                                value={fullName}
+                                onChangeText={onFullNameChange}
+                            />
                             <TextInput style={styles.input} placeholder="E-mail*" placeholderTextColor="#888" value={email} onChangeText={(text) => setEmail(text.toLowerCase())} />
-                            <TextInput style={styles.input} placeholder="Create Password*" placeholderTextColor="#888" value={password} onChangeText={setPassword} />
-                            <TextInput style={styles.input} placeholder="LinkedIn URL*" placeholderTextColor="#888" value={linkedin} onChangeText={setLinkedin} />
-                            <TextInput style={styles.input} placeholder="Company Name" placeholderTextColor="#888" value={companyName} onChangeText={setCompanyName} />
+                            <TextInput style={styles.input} placeholder="Password*" placeholderTextColor="#888" value={password} onChangeText={setPassword} />
+                            <TextInput
+                                style={styles.input}
+                                placeholder={'LinkedIn*'}
+                                placeholderTextColor="#888"
+                                value={linkedInUsername ? linkedInPrefix + linkedInUsername : ''}
+                                onChangeText={(text) => {
+                                    // Case 0: If user has started typing and prefix is broken, restore it
+                                    if (linkedInUsername && !text.startsWith(linkedInPrefix)) {
+                                        setLinkedInUsername(linkedInUsername); // keep previous username, prefix will auto-add from value
+                                        return;
+                                    }
+
+                                    // Case 1: If empty, reset username (placeholder will show)
+                                    if (text.trim() === '') {
+                                        setLinkedInUsername('');
+                                        return;
+                                    }
+
+                                    // Case 2: Handle full LinkedIn URL pasted
+                                    if (text.includes('linkedin.com/in/')) {
+                                        let usernamePart = text.split('linkedin.com/in/')[1] || '';
+                                        usernamePart = usernamePart.replace(/\/+$/, '').trim();
+                                        setLinkedInUsername(usernamePart);
+                                        return;
+                                    }
+
+                                    // Case 3: If prefix is missing but user types something, restore prefix
+                                    if (!text.startsWith(linkedInPrefix)) {
+                                        setLinkedInUsername(text.trim()); // store as username
+                                        return;
+                                    }
+
+                                    // Case 4: Normal typing after prefix
+                                    let usernamePart = text.slice(linkedInPrefix.length).trim();
+                                    setLinkedInUsername(usernamePart);
+                                }}
+                                onSelectionChange={({ nativeEvent: { selection } }) => {
+                                    // Lock cursor after prefix only when username exists
+                                    if (linkedInUsername && selection.start < linkedInPrefix.length) {
+                                        selection.start = linkedInPrefix.length;
+                                        selection.end = linkedInPrefix.length;
+                                    }
+                                }}
+                                autoCapitalize="none"
+                                keyboardType="default"
+                            />
+                            <TextInput style={styles.input} placeholder="Company Name (optional)" placeholderTextColor="#888" value={companyName} onChangeText={setCompanyName} />
 
                             <TouchableOpacity
                                 ref={roleRef}
@@ -205,56 +360,48 @@ const SignUp = ({ navigation, route }) => {
                             )}
 
                             <TouchableOpacity style={styles.input} onPress={() => setModalVisible(true)}>
-                                <Text style={styles.anchorText}>Preferences*</Text>
+                                <Text style={styles.anchorText}>Preferences* {selectedRoles.length !== 0 ? ': ' + selectedRoles.length : ''}</Text>
                             </TouchableOpacity>
 
-                            <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={styles.selectedWrapper}>
-                                {selectedRoles.map((role, index) => (
-                                    <View key={index} style={styles.tag}>
-                                        <Text style={styles.tagText}>{role.toUpperCase()}</Text>
-                                        <TouchableOpacity onPress={() => removeRole(role)}>
-                                            <MaterialIcons name="close" size={16} color="#888" />
-                                        </TouchableOpacity>
-                                    </View>
-                                ))}
-                            </ScrollView>
+                            <View style={{ padding: 16 }}>
+                                {loading ? (
+                                    <ActivityIndicator size="large" color="#34495e" />
+                                ) : (
+                                    <TouchableOpacity style={styles.button} onPress={handleSubmit}>
+                                        <Text style={styles.buttonText}>Sign-up</Text>
+                                    </TouchableOpacity>
+                                )}
+
+                                <View style={styles.condition}>
+                                    <Text style={styles.agree}>
+                                        By continuing you agree to our{' '}
+                                        <Text
+                                            style={styles.terms}
+                                            onPress={() => {
+                                                setPolicyModalVisible(true);
+                                            }}
+                                        >
+                                            Terms, Conditions
+                                        </Text>
+                                    </Text>
+                                    <Text
+                                        style={[styles.policy, { textAlign: 'center', marginTop: 4 }]}
+                                        onPress={() => {
+                                            setPolicyModalVisible(true);
+                                        }}
+                                    >
+                                        & Privacy Policy
+                                    </Text>
+                                </View>
+                                <View style={styles.account}>
+                                    <Text style={styles.already}>Already have an account? </Text>
+                                    <TouchableOpacity onPress={() => navigation.goBack()}>
+                                        <Text style={styles.login}>log-in</Text>
+                                    </TouchableOpacity>
+                                </View>
+                            </View>
                         </ScrollView>
                     </KeyboardAvoidingView>
-
-                    <View style={{ padding: 16 }}>
-                        {loading ? (
-                            <ActivityIndicator size="large" color="#34495e" />
-                        ) : (
-                            <TouchableOpacity style={styles.button} onPress={handleSubmit}>
-                                <Text style={styles.buttonText}>Sign-up</Text>
-                            </TouchableOpacity>
-                        )}
-
-                        <View style={styles.condition}>
-                            <Text style={styles.agree}>By continuing you agree to all </Text>
-                            <Text style={styles.terms} onPress={() => {
-                                setModalContent('Terms and Conditions content goes here...');
-                                setPolicyModalVisible(true);
-                            }}>
-                                terms, condition
-                            </Text>
-                        </View>
-                        <View style={styles.privacy}>
-                            <Text style={styles.and}>& </Text>
-                            <Text style={styles.policy} onPress={() => {
-                                setModalContent('Privacy Policy content goes here...');
-                                setPolicyModalVisible(true);
-                            }}>
-                                privacy policy
-                            </Text>
-                        </View>
-                        <View style={styles.account}>
-                            <Text style={styles.already}>Already have an account? </Text>
-                            <TouchableOpacity onPress={() => navigation.goBack()}>
-                                <Text style={styles.login}>log-in</Text>
-                            </TouchableOpacity>
-                        </View>
-                    </View>
 
                     <Modal
                         visible={modalVisible}
@@ -294,75 +441,13 @@ const SignUp = ({ navigation, route }) => {
                                 <ScrollView>
                                     <Text style={styles.modalTitle}>Terms and Conditions</Text>
 
-                                    <Text style={styles.modalText}>
-                                        Welcome to LetsMeet!
-                                    </Text>
-
-                                    <Text style={styles.modalText}>
-                                        Please read these Terms and Conditions carefully before using our app.
-                                        By accessing or using the LetsMeet application (“App”), you agree to be bound by these Terms.
-                                    </Text>
-
-                                    <Text style={styles.modalText}>
-                                        1. Acceptance of Terms{'\n'}
-                                        By registering or using the App, you agree to abide by these Terms and our Privacy Policy.
-                                    </Text>
-
-                                    <Text style={styles.modalText}>
-                                        2. User Accounts{'\n'}
-                                        Users must provide accurate and complete information. You are responsible for maintaining
-                                        the confidentiality of your credentials.
-                                    </Text>
-
-                                    <Text style={styles.modalText}>
-                                        3. QR Code Usage{'\n'}
-                                        Do not tamper with or misuse QR codes. Each code is linked to user identity.
-                                    </Text>
-
-                                    <Text style={styles.modalText}>
-                                        4. Event Participation{'\n'}
-                                        Users may check in to events using the app. Location access might be required.
-                                    </Text>
-
-                                    <Text style={styles.modalText}>
-                                        5. User Conduct{'\n'}
-                                        Do not use the app for illegal or malicious activities. Misuse may result in account termination.
-                                    </Text>
-
-                                    <Text style={styles.modalText}>
-                                        6. Data & Privacy{'\n'}
-                                        We collect data to improve your experience. See our Privacy Policy for full details.
-                                    </Text>
-
-                                    <Text style={styles.modalText}>
-                                        7. Intellectual Property{'\n'}
-                                        All app content is the property of LetsMeet and must not be reused without permission.
-                                    </Text>
-
-                                    <Text style={styles.modalText}>
-                                        8. Modifications to the App{'\n'}
-                                        We may update or discontinue the app at any time without notice.
-                                    </Text>
-
-                                    <Text style={styles.modalText}>
-                                        9. Limitation of Liability{'\n'}
-                                        LetsMeet is not responsible for damages or losses from use of the app.
-                                    </Text>
-
-                                    <Text style={styles.modalText}>
-                                        10. Termination{'\n'}
-                                        Accounts may be suspended for violation of terms.
-                                    </Text>
-
-                                    <Text style={styles.modalText}>
-                                        11. Governing Law{'\n'}
-                                        These Terms are governed by the laws of Rajasthan/India.
-                                    </Text>
-
-                                    <Text style={styles.modalText}>
-                                        12. Contact Us{'\n'}
-                                        For any queries, contact us at kiranchoudhary@gmail.com.
-                                    </Text>
+                                    {privacyPolicy ? (
+                                        <Text style={styles.modalText}>
+                                            {privacyPolicy}
+                                        </Text>
+                                    ) : (
+                                        <Text style={styles.modalText}>Loading Privacy Policy...</Text>
+                                    )}
                                 </ScrollView>
 
                                 <TouchableOpacity
@@ -374,6 +459,7 @@ const SignUp = ({ navigation, route }) => {
                             </View>
                         </View>
                     </Modal>
+
                 </View>
                 <Modal
                     animationType="fade"
@@ -406,10 +492,10 @@ const SignUp = ({ navigation, route }) => {
                         </View>
                     </View>
                 </Modal>
-        </Provider >
+            </Provider >
         </>
     );
-}
+};
 
 const styles = StyleSheet.create({
     container: {
@@ -440,7 +526,7 @@ const styles = StyleSheet.create({
         width: '85%',
         height: 45,
         backgroundColor: '#f7faff',
-        color: "#000",
+        color: '#000',
     },
 
     anchorText: {
@@ -508,7 +594,7 @@ const styles = StyleSheet.create({
 
     tagText: {
         marginRight: 8,
-        color: "#000"
+        color: '#000',
     },
     crossIcon: {
         fontSize: 12,
@@ -530,9 +616,8 @@ const styles = StyleSheet.create({
         color: 'white',
     },
     condition: {
-        flexDirection: 'row',
-        justifyContent: 'center',
-        marginTop: 10,
+        alignItems: 'center',
+        marginTop: 8,
     },
     agree: {
         fontSize: 13,
@@ -548,10 +633,6 @@ const styles = StyleSheet.create({
         justifyContent: 'center',
         marginTop: 4,
     },
-    and: {
-        fontSize: 13,
-        color: '#7f8c8d',
-    },
     policy: {
         fontSize: 13,
         color: '#7680DE',
@@ -560,7 +641,7 @@ const styles = StyleSheet.create({
     account: {
         flexDirection: 'row',
         justifyContent: 'center',
-        marginTop: 16,
+        marginTop: 8,
     },
     already: {
         fontSize: 14,
@@ -586,6 +667,47 @@ const styles = StyleSheet.create({
         marginBottom: 10,
         color: '#444',
         whiteSpace: 'pre-line',
+    },
+    errorOverlay: {
+        flex: 1,
+        backgroundColor: 'rgba(0,0,0,0.5)',
+        justifyContent: 'center',
+        alignItems: 'center',
+    },
+    errorBox: {
+        backgroundColor: '#fff',
+        borderRadius: 12,
+        padding: 20,
+        width: '80%',
+        shadowColor: '#000',
+        shadowOffset: { width: 0, height: 4 },
+        shadowOpacity: 0.2,
+        shadowRadius: 4,
+        elevation: 5,
+        alignItems: 'center',
+    },
+    errorTitle: {
+        fontSize: 18,
+        fontWeight: 'bold',
+        color: '#e74c3c',
+        marginBottom: 10,
+    },
+    errorText: {
+        fontSize: 15,
+        color: '#333',
+        textAlign: 'center',
+        marginBottom: 20,
+    },
+    errorButton: {
+        backgroundColor: '#34495e',
+        paddingVertical: 8,
+        paddingHorizontal: 20,
+        borderRadius: 8,
+    },
+    errorButtonText: {
+        color: '#fff',
+        fontSize: 15,
+        fontWeight: 'bold',
     },
 });
 

@@ -156,8 +156,8 @@ export default function MeetingRecords() {
                                 <View style={styles.modalContent}>
                                     <Text style={styles.modalTitle}>Meeting Detail</Text>
                                     <Text style={styles.modalDescription}>
-                                        Host: {selectedMeeting.userName}{"\n"}
-                                        Date: {selectedMeeting.date}{"\n"}
+                                        Host: {selectedMeeting.userName}{'\n'}
+                                        Date: {selectedMeeting.date}{'\n'}
                                         Time: {selectedMeeting.time}
                                     </Text>
 

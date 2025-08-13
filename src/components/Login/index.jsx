@@ -15,13 +15,11 @@ import {
     Linking,
     StatusBar,
     Dimensions,
-    Animated
 } from 'react-native';
 import logo from '../../assets/logo.png';
 import axios from 'axios';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import MaterialIcons from 'react-native-vector-icons/MaterialIcons';
-import { getSocket, connectSocket } from '../../socket';
 import { BlurView } from '@react-native-community/blur';
 
 const { width } = Dimensions.get('window');
@@ -40,9 +38,6 @@ const Login = ({ navigation, route }) => {
     const [retryCountdown, setRetryCountdown] = useState(0);
     const [isRetryLocked, setIsRetryLocked] = useState(false);
     const retryIntervalRef = useRef(null);
-    const [meetingModalVisible, setMeetingModalVisible] = useState(false);
-    const progressAnim = useRef(new Animated.Value(0)).current;
-    const timeoutIdRef = useRef(null);
 
 
     const handleRateLimit = async (seconds) => {
@@ -422,7 +417,7 @@ const styles = StyleSheet.create({
         backgroundColor: '#f7faff',
         margin: 10,
         borderRadius: 5,
-        paddingHorizontal: 10,
+        paddingHorizontal: 5,
         borderColor: '#ccc',
         borderWidth: 1,
     },

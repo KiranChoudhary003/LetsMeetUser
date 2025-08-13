@@ -1,13 +1,14 @@
+/* eslint-disable react-native/no-inline-styles */
+/* eslint-disable react-hooks/exhaustive-deps */
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import axios from 'axios';
 import React, { useContext, useEffect, useRef, useState } from 'react';
 import {
   ActivityIndicator, Alert, Animated,
-  Pressable, SafeAreaView, ScrollView, StatusBar, StyleSheet, Text, TouchableOpacity, View
+  Pressable, SafeAreaView, ScrollView, StatusBar, StyleSheet, Text, TouchableOpacity, View,
 } from 'react-native';
 import { LocationContext } from '../LocationContext/LocationContext';
 
-const backgroundImage = require('../../assets/bgg.png');
 
 const EventCard = ({
   id,
@@ -313,7 +314,7 @@ const EventsScreen = ({ navigation }) => {
   }, []);
 
   return (
-    <View source={backgroundImage} style={styles.background} resizeMode="cover">
+    <View style={styles.background}>
       <SafeAreaView style={styles.container}>
 
         <StatusBar barStyle="dark-content" />

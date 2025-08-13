@@ -32,18 +32,18 @@ const Description = ({ navigation, route }) => {
         checkInDistance,
     } = route.params;
 
-    console.log("🔍 Description Screen — checkInAvailable:", checkInDistance);
+    console.log('🔍 Description Screen — checkInAvailable:', checkInDistance);
 
     const [buttonState, setButtonState] = useState(() => {
-        if (!isRegistered) return 'register';
-        if (already_checked_in) return 'checkedin';
+        if (!isRegistered) {return 'register';}
+        if (already_checked_in) {return 'checkedin';}
         return 'checkin';
     });
 
     const [isLoading, setIsLoading] = useState(false);
 
     const handlePress = async () => {
-        if (isLoading) return;
+        if (isLoading) {return;}
 
         if (buttonState === 'register') {
             if (!id) {
@@ -78,7 +78,7 @@ const Description = ({ navigation, route }) => {
     const handleRegister = async (eventId) => {
         try {
             const token = await AsyncStorage.getItem('token');
-            if (!eventId) return;
+            if (!eventId) {return;}
 
             await axios.post(
                 'https://letsmeet-backend-47lv.onrender.com/api/user-events/register-event',
@@ -174,25 +174,25 @@ const Description = ({ navigation, route }) => {
 
                         <Text style={styles.descriptionHeading}>Start Date</Text>
                         <Text style={styles.descriptionText}>
-                            {new Date(date).toLocaleString("en-GB", {
+                            {new Date(date).toLocaleString('en-GB', {
                                 day: '2-digit',
                                 month: 'short',
                                 year: 'numeric',
                                 hour: '2-digit',
                                 minute: '2-digit',
-                                hour12: false
+                                hour12: false,
                             })}
                         </Text>
 
                         <Text style={styles.descriptionHeading}>End Date</Text>
                         <Text style={styles.descriptionText}>
-                            {new Date(endDate).toLocaleString("en-GB", {
+                            {new Date(endDate).toLocaleString('en-GB', {
                                 day: '2-digit',
                                 month: 'short',
                                 year: 'numeric',
                                 hour: '2-digit',
                                 minute: '2-digit',
-                                hour12: false
+                                hour12: false,
                             })}
                         </Text>
 

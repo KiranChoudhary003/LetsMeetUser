@@ -1,4 +1,3 @@
-import { getSocket } from "../../socket";
 
 export const initializeGlobalSocketListeners = (
     socket,

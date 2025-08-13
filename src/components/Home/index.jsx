@@ -1,3 +1,5 @@
+/* eslint-disable react-hooks/exhaustive-deps */
+/* eslint-disable react-native/no-inline-styles */
 import React, { useRef, useState, useEffect, useContext, useMemo, useCallback } from 'react';
 import { Modal, TouchableWithoutFeedback, ActivityIndicator, Alert } from 'react-native';
 import {
@@ -181,7 +183,7 @@ const groupEventsByMonth = (events) => {
 
 
 const formatDate = (date) => {
-    if (!date) return '';
+    if (!date) {return '';}
     const IST = 'Asia/Kolkata';
     if (dayjs.isDayjs(date)) {
         return date.tz(IST).format('MM-DD-YYYY');
@@ -224,7 +226,7 @@ const Home = ({ navigation }) => {
         }, [eventData, fetchUpcomingEvents])
     );
 
-    const filterEvents = (events, filterType, customDate, location) => {
+    const filterEvents = (events, filterType, filterDate, location) => {
         const now = new Date();
         const today = new Date(now.setHours(0, 0, 0, 0));
         const tomorrow = new Date(today);
@@ -245,9 +247,9 @@ const Home = ({ navigation }) => {
                 );
 
             case 'Choose from Calendar':
-                if (!customDate) return [];
+                if (!filterDate) {return [];}
                 return events.filter(event =>
-                    dayjs.utc(event.date).local().format('YYYY-MM-DD') === dayjs(customDate).format('YYYY-MM-DD')
+                    dayjs.utc(event.date).local().format('YYYY-MM-DD') === dayjs(filterDate).format('YYYY-MM-DD')
                 );
 
             case 'Near Me':

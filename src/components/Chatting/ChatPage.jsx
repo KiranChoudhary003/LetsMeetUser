@@ -334,7 +334,7 @@ const ChatPage = ({ route }) => {
     };
 
     const loadOlderMessages = () => {
-        if (loadingOlder) return;
+        if (loadingOlder) {return;}
         setLoadingOlder(true);
 
         setTimeout(() => {
@@ -355,7 +355,7 @@ const ChatPage = ({ route }) => {
             setTimeout(() => {
                 setLoadingOlder(false);
             }, 50);
-        }, 800); 
+        }, 800);
     };
 
     return (
@@ -493,7 +493,7 @@ const styles = StyleSheet.create({
         backgroundColor: '#34495e',
         borderBottomWidth: 1,
         borderColor: '#e6e6e6',
-        height : 70
+        height : 70,
     },
     backButton: {
         marginRight: 10,
@@ -555,7 +555,7 @@ const styles = StyleSheet.create({
         color: '#ffffff',
     },
     typingText: {
-        paddingLeft: 14, 
+        paddingLeft: 14,
         paddingBottom: 4,
         fontStyle: 'italic',
         color: '#444',
