@@ -138,35 +138,35 @@ const SignUp = ({ navigation, route }) => {
             return 'Password is required';
         }
 
-        const password = passwordToValidate.trim();
-        if (password.length < 8) {
+        const trimmedPassword = passwordToValidate.trim();
+        if (trimmedPassword.length < 8) {
             return 'Password must be at least 8 characters long';
         }
-        if (password.length > 20) {
+        if (trimmedPassword.length > 20) {
             return 'Password cannot exceed 20 characters';
         }
-        if (/\s/.test(password)) {
+        if (/\s/.test(trimmedPassword)) {
             return 'Spaces are not allowed in password';
         }
-        if (!/[A-Z]/.test(password)) {
+        if (!/[A-Z]/.test(trimmedPassword)) {
             return 'Password must include at least one uppercase letter';
         }
-        if (!/[a-z]/.test(password)) {
+        if (!/[a-z]/.test(trimmedPassword)) {
             return 'Password must include at least one lowercase letter';
         }
-        if (!/[0-9]/.test(password)) {
+        if (!/[0-9]/.test(trimmedPassword)) {
             return 'Password must include at least one number';
         }
-        if (!/[!@#$%^&*(),.?":{}|<>]/.test(password)) {
+        if (!/[!@#$%^&*(),.?":{}|<>]/.test(trimmedPassword)) {
             return 'Password must include at least one special character';
         }
-        if (/[^A-Za-z0-9!@#$%^&*(),.?":{}|<>]/.test(password)) {
+        if (/[^A-Za-z0-9!@#$%^&*(),.?":{}|<>]/.test(trimmedPassword)) {
             return 'Password contains invalid characters';
         }
-        if (commonPasswords.includes(password)) {
+        if (commonPasswords.includes(trimmedPassword)) {
             return 'Password is too common. Choose a stronger one';
         }
-        if (isCommonPattern(password)) {
+        if (isCommonPattern(trimmedPassword)) {
             return 'Password is too predictable. Choose a stronger one';
         }
         return true;
@@ -555,16 +555,68 @@ const SignUp = ({ navigation, route }) => {
                         onRequestClose={() => setPolicyModalVisible(false)}
                     >
                         <View style={styles.modalOverlay}>
-                            <View style={styles.modalContainer}>
+                            <View style={styles.privacymodalContainer}>
+                                <Text style={styles.modalTitle}>Terms and Conditions</Text>
                                 <ScrollView>
-                                    <Text style={styles.modalTitle}>Terms and Conditions</Text>
-
                                     {privacyPolicy ? (
-                                        <Text style={styles.modalText}>
-                                            {privacyPolicy}
-                                        </Text>
+                                        privacyPolicy.split('\n').map((line, index) => {
+                                            const trimmed = line.trim();
+
+                                            if (!trimmed) {
+                                                return <Text key={index} />;
+                                            }
+
+                                            if (trimmed === trimmed.toUpperCase() || trimmed.endsWith(':')) {
+                                                return (
+                                                    <Text key={index} style={styles.privacyHeading}>
+                                                        {trimmed}
+                                                    </Text>
+                                                );
+                                            }
+
+                                            // Bullet points
+                                            const listMatch = trimmed.match(/^(\d+[\.\)]\s|[IVXLCDM]+\.\s|[a-zA-Z][\.\)]\s|[•\-*]\s?)(.*)$/);
+                                            if (listMatch) {
+                                                return (
+                                                    <View
+                                                        key={index}
+                                                        style={{ flexDirection: 'row', marginBottom: 4 }}
+                                                    >
+                                                        <Text
+                                                            style={{
+                                                                fontSize: 15,
+                                                                lineHeight: 22,
+                                                                color: '#444',
+                                                                marginRight: 6,
+                                                            }}
+                                                        >
+                                                            {listMatch[1].trim()}
+                                                        </Text>
+                                                        <Text
+                                                            style={{
+                                                                fontSize: 15,
+                                                                lineHeight: 22,
+                                                                color: '#444',
+                                                                flex: 1,
+                                                                textAlign: 'left',
+                                                            }}
+                                                        >
+                                                            {listMatch[2].trim()}
+                                                        </Text>
+                                                    </View>
+                                                );
+                                            }
+
+                                            // Normal paragraphs
+                                            return (
+                                                <Text key={index} style={styles.privacyParagraph}>
+                                                    {trimmed}
+                                                </Text>
+                                            );
+
+                                        })
                                     ) : (
-                                        <Text style={styles.modalText}>Loading Privacy Policy...</Text>
+                                        <Text style={{ fontSize: 16, color: '#666' }}>Loading Privacy Policy...</Text>
                                     )}
                                 </ScrollView>
 
@@ -655,6 +707,7 @@ const styles = StyleSheet.create({
     },
     passwordInput: {
         flex: 1,
+        color: '#000',
     },
     anchorText: {
         color: '#888',
@@ -674,6 +727,14 @@ const styles = StyleSheet.create({
         borderRadius: 12,
         width: '85%',
         maxHeight: '50%',
+        padding: 20,
+        elevation: 5,
+    },
+    privacymodalContainer: {
+        backgroundColor: '#fff',
+        borderRadius: 12,
+        width: '90%',
+        maxHeight: '80%',
         padding: 20,
         elevation: 5,
     },
@@ -794,6 +855,21 @@ const styles = StyleSheet.create({
         marginBottom: 10,
         color: '#444',
         whiteSpace: 'pre-line',
+    },
+    privacyHeading: {
+        fontSize: 18,
+        fontWeight: 'bold',
+        marginTop: 20,
+        marginBottom: 10,
+        color: '#222',
+        textAlign: 'left',
+    },
+    privacyParagraph: {
+        fontSize: 15,
+        lineHeight: 22,
+        color: '#444',
+        flex: 1,
+        textAlign: 'left',
     },
     errorOverlay: {
         flex: 1,
