@@ -5,12 +5,14 @@ import {
     KeyboardAvoidingView,
     Platform,
     Alert,
+    Dimensions,
     Modal as RNModal,
 } from 'react-native';
 import { Checkbox, Menu, Modal as PaperModal, Provider } from 'react-native-paper';
 import axios from 'axios';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import Ionicons from 'react-native-vector-icons/Ionicons';
+import MaterialIcons from 'react-native-vector-icons/MaterialIcons';
 import validator from 'validator';
 
 const Edit = ({ route, navigation }) => {
@@ -41,14 +43,18 @@ const Edit = ({ route, navigation }) => {
     const [roles, setRoles] = useState([]);
     const [errorModalVisible, setErrorModalVisible] = useState(false);
     const [errorMessage, setErrorMessage] = useState('');
-
     const [visible, setVisible] = useState(false);
     const [modalVisible, setModalVisible] = useState(false);
     const [isSaving, setIsSaving] = useState(false);
     const [anchorLayout, setAnchorLayout] = useState(null);
     const [inputWidth, setInputWidth] = useState(0);
-
     const roleRef = useRef();
+    const [showEmailTooltip, setShowEmailTooltip] = useState(false);
+    const [emailTooltipHeight, setEmailTooltipHeight] = useState(0);
+    const [emailTooltipWidth, setEmailTooltipWidth] = useState(0);
+    const emailRef = useRef(null);
+    const [emailPos, setEmailPos] = useState(null);
+    const containerRef = useRef(null);
 
     useEffect(() => {
         const fetchRoles = async () => {
@@ -150,6 +156,18 @@ const Edit = ({ route, navigation }) => {
     };
 
 
+    const emailRules = [
+        { check: (email) => !/[^a-zA-Z0-9@._-]/.test(email), message: "No invalid characters" },
+        { check: (email) => !email.includes(".."), message: "No consecutive dots" },
+        { check: (email) => !/\s/.test(email), message: "No spaces allowed" }, // <-- new rule
+        { check: (email) => validator.isEmail(email), message: "Must be a valid email" },
+    ];
+
+
+    const checkEmailRule = (rule) => rule.check(newEmail.trim());
+    const allEmailValid = emailRules.every((rule) => rule.check(newEmail.trim()));
+
+
     const handleEdit = async () => {
         if (isSaving || modalVisible) { return; }
 
@@ -226,7 +244,7 @@ const Edit = ({ route, navigation }) => {
                     </View>
                 </RNModal>
 
-                <View style={styles.container}>
+                <View style={styles.container} ref={containerRef}>
                     <View style={styles.headingContainer}>
                         <TouchableOpacity onPress={() => navigation.goBack()} style={styles.backButton}>
                             <Ionicons name="arrow-back-outline" size={24} color="white" />
@@ -238,7 +256,40 @@ const Edit = ({ route, navigation }) => {
                     <TextInput style={styles.input} placeholder="First Name" placeholderTextColor="#888" value={newFirstName} onChangeText={setNewFirstName} />
                     <TextInput style={styles.input} placeholder="Middle Name (Optional)" placeholderTextColor="#888" value={newMiddleName} onChangeText={setNewMiddleName} />
                     <TextInput style={styles.input} placeholder="Last Name" placeholderTextColor="#888" value={newLastName} onChangeText={setNewLastName} />
-                    <TextInput style={styles.input} placeholder="E-mail" placeholderTextColor="#888" value={newEmail} onChangeText={setNewEmail} />
+                    <View
+                        style={{ width: "85%", alignSelf: "center", height: 45, marginBottom: 12 }}
+                        ref={emailRef}
+                        onLayout={() => {
+                            if (containerRef.current && emailRef.current) {
+                                emailRef.current.measureLayout(
+                                    containerRef.current,
+                                    (x, y, width, height) => {
+                                        setEmailPos({ x, y, width, height });
+                                    }
+                                );
+                            }
+                        }}
+                    >
+                        <TextInput
+                            style={[styles.input, { width: "100%", marginBottom: 0 }]}
+                            placeholder="E-mail*"
+                            placeholderTextColor="#888"
+                            value={newEmail}
+                            onChangeText={(text) => {
+                                const lower = text.toLowerCase();
+                                setNewEmail(lower);
+
+                                const isValid = emailRules.every((rule) => rule.check(lower));
+                                setShowEmailTooltip(text.length > 0 && !isValid);
+                            }}
+                            onFocus={() => {
+                                const isValid = emailRules.every((rule) => rule.check(email));
+                                if (email.length > 0 && !isValid) setShowEmailTooltip(true);
+                            }}
+                            onBlur={() => setShowEmailTooltip(false)}
+                        />
+                    </View>
+                    {/* <TextInput style={styles.input} placeholder="E-mail" placeholderTextColor="#888" value={newEmail} onChangeText={setNewEmail} /> */}
                     <TextInput
                         style={styles.input}
                         placeholder={linkedInPrefix + 'your-username'}
@@ -366,6 +417,43 @@ const Edit = ({ route, navigation }) => {
                         </View>
                     )}
                 </View>
+                {showEmailTooltip && !allEmailValid && emailPos && (
+                    <View
+                        style={[
+                            styles.tooltipOverlay,
+                            {
+                                top: emailPos.y - emailTooltipHeight,
+                                left: emailPos.x + emailPos.width - emailTooltipWidth,
+                            },
+                        ]}
+                        onLayout={(e) => {
+                            setEmailTooltipHeight(e.nativeEvent.layout.height);
+                            setEmailTooltipWidth(e.nativeEvent.layout.width);
+                        }}
+                    >
+                        <View style={styles.tooltip}>
+                            {emailRules.map((rule, index) => {
+                                const passed = checkEmailRule(rule);
+                                return (
+                                    <View
+                                        key={index}
+                                        style={{ flexDirection: "row", alignItems: "center", marginBottom: 4 }}
+                                    >
+                                        <MaterialIcons
+                                            name={passed ? "check-circle" : "cancel"}
+                                            size={16}
+                                            color={passed ? "lightgreen" : "red"}
+                                            style={{ marginRight: 6 }}
+                                        />
+                                        <Text style={styles.tooltipText}>{rule.message}</Text>
+                                    </View>
+                                );
+                            })}
+                        </View>
+                        {/* arrow pointing downward into input */}
+                        <View style={styles.arrowDown} />
+                    </View>
+                )}
             </KeyboardAvoidingView>
         </Provider>
     );
@@ -557,6 +645,48 @@ const styles = StyleSheet.create({
     },
     activityIndicatorMargin: {
         marginRight: 8,
+    },
+    tooltipOverlay: {
+        position: "absolute",
+        alignItems: "center",
+        backgroundColor: "transparent",
+        zIndex: 9999,   // 👈 force top stacking
+        elevation: 9999, // 👈 required for Android
+    },
+
+    tooltip: {
+        backgroundColor: "#333",
+        padding: 12,
+        borderRadius: 8,
+        maxWidth: 280,
+        shadowColor: "#000",
+        shadowOffset: { width: 0, height: 2 },
+        shadowOpacity: 0.3,
+        shadowRadius: 4,
+        elevation: 10,
+    },
+    tooltipText: {
+        fontSize: 12,
+        color: "#fff",
+    },
+    arrowDown: {
+        width: 0,
+        height: 0,
+        borderLeftWidth: 8,
+        borderRightWidth: 8,
+        borderTopWidth: 8,
+        borderLeftColor: "transparent",
+        borderRightColor: "transparent",
+        borderTopColor: "#333",
+        marginTop: -1,
+    },
+    inputMeasureWrapper: {
+        width: '85%',        // same width as your input
+        alignSelf: 'center', // center horizontally
+        height: 45,          // same height as your input
+        marginBottom: 12,    // same spacing
+        position: 'absolute', // invisible layer for measuring
+        opacity: 0,           // doesn’t change UI
     },
 
 });

@@ -36,8 +36,22 @@ const SignUp = ({ navigation, route }) => {
     const [alertModalVisible, setalertModalVisible] = useState(false);
     const [alertMessage, setalertMessage] = useState('');
     const [alertAction, setAlertAction] = useState(null);
+    const [showTooltip, setShowTooltip] = useState(false);
+    const [tooltipPos, setTooltipPos] = useState(null);
+    const [passwordTooltipHeight, setPasswordTooltipHeight] = useState(0);
+    const [showEmailTooltip, setShowEmailTooltip] = useState(false);
+    const [passwordTooltipWidth, setPasswordTooltipWidth] = useState(0);
+    const [emailTooltipHeight, setEmailTooltipHeight] = useState(0);
+    const [emailTooltipWidth, setEmailTooltipWidth] = useState(0);
+    const emailRef = useRef(null);
+    const [emailPos, setEmailPos] = useState(null);
+    const containerRef = useRef(null);
+
+
+
 
     const roleRef = useRef(null);
+    const passwordRef = useRef(null);
 
     const toggleRole = (role) => {
         setSelectedRoles((prevSelectedRoles) => {
@@ -63,6 +77,32 @@ const SignUp = ({ navigation, route }) => {
             setLastName('');
         }
     };
+
+    const rules = [
+        { regex: /.{8,}/, message: "At least 8 characters" },
+        { regex: /^.{0,20}$/, message: "No more than 20 characters" },
+        { regex: /^\S*$/, message: "No spaces allowed" },
+        { regex: /[A-Z]/, message: "At least one uppercase letter" },
+        { regex: /[a-z]/, message: "At least one lowercase letter" },
+        { regex: /[0-9]/, message: "At least one number" },
+        { regex: /[!@#$%^&*(),.?\":{}|<>]/, message: "At least one special character" },
+    ];
+
+    const checkRule = (rule) => rule.regex.test(password);
+    const passwordValid = rules.every(checkRule);
+
+    const emailRules = [
+    { check: (email) => !/[^a-zA-Z0-9@._-]/.test(email), message: "No invalid characters" },
+    { check: (email) => !email.includes(".."), message: "No consecutive dots" },
+    { check: (email) => !/\s/.test(email), message: "No spaces allowed" },
+    { check: (email) => validator.isEmail(email), message: "Must be a valid email" },
+];
+
+
+    const checkEmailRule = (rule) => rule.check(email);
+    const allEmailValid = emailRules.every(checkEmailRule);
+
+
 
 
     const validateEmail = (emailToValidate) => {
@@ -339,157 +379,233 @@ const SignUp = ({ navigation, route }) => {
                         behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
                         style={{ flex: 1 }}
                     >
-                        <ScrollView
-                            contentContainerStyle={styles.scrollForm}
-                            keyboardShouldPersistTaps="handled"
-                            showsVerticalScrollIndicator={false}
-                        >
-                            <TextInput
-                                style={styles.input}
-                                placeholder="Full Name*"
-                                placeholderTextColor="#888"
-                                value={fullName}
-                                onChangeText={onFullNameChange}
-                            />
-                            <TextInput style={styles.input} placeholder="E-mail*" placeholderTextColor="#888" value={email} onChangeText={(text) => setEmail(text.toLowerCase())} />
-                            <View style={[styles.inputContainer]}>
-                                <TextInput
-                                    style={styles.passwordInput}
-                                    placeholder="Password*"
-                                    placeholderTextColor="#888"
-                                    secureTextEntry={!showPassword}
-                                    value={password}
-                                    onChangeText={setPassword}
-                                />
-                                <TouchableOpacity onPress={() => setShowPassword(!showPassword)}>
-                                    <MaterialIcons
-                                        name={showPassword ? 'visibility-off' : 'visibility'}
-                                        size={22}
-                                        color="#888"
-                                    />
-                                </TouchableOpacity>
-                            </View>
-                            <TextInput
-                                style={styles.input}
-                                placeholder={'LinkedIn*'}
-                                placeholderTextColor="#888"
-                                value={linkedInUsername ? linkedInPrefix + linkedInUsername : ''}
-                                onChangeText={(text) => {
-                                    if (linkedInUsername && !text.startsWith(linkedInPrefix)) {
-                                        setLinkedInUsername(linkedInUsername);
-                                        return;
-                                    }
-
-                                    if (text.trim() === '') {
-                                        setLinkedInUsername('');
-                                        return;
-                                    }
-
-                                    if (text.includes('linkedin.com/in/')) {
-                                        let usernamePart = text.split('linkedin.com/in/')[1] || '';
-                                        usernamePart = usernamePart.replace(/\/+$/, '').trim();
-                                        setLinkedInUsername(usernamePart);
-                                        return;
-                                    }
-
-                                    if (!text.startsWith(linkedInPrefix)) {
-                                        setLinkedInUsername(text.trim());
-                                        return;
-                                    }
-
-                                    let usernamePart = text.slice(linkedInPrefix.length).trim();
-                                    setLinkedInUsername(usernamePart);
-                                }}
-                                onSelectionChange={({ nativeEvent: { selection } }) => {
-                                    if (linkedInUsername && selection.start < linkedInPrefix.length) {
-                                        selection.start = linkedInPrefix.length;
-                                        selection.end = linkedInPrefix.length;
-                                    }
-                                }}
-                                autoCapitalize="none"
-                                keyboardType="default"
-                            />
-                            <TextInput style={styles.input} placeholder="Company Name (optional)" placeholderTextColor="#888" value={companyName} onChangeText={setCompanyName} />
-
-                            <TouchableOpacity
-                                ref={roleRef}
-                                onLayout={() => {
-                                    roleRef.current?.measureInWindow((x, y, width, height) => {
-                                        setAnchorLayout({ x, y, width, height });
-                                        setInputWidth(width);
-                                    });
-                                }}
-                                onPress={() => {
-                                    roleRef.current?.measureInWindow((x, y, width, height) => {
-                                        setAnchorLayout({ x, y, width, height });
-                                        setInputWidth(width);
-                                        setVisible(true);
-                                    });
-                                }}
-                                style={styles.input}
+                        {/* Root wrapper so tooltip can be absolute */}
+                        <View style={{ flex: 1 }} ref={containerRef}>
+                            <ScrollView
+                                contentContainerStyle={styles.scrollForm}
+                                keyboardShouldPersistTaps="handled"
+                                showsVerticalScrollIndicator={false}
                             >
-                                <Text
-                                    style={[
-                                        styles.anchorText,
-                                        {
-                                            color: jobRole
-                                                ? '#000'
-                                                : '#888',
-                                        },
-                                    ]}
-                                >
-                                    {jobRole
-                                        ? typeof jobRole === 'string'
-                                            ? jobRole.toUpperCase()
-                                            : jobRole.label.toUpperCase()
-                                        : 'Role*'}
-                                </Text>
-                            </TouchableOpacity>
-
-                            {anchorLayout && (
-                                <Menu
-                                    visible={visible}
-                                    onDismiss={() => setVisible(false)}
-                                    anchor={{ x: anchorLayout.x, y: anchorLayout.y + anchorLayout.height }}
-                                    anchorPosition="top"
-                                    contentStyle={{
-                                        backgroundColor: 'white',
-                                        width: inputWidth,
-                                        maxHeight: 220,
-                                        borderWidth: 1,
-                                        borderColor: '#888',
+                                <TextInput
+                                    style={styles.input}
+                                    placeholder="Full Name*"
+                                    placeholderTextColor="#888"
+                                    value={fullName}
+                                    onChangeText={onFullNameChange}
+                                />
+                                <View
+                                    style={{ width: "85%", alignSelf: "center", height: 45, marginBottom: 12 }}
+                                    ref={emailRef}
+                                    onLayout={() => {
+                                        if (containerRef.current && emailRef.current) {
+                                            emailRef.current.measureLayout(
+                                                containerRef.current,
+                                                (x, y, width, height) => {
+                                                    setEmailPos({ x, y, width, height });
+                                                }
+                                            );
+                                        }
                                     }}
                                 >
-                                    <ScrollView>
-                                        {roles.map((role) => (
-                                            <View key={role} style={{ borderBottomWidth: 1, borderBottomColor: '#ccc' }}>
-                                                <Menu.Item
-                                                    onPress={() => {
-                                                        setJobRole(role);
-                                                        setVisible(false);
-                                                    }}
-                                                    title={role.toUpperCase()}
-                                                    titleStyle={{ color: 'black' }}
-                                                />
-                                            </View>
-                                        ))}
-                                    </ScrollView>
-                                </Menu>
-                            )}
+                                    <TextInput
+                                        style={[styles.input, { width: "100%", marginBottom: 0 }]}
+                                        placeholder="E-mail*"
+                                        placeholderTextColor="#888"
+                                        value={email}
+                                        onChangeText={(text) => {
+                                            const lower = text.toLowerCase();
+                                            setEmail(lower);
 
-                            <TouchableOpacity style={styles.input} onPress={() => setModalVisible(true)}>
-                                <Text style={styles.anchorText}>Preferences* {selectedRoles.length !== 0 ? ': ' + selectedRoles.length : ''}</Text>
-                            </TouchableOpacity>
+                                            const isValid = emailRules.every((rule) => rule.check(lower));
+                                            setShowEmailTooltip(text.length > 0 && !isValid);
+                                        }}
+                                        onFocus={() => {
+                                            const isValid = emailRules.every((rule) => rule.check(email));
+                                            if (email.length > 0 && !isValid) setShowEmailTooltip(true);
+                                        }}
+                                        onBlur={() => setShowEmailTooltip(false)}
+                                    />
+                                </View>
 
-                            <View style={{ padding: 16 }}>
-                                {loading ? (
-                                    <ActivityIndicator size="large" color="#34495e" />
-                                ) : (
-                                    <TouchableOpacity style={styles.button} onPress={handleSubmit}>
-                                        <Text style={styles.buttonText}>Sign-up</Text>
+
+                                {/* Password Input */}
+                                <View
+                                    style={styles.inputContainer}
+                                    ref={passwordRef}
+                                    onLayout={() => {
+                                        if (containerRef.current && passwordRef.current) {
+                                            passwordRef.current.measureLayout(
+                                                containerRef.current,
+                                                (x, y, width, height) => {
+                                                    setTooltipPos({ x, y, width, height });
+                                                }
+                                            );
+                                        }
+                                    }}
+                                >
+                                    <TextInput
+                                        style={styles.passwordInput}
+                                        placeholder="Password*"
+                                        placeholderTextColor="#888"
+                                        secureTextEntry={!showPassword}
+                                        value={password}
+                                        onChangeText={(text) => {
+                                            setPassword(text);
+                                            // show tooltip if password is non-empty and invalid
+                                            if (text.length > 0 && !rules.every((r) => r.regex.test(text))) {
+                                                setShowTooltip(true);
+                                            } else {
+                                                setShowTooltip(false);
+                                            }
+                                        }}
+                                        onFocus={() => {
+                                            if (password.length > 0 && !rules.every((r) => r.regex.test(password))) {
+                                                setShowTooltip(true);
+                                            }
+                                        }}
+                                        onBlur={() => setShowTooltip(false)} // hide tooltip when leaving password field
+                                    />
+
+                                    <TouchableOpacity onPress={() => setShowPassword(!showPassword)}>
+                                        <MaterialIcons
+                                            name={showPassword ? 'visibility-off' : 'visibility'}
+                                            size={22}
+                                            color="#888"
+                                        />
                                     </TouchableOpacity>
+                                </View>
+
+                                {/* LinkedIn Input */}
+                                <TextInput
+                                    style={styles.input}
+                                    placeholder={'LinkedIn*'}
+                                    placeholderTextColor="#888"
+                                    value={linkedInUsername ? linkedInPrefix + linkedInUsername : ''}
+                                    onChangeText={(text) => {
+                                        if (linkedInUsername && !text.startsWith(linkedInPrefix)) {
+                                            setLinkedInUsername(linkedInUsername);
+                                            return;
+                                        }
+                                        if (text.trim() === '') {
+                                            setLinkedInUsername('');
+                                            return;
+                                        }
+                                        if (text.includes('linkedin.com/in/')) {
+                                            let usernamePart = text.split('linkedin.com/in/')[1] || '';
+                                            usernamePart = usernamePart.replace(/\/+$/, '').trim();
+                                            setLinkedInUsername(usernamePart);
+                                            return;
+                                        }
+                                        if (!text.startsWith(linkedInPrefix)) {
+                                            setLinkedInUsername(text.trim());
+                                            return;
+                                        }
+                                        let usernamePart = text.slice(linkedInPrefix.length).trim();
+                                        setLinkedInUsername(usernamePart);
+                                    }}
+                                    onSelectionChange={({ nativeEvent: { selection } }) => {
+                                        if (linkedInUsername && selection.start < linkedInPrefix.length) {
+                                            selection.start = linkedInPrefix.length;
+                                            selection.end = linkedInPrefix.length;
+                                        }
+                                    }}
+                                    autoCapitalize="none"
+                                    keyboardType="default"
+                                />
+
+                                <TextInput
+                                    style={styles.input}
+                                    placeholder="Company Name (optional)"
+                                    placeholderTextColor="#888"
+                                    value={companyName}
+                                    onChangeText={setCompanyName}
+                                />
+
+                                {/* Role Input */}
+                                <TouchableOpacity
+                                    ref={roleRef}
+                                    onLayout={() => {
+                                        roleRef.current?.measureInWindow((x, y, width, height) => {
+                                            setAnchorLayout({ x, y, width, height });
+                                            setInputWidth(width);
+                                        });
+                                    }}
+                                    onPress={() => {
+                                        roleRef.current?.measureInWindow((x, y, width, height) => {
+                                            setAnchorLayout({ x, y, width, height });
+                                            setInputWidth(width);
+                                            setVisible(true);
+                                        });
+                                    }}
+                                    style={styles.input}
+                                >
+                                    <Text
+                                        style={[
+                                            styles.anchorText,
+                                            { color: jobRole ? '#000' : '#888' },
+                                        ]}
+                                    >
+                                        {jobRole
+                                            ? typeof jobRole === 'string'
+                                                ? jobRole.toUpperCase()
+                                                : jobRole.label.toUpperCase()
+                                            : 'Role*'}
+                                    </Text>
+                                </TouchableOpacity>
+
+                                {anchorLayout && (
+                                    <Menu
+                                        visible={visible}
+                                        onDismiss={() => setVisible(false)}
+                                        anchor={{ x: anchorLayout.x, y: anchorLayout.y + anchorLayout.height }}
+                                        anchorPosition="top"
+                                        contentStyle={{
+                                            backgroundColor: 'white',
+                                            width: inputWidth,
+                                            maxHeight: 220,
+                                            borderWidth: 1,
+                                            borderColor: '#888',
+                                        }}
+                                    >
+                                        <ScrollView>
+                                            {roles.map((role) => (
+                                                <View
+                                                    key={role}
+                                                    style={{ borderBottomWidth: 1, borderBottomColor: '#ccc' }}
+                                                >
+                                                    <Menu.Item
+                                                        onPress={() => {
+                                                            setJobRole(role);
+                                                            setVisible(false);
+                                                        }}
+                                                        title={role.toUpperCase()}
+                                                        titleStyle={{ color: 'black' }}
+                                                    />
+                                                </View>
+                                            ))}
+                                        </ScrollView>
+                                    </Menu>
                                 )}
 
+                                <TouchableOpacity
+                                    style={styles.input}
+                                    onPress={() => setModalVisible(true)}
+                                >
+                                    <Text style={styles.anchorText}>
+                                        Preferences* {selectedRoles.length !== 0 ? ': ' + selectedRoles.length : ''}
+                                    </Text>
+                                </TouchableOpacity>
+
+                                {/* Submit */}
+                                <View style={{ padding: 16 }}>
+                                    {loading ? (
+                                        <ActivityIndicator size="large" color="#34495e" />
+                                    ) : (
+                                        <TouchableOpacity style={styles.button} onPress={handleSubmit}>
+                                            <Text style={styles.buttonText}>Sign Up</Text>
+                                        </TouchableOpacity>
+                                    )}
+                                </View>
                                 <View style={styles.condition}>
                                     <Text style={styles.agree}>
                                         By continuing you agree to our{' '}
@@ -502,6 +618,7 @@ const SignUp = ({ navigation, route }) => {
                                             Terms, Conditions
                                         </Text>
                                     </Text>
+
                                     <Text
                                         style={[styles.policy, { textAlign: 'center', marginTop: 4 }]}
                                         onPress={() => {
@@ -511,15 +628,92 @@ const SignUp = ({ navigation, route }) => {
                                         & Privacy Policy
                                     </Text>
                                 </View>
+
                                 <View style={styles.account}>
                                     <Text style={styles.already}>Already have an account? </Text>
                                     <TouchableOpacity onPress={() => navigation.goBack()}>
-                                        <Text style={styles.login}>log-in</Text>
+                                        <Text style={styles.login}>Log In</Text>
                                     </TouchableOpacity>
                                 </View>
-                            </View>
-                        </ScrollView>
+                            </ScrollView>
+
+                            {showEmailTooltip && !allEmailValid && emailPos && (
+                                <View
+                                    style={[
+                                        styles.tooltipOverlay,
+                                        {
+                                            top: emailPos.y - emailTooltipHeight, // use emailTooltipHeight
+                                            left: emailPos.x + emailPos.width - emailTooltipWidth,
+                                        },
+                                    ]}
+                                    onLayout={(e) => {
+                                        setEmailTooltipHeight(e.nativeEvent.layout.height);
+                                        setEmailTooltipWidth(e.nativeEvent.layout.width);
+                                    }}
+                                >
+                                    <View style={styles.tooltip}>
+                                        {emailRules.map((rule, index) => {
+                                            const passed = checkEmailRule(rule);
+                                            return (
+                                                <View
+                                                    key={index}
+                                                    style={{ flexDirection: "row", alignItems: "center", marginBottom: 4 }}
+                                                >
+                                                    <MaterialIcons
+                                                        name={passed ? "check-circle" : "cancel"}
+                                                        size={16}
+                                                        color={passed ? "lightgreen" : "red"}
+                                                        style={{ marginRight: 6 }}
+                                                    />
+                                                    <Text style={styles.tooltipText}>{rule.message}</Text>
+                                                </View>
+                                            );
+                                        })}
+                                    </View>
+                                    <View style={styles.arrowDown} />
+                                </View>
+                            )}
+
+                            {/* Tooltip Floating Layer */}
+                            {showTooltip && !passwordValid && tooltipPos && (
+                                <View
+                                    style={[
+                                        styles.tooltipOverlay,
+                                        {
+                                            top: tooltipPos.y - passwordTooltipHeight,
+                                            left: tooltipPos.x + tooltipPos.width - passwordTooltipWidth,
+                                        },
+                                    ]}
+                                    onLayout={(e) => {
+                                        setPasswordTooltipHeight(e.nativeEvent.layout.height);
+                                        setPasswordTooltipWidth(e.nativeEvent.layout.width);
+                                    }}
+                                >
+                                    <View style={styles.tooltip}>
+                                        {rules.map((rule, index) => {
+                                            const passed = rule.regex.test(password);
+                                            return (
+                                                <View
+                                                    key={index}
+                                                    style={{ flexDirection: "row", alignItems: "center", marginBottom: 4 }}
+                                                >
+                                                    <MaterialIcons
+                                                        name={passed ? "check-circle" : "cancel"}
+                                                        size={16}
+                                                        color={passed ? "lightgreen" : "red"}
+                                                        style={{ marginRight: 6 }}
+                                                    />
+                                                    <Text style={styles.tooltipText}>{rule.message}</Text>
+                                                </View>
+                                            );
+                                        })}
+                                    </View>
+                                    <View style={styles.arrowDown} />
+                                </View>
+                            )}
+                        </View>
                     </KeyboardAvoidingView>
+
 
                     <Modal
                         visible={modalVisible}
@@ -912,6 +1106,51 @@ const styles = StyleSheet.create({
         fontSize: 15,
         fontWeight: 'bold',
     },
+    tooltipOverlay: {
+        position: "absolute",
+        alignItems: "center",
+        backgroundColor: "transparent",
+        zIndex: 9999,   // 👈 force top stacking
+        elevation: 9999, // 👈 required for Android
+    },
+
+    tooltip: {
+        backgroundColor: "#333",
+        padding: 12,
+        borderRadius: 8,
+        maxWidth: 280,
+        shadowColor: "#000",
+        shadowOffset: { width: 0, height: 2 },
+        shadowOpacity: 0.3,
+        shadowRadius: 4,
+        elevation: 10,
+    },
+    tooltipText: {
+        fontSize: 12,
+        color: "#fff",
+    },
+    arrowDown: {
+        width: 0,
+        height: 0,
+        borderLeftWidth: 8,
+        borderRightWidth: 8,
+        borderTopWidth: 8,
+        borderLeftColor: "transparent",
+        borderRightColor: "transparent",
+        borderTopColor: "#333",
+        marginTop: -1,
+    },
+    inputMeasureWrapper: {
+        width: '85%',        // same width as your input
+        alignSelf: 'center', // center horizontally
+        height: 45,          // same height as your input
+        marginBottom: 12,    // same spacing
+        position: 'absolute', // invisible layer for measuring
+        opacity: 0,           // doesn’t change UI
+    },
+
+
+
 });
 
 export default SignUp;

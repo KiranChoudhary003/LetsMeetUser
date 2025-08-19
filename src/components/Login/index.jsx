@@ -261,14 +261,14 @@ const Login = ({ navigation, route }) => {
                             <ActivityIndicator size="large" color="#34495e" />
                         ) : (
                             <TouchableOpacity style={styles.button} onPress={handleSubmit} disabled={isRetryLocked}>
-                                <Text style={styles.buttonText}>Log-in</Text>
+                                <Text style={styles.buttonText}>Log In</Text>
                             </TouchableOpacity>
                         )}
 
                         <View style={styles.signUpSection}>
                             <Text style={styles.account}>Don't have an account?</Text>
                             <TouchableOpacity onPress={() => navigation.navigate('SignUp', { deviceToken })}>
-                                <Text style={styles.signUp}>sign up</Text>
+                                <Text style={styles.signUp}>Sign Up</Text>
                             </TouchableOpacity>
                         </View>
 
