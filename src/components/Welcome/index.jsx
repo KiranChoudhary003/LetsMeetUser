@@ -18,6 +18,7 @@ import {
   request,
   RESULTS,
   openSettings,
+  requestNotifications, // 🆕 for iOS notifications
 } from 'react-native-permissions';
 import Geolocation from 'react-native-geolocation-service';
 import { LocationContext } from '../../components/LocationContext/LocationContext';
@@ -107,7 +108,7 @@ const Welcome = ({ navigation }) => {
 
     const askAgain = async () => {
       const newStatus = await request(permission);
-      if (newStatus === RESULTS.GRANTED) {return true;}
+      if (newStatus === RESULTS.GRANTED) return true;
       if (newStatus === RESULTS.BLOCKED) {
         Alert.alert(
           'Location Permission Required',
@@ -143,7 +144,7 @@ const Welcome = ({ navigation }) => {
       Platform.OS === 'android' ? PERMISSIONS.ANDROID.CAMERA : PERMISSIONS.IOS.CAMERA;
 
     const result = await request(permission);
-    if (result === RESULTS.GRANTED) {return true;}
+    if (result === RESULTS.GRANTED) return true;
 
     Alert.alert(
       'Camera Permission',
@@ -154,54 +155,59 @@ const Welcome = ({ navigation }) => {
   };
 
   const requestStoragePermission = async () => {
-  try {
-    if (Platform.OS === 'android') {
-      if (Platform.Version >= 33) {
-        // Android 13+ (API level 33+)
-        const result = await request(PERMISSIONS.ANDROID.READ_MEDIA_IMAGES);
+    try {
+      if (Platform.OS === 'android') {
+        if (Platform.Version >= 33) {
+          const result = await request(PERMISSIONS.ANDROID.READ_MEDIA_IMAGES);
+          if (result === RESULTS.GRANTED) return true;
 
-        if (result === RESULTS.GRANTED) {return true;}
+          if (result === RESULTS.BLOCKED) {
+            Alert.alert(
+              'Storage Permission Blocked',
+              'Please enable storage access from settings.',
+              [
+                { text: 'Open Settings', onPress: () => openSettings() },
+                { text: 'Cancel', style: 'cancel' },
+              ]
+            );
+          }
+          return false;
+        } else {
+          const write = await request(PERMISSIONS.ANDROID.WRITE_EXTERNAL_STORAGE);
+          if (write === RESULTS.GRANTED) return true;
 
+          if (write === RESULTS.BLOCKED) {
+            Alert.alert(
+              'Storage Permission Blocked',
+              'Please enable storage access from settings.',
+              [
+                { text: 'Open Settings', onPress: () => openSettings() },
+                { text: 'Cancel', style: 'cancel' },
+              ]
+            );
+          }
+          return false;
+        }
+      } else {
+        const result = await request(PERMISSIONS.IOS.PHOTO_LIBRARY);
+        if (result === RESULTS.GRANTED) return true;
         if (result === RESULTS.BLOCKED) {
           Alert.alert(
-            'Storage Permission Blocked',
-            'Please enable storage access from settings.',
+            'Photo Library Blocked',
+            'Please enable photo library access from settings.',
             [
               { text: 'Open Settings', onPress: () => openSettings() },
               { text: 'Cancel', style: 'cancel' },
             ]
           );
         }
-
-        return false;
-      } else {
-        // Android 12 and below
-        const write = await request(PERMISSIONS.ANDROID.WRITE_EXTERNAL_STORAGE);
-
-        if (write === RESULTS.GRANTED) {return true;}
-
-        if (write === RESULTS.BLOCKED) {
-          Alert.alert(
-            'Storage Permission Blocked',
-            'Please enable storage access from settings.',
-            [
-              { text: 'Open Settings', onPress: () => openSettings() },
-              { text: 'Cancel', style: 'cancel' },
-            ]
-          );
-        }
-
         return false;
       }
+    } catch (error) {
+      console.error('Storage permission error:', error);
+      return false;
     }
-
-    return true; // iOS doesn't need storage permission
-  } catch (error) {
-    console.error('Storage permission error:', error);
-    return false;
-  }
-};
-
+  };
 
   const getCurrentLocation = () => {
     return new Promise((resolve) => {
@@ -230,11 +236,23 @@ const Welcome = ({ navigation }) => {
       const result = await PermissionsAndroid.request(
         PermissionsAndroid.PERMISSIONS.POST_NOTIFICATIONS
       );
-      if (result !== PermissionsAndroid.RESULTS.GRANTED) {return null;}
+      if (result !== PermissionsAndroid.RESULTS.GRANTED) return null;
+    }
+
+    if (Platform.OS === 'ios') {
+      const { status } = await requestNotifications(['alert', 'sound', 'badge']);
+      if (status !== 'granted') {
+        Alert.alert(
+          'Notifications Disabled',
+          'Please enable notifications in Settings to stay updated.',
+          [{ text: 'OK' }]
+        );
+        return null;
+      }
     }
 
     try {
-      const app = getApp();
+      const app = getApp(); // ✅ fix missing reference
       const messaging = getMessaging(app);
 
       await requestPermission(messaging);
