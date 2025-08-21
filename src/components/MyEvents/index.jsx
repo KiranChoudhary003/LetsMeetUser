@@ -5,7 +5,7 @@ import axios from 'axios';
 import React, { useContext, useEffect, useRef, useState } from 'react';
 import {
   ActivityIndicator, Alert, Animated,
-  Pressable, SafeAreaView, ScrollView, StatusBar, StyleSheet, Text, TouchableOpacity, View,
+  Pressable, SafeAreaView, ScrollView, StatusBar, useColorScheme, StyleSheet, Text, TouchableOpacity, View,
 } from 'react-native';
 import { LocationContext } from '../LocationContext/LocationContext';
 
@@ -316,8 +316,7 @@ const EventsScreen = ({ navigation }) => {
   return (
     <View style={styles.background}>
       <SafeAreaView style={styles.container}>
-
-        <StatusBar barStyle="dark-content" />
+        <StatusBar barStyle={useColorScheme() === 'dark' ? 'light-content' : 'dark-content'} />
         <View style={styles.header}>
           {/* Centered Title */}
           <View style={styles.eventsLabel}>

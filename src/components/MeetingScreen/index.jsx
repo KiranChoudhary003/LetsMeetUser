@@ -8,6 +8,8 @@ import {
   Modal,
   ScrollView,
   TouchableWithoutFeedback,
+  StatusBar,
+  useColorScheme,
   TextInput,
   KeyboardAvoidingView,
   Platform,
@@ -19,6 +21,7 @@ import Feather from 'react-native-vector-icons/Feather';
 import Icon from 'react-native-vector-icons/MaterialIcons';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import axios from 'axios';
+import { SafeAreaView } from 'react-native-safe-area-context';
 
 export default function MeetingScreen() {
   const navigation = useNavigation();
@@ -95,115 +98,118 @@ export default function MeetingScreen() {
   );
 
   return (
-    <View style={{ flex: 1 }}>
-      <View style={styles.topBar}>
-        <TouchableOpacity style={styles.backButton} onPress={() => navigation.goBack()}>
-          <Icon name="arrow-back" size={24} color="#fff" />
-        </TouchableOpacity>
-        <Text style={styles.headerTitle} numberOfLines={1} ellipsizeMode="tail">
-          {name.split(' ').slice(0, 2).join(' ') + (name.split(' ').length > 2 ? '...' : '')} Meetings
-        </Text>
-      </View>
+    <>
+    <StatusBar barStyle={useColorScheme() === 'dark' ? 'light-content' : 'dark-content'} />
+      <SafeAreaView style={{ flex: 1 , backgroundColor: '#e8effc'}}>
+        <View style={styles.topBar}>
+          <TouchableOpacity style={styles.backButton} onPress={() => navigation.goBack()}>
+            <Icon name="arrow-back" size={24} color="#fff" />
+          </TouchableOpacity>
+          <Text style={styles.headerTitle} numberOfLines={1} ellipsizeMode="tail">
+            {name.split(' ').slice(0, 2).join(' ') + (name.split(' ').length > 2 ? '...' : '')} Meetings
+          </Text>
+        </View>
 
-      <View style={styles.container}>
-        <Text style={styles.totalCount}>Total Meetings: {meetings.length}</Text>
-        <FlatList
-          data={meetings}
-          renderItem={renderItem}
-          keyExtractor={(item, index) => item.id || index.toString()}
-          ItemSeparatorComponent={() => <View style={styles.separator} />}
-          contentContainerStyle={styles.listContent}
-          style={{ flex: 1 }}
-        />
-      </View>
-
-      {selectedMeeting && (
-        <Modal
-          animationType="slide"
-          transparent
-          visible={modalVisible}
-          onRequestClose={() => setModalVisible(false)}
-        >
-          <KeyboardAvoidingView
-            behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
+        <View style={styles.container}>
+          <Text style={styles.totalCount}>Total Meetings: {meetings.length}</Text>
+          <FlatList
+            data={meetings}
+            renderItem={renderItem}
+            keyExtractor={(item, index) => item.id || index.toString()}
+            ItemSeparatorComponent={() => <View style={styles.separator} />}
+            contentContainerStyle={styles.listContent}
             style={{ flex: 1 }}
-            keyboardVerticalOffset={Platform.OS === 'ios' ? 60 : 0}
+          />
+        </View>
+
+        {selectedMeeting && (
+          <Modal
+            animationType="slide"
+            transparent
+            visible={modalVisible}
+            onRequestClose={() => setModalVisible(false)}
           >
-            <TouchableWithoutFeedback onPress={Keyboard.dismiss}>
-              <View style={styles.modalOverlay}>
-                <View style={styles.modalContent}>
-                  <Text style={styles.modalTitle}>Meeting Detail</Text>
-                  <Text style={styles.modalDescription}>
-                    Date: {selectedMeeting.date}{'\n'}
-                    Time: {selectedMeeting.time}
-                  </Text>
-                  <View style={{ flexDirection: 'row', justifyContent: 'space-between' }}>
-                    <Text style={styles.modalDescription}>Description:</Text>
-                    {isEditing && (
-                      <Text style={styles.wordCounterText}>
-                        {charCount}/{MAX_CHARACTERS} words
-                      </Text>
-                    )}
-                  </View>
-
-
-                  {isEditing ? (
-                    <ScrollView style={styles.scrollArea} nestedScrollEnabled showsVerticalScrollIndicator>
-                      <TextInput
-                        multiline
-                        style={styles.textInput}
-                        value={editedText}
-                        onChangeText={handleTextChange}
-                        placeholder="Edit meeting notes..."
-                        placeholderTextColor="#888"
-                      />
-                    </ScrollView>
-                  ) : (
-                    <View style={styles.descriptionBox}>
-                      <ScrollView style={styles.scrollArea} nestedScrollEnabled showsVerticalScrollIndicator>
-                        <Text style={styles.modalDescription}>{selectedMeeting.desc}</Text>
-                      </ScrollView>
+            <KeyboardAvoidingView
+              behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
+              style={{ flex: 1 }}
+              keyboardVerticalOffset={Platform.OS === 'ios' ? 60 : 0}
+            >
+              <TouchableWithoutFeedback onPress={Keyboard.dismiss}>
+                <View style={styles.modalOverlay}>
+                  <View style={styles.modalContent}>
+                    <Text style={styles.modalTitle}>Meeting Detail</Text>
+                    <Text style={styles.modalDescription}>
+                      Date: {selectedMeeting.date}{'\n'}
+                      Time: {selectedMeeting.time}
+                    </Text>
+                    <View style={{ flexDirection: 'row', justifyContent: 'space-between' }}>
+                      <Text style={styles.modalDescription}>Description:</Text>
+                      {isEditing && (
+                        <Text style={styles.wordCounterText}>
+                          {charCount}/{MAX_CHARACTERS} words
+                        </Text>
+                      )}
                     </View>
-                  )}
 
-                  <View style={styles.modalButtons}>
+
                     {isEditing ? (
-                      <TouchableOpacity
-                        style={[styles.editButton, {
-                          flexDirection: 'row',
-                          justifyContent: 'center',
-                          alignItems: 'center',
-                          opacity: isSaving ? 0.8 : 1,
-                        }]}
-                        onPress={saveDescription}
-                        disabled={isSaving}
-                      >
-                        {isSaving ? (
-                          <>
-                            <Text style={styles.editText}>Saving</Text>
-                            <ActivityIndicator size="small" color="#fff" style={{ marginLeft: 8 }} />
-                          </>
-                        ) : (
-                          <Text style={styles.editText}>Save</Text>
-                        )}
-                      </TouchableOpacity>
+                      <ScrollView style={styles.scrollArea} nestedScrollEnabled showsVerticalScrollIndicator>
+                        <TextInput
+                          multiline
+                          style={styles.textInput}
+                          value={editedText}
+                          onChangeText={handleTextChange}
+                          placeholder="Edit meeting notes..."
+                          placeholderTextColor="#888"
+                        />
+                      </ScrollView>
                     ) : (
-                      <TouchableOpacity style={styles.editButton} onPress={() => setIsEditing(true)}>
-                        <Text style={styles.editText}>Edit</Text>
-                      </TouchableOpacity>
+                      <View style={styles.descriptionBox}>
+                        <ScrollView style={styles.scrollArea} nestedScrollEnabled showsVerticalScrollIndicator>
+                          <Text style={styles.modalDescription}>{selectedMeeting.desc}</Text>
+                        </ScrollView>
+                      </View>
                     )}
 
-                    <TouchableOpacity style={styles.closeButton} onPress={() => setModalVisible(false)}>
-                      <Text style={{ color: '#fff', fontWeight: 'bold' }}>Close</Text>
-                    </TouchableOpacity>
+                    <View style={styles.modalButtons}>
+                      {isEditing ? (
+                        <TouchableOpacity
+                          style={[styles.editButton, {
+                            flexDirection: 'row',
+                            justifyContent: 'center',
+                            alignItems: 'center',
+                            opacity: isSaving ? 0.8 : 1,
+                          }]}
+                          onPress={saveDescription}
+                          disabled={isSaving}
+                        >
+                          {isSaving ? (
+                            <>
+                              <Text style={styles.editText}>Saving</Text>
+                              <ActivityIndicator size="small" color="#fff" style={{ marginLeft: 8 }} />
+                            </>
+                          ) : (
+                            <Text style={styles.editText}>Save</Text>
+                          )}
+                        </TouchableOpacity>
+                      ) : (
+                        <TouchableOpacity style={styles.editButton} onPress={() => setIsEditing(true)}>
+                          <Text style={styles.editText}>Edit</Text>
+                        </TouchableOpacity>
+                      )}
+
+                      <TouchableOpacity style={styles.closeButton} onPress={() => setModalVisible(false)}>
+                        <Text style={{ color: '#fff', fontWeight: 'bold' }}>Close</Text>
+                      </TouchableOpacity>
+                    </View>
                   </View>
                 </View>
-              </View>
-            </TouchableWithoutFeedback>
-          </KeyboardAvoidingView>
-        </Modal>
-      )}
-    </View>
+              </TouchableWithoutFeedback>
+            </KeyboardAvoidingView>
+          </Modal>
+        )}
+      </SafeAreaView>
+      </>
   );
 }
 
@@ -228,9 +234,9 @@ const styles = StyleSheet.create({
     zIndex: 1,
   },
   headerTitle: {
-        color: 'white',
-        fontSize: 18,
-        fontWeight: 'bold',
+    color: 'white',
+    fontSize: 18,
+    fontWeight: 'bold',
   },
 
   totalCount: {

@@ -1,9 +1,10 @@
 import React, { useEffect, useRef, useState } from 'react';
-import { View, Text, StyleSheet, TouchableOpacity, ActivityIndicator, StatusBar } from 'react-native';
+import { View, Text, StyleSheet, TouchableOpacity, ActivityIndicator, StatusBar, useColorScheme } from 'react-native';
 import QRCode from 'react-native-qrcode-svg';
 import axios from 'axios';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import MaterialIcons from 'react-native-vector-icons/MaterialIcons';
+import { SafeAreaView } from 'react-native-safe-area-context';
 
 const QRCodeScreen = ({ navigation }) => {
   const [userData, setUserData] = useState({});
@@ -44,38 +45,36 @@ const QRCodeScreen = ({ navigation }) => {
 
   return (
     <>
-      <StatusBar barStyle="light-content" backgroundColor="#34495e" translucent={false} />
-      <View style={styles.container}>
+      <StatusBar barStyle={useColorScheme() === 'dark' ? 'light-content' : 'dark-content'} />
+      <SafeAreaView style={{ flex: 1, backgroundColor: '#e8effc' }}>
         <View style={styles.header}>
           <TouchableOpacity onPress={() => navigation.goBack()}>
-            <Text style={styles.headerBackText}>
-              <MaterialIcons name="arrow-back" size={24} color="#000" />
-            </Text>
+            <MaterialIcons name="arrow-back" size={24} color="#000" />
           </TouchableOpacity>
           <TouchableOpacity
             style={styles.headerTitle}
             onPress={() => navigation.replace('Scanner')}
           >
-            <Text style={{ fontSize: 20, paddingLeft: 10, color: '#000' }}>Scan</Text>
+            <Text style={{ fontSize: 20, paddingHorizontal: 10, color: '#000' }}>Scan</Text>
           </TouchableOpacity>
-          <View style={{ width: 24 }} />
         </View>
-
-        <View style={styles.card}>
-          <Text style={styles.cardTitle}>Scan QR</Text>
-          <View style={styles.qrBox}>
-            {loading ? (
-              <ActivityIndicator size="large" color="#34495e" />
-            ) : (
-              <QRCode
-                value={qrValue}
-                size={180}
-                getRef={(c) => (qrCodeRef.current = c)}
-              />
-            )}
+        <View style={styles.container}>
+          <View style={styles.card}>
+            <Text style={styles.cardTitle}>Scan QR</Text>
+            <View style={styles.qrBox}>
+              {loading ? (
+                <ActivityIndicator size="large" color="#34495e" />
+              ) : (
+                <QRCode
+                  value={qrValue}
+                  size={180}
+                  getRef={(c) => (qrCodeRef.current = c)}
+                />
+              )}
+            </View>
           </View>
         </View>
-      </View>
+      </SafeAreaView>
     </>
   );
 };
@@ -85,15 +84,15 @@ export default QRCodeScreen;
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: '#e8effc',
-    padding: 20,
+    // padding: 20,
     alignItems: 'center',
   },
   header: {
-    marginTop: 40,
     flexDirection: 'row',
     justifyContent: 'space-between',
     alignItems: 'center',
+    paddingHorizontal: 12,
+    paddingVertical: 12,
   },
   headerTitle: {
     fontSize: 18,
@@ -105,16 +104,6 @@ const styles = StyleSheet.create({
     borderRadius: 10,
     alignItems: 'center',
     position: 'fixed',
-    top: -40,
-    right: -120,
-  },
-  headerBackText: {
-    fontSize: 35,
-    fontWeight: 'bold',
-    color: '#000',
-    position: 'fixed',
-    top: -45,
-    left: -100,
   },
   card: {
     marginTop: 70,

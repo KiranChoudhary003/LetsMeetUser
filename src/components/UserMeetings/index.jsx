@@ -5,6 +5,7 @@ import {
     SafeAreaView,
     StatusBar,
     StyleSheet,
+    useColorScheme,
     Text,
     TextInput,
     TouchableOpacity,
@@ -139,8 +140,8 @@ const UserMeetings = ({ route, navigation }) => {
     };
 
     return (
-        <SafeAreaView style={{ flex: 1, backgroundColor: '#34495E' }}>
-            <StatusBar barStyle="light-content" backgroundColor="#34495E" />
+        <SafeAreaView style={{ flex: 1, backgroundColor: '#E8EFFC' }}>
+            <StatusBar barStyle={useColorScheme() === 'dark' ? 'light-content' : 'dark-content'} />
             <View style={{ flex: 1, backgroundColor: '#E8EFFC' }}>
                 <View style={styles.header}>
                     <TouchableOpacity onPress={() => navigation.goBack()} style={styles.backButton}>
@@ -267,10 +268,12 @@ const styles = StyleSheet.create({
         backgroundColor: '#f9f9f9f7',
     },
     searchInput: {
-        flex: 1,
-        fontSize: 16,
-        color: '#000',
-    },
+    flex: 1,
+    fontSize: 16,
+    color: '#000',
+    paddingVertical: Platform.OS === 'ios' ? 10 : 6,
+    paddingHorizontal: Platform.OS === 'ios' ? 4 : 4,
+  },
     card: {
         flexDirection: 'row',
         justifyContent: 'space-between',

@@ -1,5 +1,5 @@
 import React from 'react';
-import { View, StyleSheet } from 'react-native';
+import { View, StyleSheet, StatusBar, useColorScheme } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import Header from '../Header';
 import BottomTab from '../BottomTab';
@@ -14,6 +14,7 @@ const InnerStack = createStackNavigator();
 const Layout = () => {
   return (
     <SafeAreaView style={styles.safeArea} edges={['top', 'bottom']}>
+       <StatusBar barStyle={useColorScheme() === 'dark' ? 'light-content' : 'dark-content'} />
       <View style={styles.container}>
         <View style={styles.header}>
           <Header />
@@ -41,7 +42,7 @@ export default Layout;
 const styles = StyleSheet.create({
   safeArea: {
     flex: 1,
-    backgroundColor: '#fff',
+    backgroundColor: '#e8effc',
   },
   container: {
     flex: 1,

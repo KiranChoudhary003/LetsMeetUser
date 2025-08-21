@@ -7,6 +7,7 @@ import {
     TouchableOpacity,
     ScrollView,
     SafeAreaView,
+    useColorScheme,
     Platform,
     StatusBar,
     ActivityIndicator,
@@ -120,11 +121,7 @@ const MyEventsDesciption = ({ navigation, route }) => {
 
     return (
         <>
-            <StatusBar
-                backgroundColor="#34495e"
-                barStyle={Platform.OS === 'ios' ? 'default' : 'dark-content'}
-                translucent={false}
-            />
+            <StatusBar barStyle={useColorScheme() === 'dark' ? 'light-content' : 'dark-content'} />
             <View style={styles.background}>
                 <SafeAreaView style={styles.container}>
 

@@ -11,6 +11,8 @@ import {
     Platform,
     ScrollView,
     StyleSheet,
+    StatusBar,
+    useColorScheme,
     Text,
     TextInput,
     TouchableOpacity,
@@ -114,130 +116,133 @@ export default function MeetingRecords() {
     );
 
     return (
-        <View style={{ flex: 1 }}>
-            <View style={styles.topBar}>
-                <TouchableOpacity style={styles.backButton} onPress={() => navigation.goBack()}>
-                    <Icon name="arrow-back" size={24} color="#fff" />
-                </TouchableOpacity>
-                <Text style={styles.headerTitle}>All Meetings</Text>
-            </View>
+        <View>
+            <SafeAreaView style={{ flex: 1 }}>
+                <StatusBar barStyle={useColorScheme() === 'dark' ? 'light-content' : 'dark-content'} />
+                <View style={styles.topBar}>
+                    <TouchableOpacity style={styles.backButton} onPress={() => navigation.goBack()}>
+                        <Icon name="arrow-back" size={24} color="#fff" />
+                    </TouchableOpacity>
+                    <Text style={styles.headerTitle}>All Meetings</Text>
+                </View>
 
-            <View style={styles.container}>
-                <Text style={styles.totalCount}>Total Meetings: {meetings.length}</Text>
+                <View style={styles.container}>
+                    <Text style={styles.totalCount}>Total Meetings: {meetings.length}</Text>
 
-                {meetings.length === 0 ? (
-                    <Text style={{ textAlign: 'center', marginTop: 20 }}>No meetings found.</Text>
-                ) : (
-                    <FlatList
-                        data={meetings}
-                        renderItem={renderItem}
-                        keyExtractor={item => item.id}
-                        ItemSeparatorComponent={() => <View style={styles.separator} />}
-                        contentContainerStyle={styles.listContent}
-                        style={{ flex: 1 }}
-                    />
-                )}
-            </View>
+                    {meetings.length === 0 ? (
+                        <Text style={{ textAlign: 'center', marginTop: 20 }}>No meetings found.</Text>
+                    ) : (
+                        <FlatList
+                            data={meetings}
+                            renderItem={renderItem}
+                            keyExtractor={item => item.id}
+                            ItemSeparatorComponent={() => <View style={styles.separator} />}
+                            contentContainerStyle={styles.listContent}
+                            style={{ flex: 1 }}
+                        />
+                    )}
+                </View>
 
-            {selectedMeeting && (
-                <Modal
-                    animationType="slide"
-                    transparent
-                    visible={modalVisible}
-                    onRequestClose={() => setModalVisible(false)}
-                >
-                    <KeyboardAvoidingView
-                        behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
-                        style={{ flex: 1 }}
-                        keyboardVerticalOffset={Platform.OS === 'ios' ? 60 : 0}
+                {selectedMeeting && (
+                    <Modal
+                        animationType="slide"
+                        transparent
+                        visible={modalVisible}
+                        onRequestClose={() => setModalVisible(false)}
                     >
-                        <TouchableWithoutFeedback onPress={Keyboard.dismiss}>
-                            <View style={styles.modalOverlay}>
-                                <View style={styles.modalContent}>
-                                    <Text style={styles.modalTitle}>Meeting Detail</Text>
-                                    <Text style={styles.modalDescription}>
-                                        Host: {selectedMeeting.userName}{'\n'}
-                                        Date: {selectedMeeting.date}{'\n'}
-                                        Time: {selectedMeeting.time}
-                                    </Text>
+                        <KeyboardAvoidingView
+                            behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
+                            style={{ flex: 1 }}
+                            keyboardVerticalOffset={Platform.OS === 'ios' ? 60 : 0}
+                        >
+                            <TouchableWithoutFeedback onPress={Keyboard.dismiss}>
+                                <View style={styles.modalOverlay}>
+                                    <View style={styles.modalContent}>
+                                        <Text style={styles.modalTitle}>Meeting Detail</Text>
+                                        <Text style={styles.modalDescription}>
+                                            Host: {selectedMeeting.userName}{'\n'}
+                                            Date: {selectedMeeting.date}{'\n'}
+                                            Time: {selectedMeeting.time}
+                                        </Text>
 
-                                    <View style={{ flexDirection: 'row', justifyContent: 'space-between' }}>
-                                        <Text style={styles.modalDescription}>Description:</Text>
-                                        {isEditing && (
-                                            <Text style={styles.wordCounterText}>
-                                                {charCount}/{MAX_CHARACTERS} words
-                                            </Text>
-                                        )}
-                                    </View>
-
-                                    {isEditing ? (
-                                        <View>
-                                            <ScrollView
-                                                style={styles.scrollArea}
-                                                nestedScrollEnabled={true}
-                                                showsVerticalScrollIndicator={true}
-                                            >
-                                                <TextInput
-                                                    multiline
-                                                    style={styles.textInput}
-                                                    value={editedText}
-                                                    onChangeText={handleTextChange}
-                                                    placeholder="Edit meeting notes..."
-                                                    placeholderTextColor="#888"
-                                                />
-                                            </ScrollView>
-                                        </View>
-                                    ) : (
-                                        <View style={styles.descriptionBox}>
-                                            <ScrollView
-                                                style={styles.scrollArea}
-                                                nestedScrollEnabled={true}
-                                                showsVerticalScrollIndicator={true}
-                                            >
-                                                <Text style={styles.modalDescription}>{selectedMeeting.desc}</Text>
-                                            </ScrollView>
+                                        <View style={{ flexDirection: 'row', justifyContent: 'space-between' }}>
+                                            <Text style={styles.modalDescription}>Description:</Text>
+                                            {isEditing && (
+                                                <Text style={styles.wordCounterText}>
+                                                    {charCount}/{MAX_CHARACTERS} words
+                                                </Text>
+                                            )}
                                         </View>
 
-                                    )}
-
-                                    <View style={styles.modalButtons}>
                                         {isEditing ? (
-                                            <TouchableOpacity
-                                                style={[styles.editButton, { backgroundColor: '#34495e', flexDirection: 'row', justifyContent: 'center', alignItems: 'center', opacity: isSaving ? 0.8 : 1 }]}
-                                                onPress={saveDescription}
-                                                disabled={isSaving}
-                                            >
-                                                {isSaving ? (
-                                                    <>
-                                                        <Text style={styles.editText}>Saving</Text>
-                                                        <ActivityIndicator size="small" color="#fff" style={{ marginLeft: 8 }} />
-                                                    </>
-                                                ) : (
-                                                    <Text style={styles.editText}>Save</Text>
-                                                )}
-                                            </TouchableOpacity>
+                                            <View>
+                                                <ScrollView
+                                                    style={styles.scrollArea}
+                                                    nestedScrollEnabled={true}
+                                                    showsVerticalScrollIndicator={true}
+                                                >
+                                                    <TextInput
+                                                        multiline
+                                                        style={styles.textInput}
+                                                        value={editedText}
+                                                        onChangeText={handleTextChange}
+                                                        placeholder="Edit meeting notes..."
+                                                        placeholderTextColor="#888"
+                                                    />
+                                                </ScrollView>
+                                            </View>
                                         ) : (
-                                            <TouchableOpacity
-                                                style={styles.editButton}
-                                                onPress={() => setIsEditing(true)}
-                                            >
-                                                <Text style={styles.editText}>Edit</Text>
-                                            </TouchableOpacity>
+                                            <View style={styles.descriptionBox}>
+                                                <ScrollView
+                                                    style={styles.scrollArea}
+                                                    nestedScrollEnabled={true}
+                                                    showsVerticalScrollIndicator={true}
+                                                >
+                                                    <Text style={styles.modalDescription}>{selectedMeeting.desc}</Text>
+                                                </ScrollView>
+                                            </View>
+
                                         )}
 
-                                        <TouchableOpacity
-                                            style={styles.closeButton}
-                                            onPress={() => setModalVisible(false)}
-                                        >
-                                            <Text style={{ color: '#fff', fontWeight: 'bold' }}>Close</Text>
-                                        </TouchableOpacity>
+                                        <View style={styles.modalButtons}>
+                                            {isEditing ? (
+                                                <TouchableOpacity
+                                                    style={[styles.editButton, { backgroundColor: '#34495e', flexDirection: 'row', justifyContent: 'center', alignItems: 'center', opacity: isSaving ? 0.8 : 1 }]}
+                                                    onPress={saveDescription}
+                                                    disabled={isSaving}
+                                                >
+                                                    {isSaving ? (
+                                                        <>
+                                                            <Text style={styles.editText}>Saving</Text>
+                                                            <ActivityIndicator size="small" color="#fff" style={{ marginLeft: 8 }} />
+                                                        </>
+                                                    ) : (
+                                                        <Text style={styles.editText}>Save</Text>
+                                                    )}
+                                                </TouchableOpacity>
+                                            ) : (
+                                                <TouchableOpacity
+                                                    style={styles.editButton}
+                                                    onPress={() => setIsEditing(true)}
+                                                >
+                                                    <Text style={styles.editText}>Edit</Text>
+                                                </TouchableOpacity>
+                                            )}
+
+                                            <TouchableOpacity
+                                                style={styles.closeButton}
+                                                onPress={() => setModalVisible(false)}
+                                            >
+                                                <Text style={{ color: '#fff', fontWeight: 'bold' }}>Close</Text>
+                                            </TouchableOpacity>
+                                        </View>
                                     </View>
                                 </View>
-                            </View>
-                        </TouchableWithoutFeedback>
-                    </KeyboardAvoidingView>
-                </Modal>
-            )}
+                            </TouchableWithoutFeedback>
+                        </KeyboardAvoidingView>
+                    </Modal>
+                )}
+            </SafeAreaView>
         </View>
     );
 }

@@ -7,7 +7,7 @@ import {
     Text,
     View,
     SafeAreaView,
-    StatusBar,
+    StatusBar,useColorScheme,
     TouchableOpacity,
     StyleSheet,
     Animated,
@@ -434,7 +434,7 @@ const Home = ({ navigation }) => {
     return (
         <View style={styles.background} resizeMode="cover">
             <SafeAreaView style={styles.container}>
-                <StatusBar barStyle="dark-content" />
+                <StatusBar barStyle={useColorScheme() === 'dark' ? 'light-content' : 'dark-content'} />
                 <View style={styles.header}>
                     <View style={styles.centerContainer}>
                         <View style={styles.eventsLabel}>

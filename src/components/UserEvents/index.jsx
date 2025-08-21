@@ -5,6 +5,8 @@ import {
   ScrollView,
   StyleSheet,
   SafeAreaView,
+  StatusBar,
+  useColorScheme,
   Animated,
   Pressable,
   TouchableOpacity,
@@ -68,6 +70,8 @@ export default function UserEvents({ route }) {
   );
 
   return (
+    <>
+    <StatusBar barStyle={useColorScheme() === 'dark' ? 'light-content' : 'dark-content'} />
     <SafeAreaView style={styles.container}>
       <View style={styles.header}>
         <TouchableOpacity onPress={() => navigation.goBack()} style={styles.backButton}>
@@ -84,7 +88,7 @@ export default function UserEvents({ route }) {
           onChangeText={setSearch}
           style={styles.searchInput}
           placeholderTextColor="#888"
-        />
+          />
       </View>
 
       <Text style={styles.totalEventsText}>Total Events: {filteredEvents.length}</Text>
@@ -92,24 +96,25 @@ export default function UserEvents({ route }) {
       <ScrollView contentContainerStyle={styles.scrollView}>
         {filteredEvents.map((event, index) => (
           <EventCard
-            key={index}
-            name={event.event_name}
-            organizer={event.organizer || 'Organizer'}
-            start_date={event.start_date || '2025-07-10'}
-            meetingsCount={event.meetings?.length || 0}
-            eventId={event.event_id}
-            meetings={Array.isArray(event.meetings) ? event.meetings : []}
+          key={index}
+          name={event.event_name}
+          organizer={event.organizer || 'Organizer'}
+          start_date={event.start_date || '2025-07-10'}
+          meetingsCount={event.meetings?.length || 0}
+          eventId={event.event_id}
+          meetings={Array.isArray(event.meetings) ? event.meetings : []}
           />
         ))}
       </ScrollView>
     </SafeAreaView>
+        </>
   );
 }
 
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: 'rgb(227, 235, 250)',
+    backgroundColor: '#E8EFFC',
   },
   header: {
     flexDirection: 'row',
@@ -148,6 +153,8 @@ const styles = StyleSheet.create({
     flex: 1,
     fontSize: 16,
     color: '#000',
+    paddingVertical: Platform.OS === 'ios' ? 10 : 6,
+    paddingHorizontal: Platform.OS === 'ios' ? 4 : 4,
   },
   scrollView: {
     padding: 16,

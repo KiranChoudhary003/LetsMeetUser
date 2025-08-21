@@ -2,7 +2,7 @@ import React, { useCallback, useEffect, useState } from 'react';
 import {
     Image, Modal, StyleSheet, Text, TouchableOpacity, View, Alert, Linking,
     Platform, PermissionsAndroid, ScrollView, SafeAreaView, Dimensions,
-    ActivityIndicator,
+    ActivityIndicator, StatusBar, useColorScheme
 } from 'react-native';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import MaterialIcons from 'react-native-vector-icons/MaterialIcons';
@@ -13,7 +13,6 @@ import { launchImageLibrary } from 'react-native-image-picker';
 import { CommonActions, useFocusEffect } from '@react-navigation/native';
 import FontAwesome from 'react-native-vector-icons/FontAwesome';
 import messaging from '@react-native-firebase/messaging';
-
 const { width } = Dimensions.get('window');
 
 const UserProfile = ({ navigation, route }) => {
@@ -184,6 +183,8 @@ const UserProfile = ({ navigation, route }) => {
     };
 
     return (
+        <>
+        <StatusBar barStyle={useColorScheme() === 'dark' ? 'light-content' : 'dark-content'} />
         <SafeAreaView style={styles.container}>
             <ScrollView contentContainerStyle={{ flexGrow: 1 }}>
                 <View style={styles.headerContainer}>
@@ -222,7 +223,7 @@ const UserProfile = ({ navigation, route }) => {
                                 source={getProfileImageSource()}
                                 style={styles.fullImage}
                                 resizeMode="contain"
-                            />
+                                />
                             {isViewingOwnProfile && (
                                 <TouchableOpacity style={styles.editIcon} onPress={handleEditPhoto}>
                                     <MaterialIcons name="edit" size={24} color="#fff" />
@@ -241,9 +242,9 @@ const UserProfile = ({ navigation, route }) => {
                         <View style={styles.iconRow}>
                             {userProfile.email && (
                                 <TouchableOpacity
-                                    onPress={() => Linking.openURL(`mailto:${userProfile.email}`)}
-                                    activeOpacity={0.7}
-                                    style={styles.iconButton}
+                                onPress={() => Linking.openURL(`mailto:${userProfile.email}`)}
+                                activeOpacity={0.7}
+                                style={styles.iconButton}
                                 >
                                     <MaterialIcons name="email" size={24} color="#34495e" />
                                 </TouchableOpacity>
@@ -251,9 +252,9 @@ const UserProfile = ({ navigation, route }) => {
 
                             {userProfile.linkedin_url && (
                                 <TouchableOpacity
-                                    onPress={() => Linking.openURL(userProfile.linkedin_url)}
-                                    activeOpacity={0.7}
-                                    style={styles.iconButton}
+                                onPress={() => Linking.openURL(userProfile.linkedin_url)}
+                                activeOpacity={0.7}
+                                style={styles.iconButton}
                                 >
                                     <FontAwesome name="linkedin" size={24} color="#0A66C2" />
                                 </TouchableOpacity>
@@ -280,9 +281,9 @@ const UserProfile = ({ navigation, route }) => {
 
                             {userProfile.preference?.length > 0 && (
                                 <ScrollView
-                                    style={styles.preferenceScroll}
-                                    contentContainerStyle={styles.tagContainer}
-                                    showsVerticalScrollIndicator={false}
+                                style={styles.preferenceScroll}
+                                contentContainerStyle={styles.tagContainer}
+                                showsVerticalScrollIndicator={false}
                                 >
                                     {userProfile.preference.map((item, index) => (
                                         <View key={index} style={styles.tag}>
@@ -305,6 +306,7 @@ const UserProfile = ({ navigation, route }) => {
                 )}
             </ScrollView>
         </SafeAreaView >
+                </>
     );
 };
 

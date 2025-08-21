@@ -6,6 +6,7 @@ import {
     FlatList,
     Image,
     StatusBar,
+    useColorScheme,
     StyleSheet,
     Text,
     TextInput,
@@ -51,7 +52,7 @@ export default function UserListScreen() {
         let socket;
         const setupSocket = async () => {
             const token = await AsyncStorage.getItem('token');
-            if (!token) {return;}
+            if (!token) { return; }
 
             socket = io('https://letsmeet-backend-47lv.onrender.com/', {
                 auth: { token },
@@ -137,17 +138,13 @@ export default function UserListScreen() {
 
     return (
         <>
-            <StatusBar
-                translucent
-                backgroundColor="#34495e"
-                barStyle={Platform.OS === 'ios' ? 'default' : 'dark-content'}
-            />
+            <StatusBar barStyle={useColorScheme() === 'dark' ? 'light-content' : 'dark-content'} />
             <SafeAreaView style={styles.safeContainer}>
                 <View style={styles.headingContainer}>
                     <View style={styles.headerRow}>
                         <TouchableOpacity
                             onPress={() => {
-                                if (navigation.canGoBack()) {navigation.goBack();}
+                                if (navigation.canGoBack()) { navigation.goBack(); }
                             }}
                             style={styles.backButton}
                         >
@@ -160,6 +157,7 @@ export default function UserListScreen() {
                     <Entypo name="magnifying-glass" size={24} color="black" />
                     <TextInput
                         placeholder="Search users..."
+                        style={styles.searchInput}
                         onChangeText={setSearchQuery}
                         value={searchQuery}
                         placeholderTextColor="#888"
@@ -232,6 +230,13 @@ const styles = StyleSheet.create({
         borderRadius: 25,
         backgroundColor: '#f9f9f9f7',
     },
+    searchInput: {
+    flex: 1,
+    fontSize: 16,
+    color: '#000',
+    paddingVertical: Platform.OS === 'ios' ? 10 : 6,
+    paddingHorizontal: Platform.OS === 'ios' ? 4 : 4,
+  },
     userCard: {
         backgroundColor: '#fff',
         padding: 16,

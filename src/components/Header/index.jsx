@@ -6,7 +6,7 @@ import {
   TouchableOpacity,
   View,
   Alert,
-  StatusBar,
+  StatusBar,useColorScheme,
 } from 'react-native';
 import profile from '../../assets/profile.png';
 import Ionicons from 'react-native-vector-icons/Ionicons';
@@ -69,7 +69,7 @@ const Header = () => {
 
   return (
     <>
-      <StatusBar backgroundColor="#34495e" barStyle="light-content" translucent={false}/>
+      <StatusBar barStyle={useColorScheme() === 'dark' ? 'light-content' : 'dark-content'} />
       <View style={styles.customHeader}>
         <View style={{ flexDirection: 'row', gap: 20 }}>
           <TouchableOpacity onPress={handleProfile}>

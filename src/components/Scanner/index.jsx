@@ -11,6 +11,7 @@ import {
   Animated,
   Easing,
   StatusBar,
+  useColorScheme
 } from 'react-native';
 import QRCodeScanner from 'react-native-qrcode-scanner';
 import MaterialIcons from 'react-native-vector-icons/MaterialIcons';
@@ -197,7 +198,7 @@ const Scanner = ({ navigation }) => {
 
   return (
     <>
-      <StatusBar barStyle="light-content" backgroundColor="#34495e" />
+      <StatusBar barStyle={useColorScheme() === 'dark' ? 'light-content' : 'dark-content'} />
       <View style={{ flex: 1, backgroundColor: '#e8effc' }}>
         <TouchableOpacity style={styles.backButton} onPress={() => navigation.goBack()}>
           <MaterialIcons name="arrow-back" size={24} color="#000" />
@@ -450,8 +451,8 @@ const styles = StyleSheet.create({
     fontWeight: '600',
   },
   backButton: {
-    paddingLeft: 20,
-    marginTop: 20,
+     paddingHorizontal: 12,
+    paddingVertical: 12,
   },
   connect: {
     display: 'flex',

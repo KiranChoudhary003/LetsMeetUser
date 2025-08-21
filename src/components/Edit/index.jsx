@@ -1,11 +1,10 @@
 import React, { useEffect, useState, useRef } from 'react';
 import {
     StyleSheet, Text, TextInput, TouchableOpacity, View,
-    ActivityIndicator, StatusBar, ScrollView,
+    ActivityIndicator, StatusBar, ScrollView,useColorScheme,
     KeyboardAvoidingView,
     Platform,
     Alert,
-    Dimensions,
     Modal as RNModal,
 } from 'react-native';
 import { Checkbox, Menu, Modal as PaperModal, Provider } from 'react-native-paper';
@@ -14,6 +13,7 @@ import AsyncStorage from '@react-native-async-storage/async-storage';
 import Ionicons from 'react-native-vector-icons/Ionicons';
 import MaterialIcons from 'react-native-vector-icons/MaterialIcons';
 import validator from 'validator';
+import { SafeAreaView } from 'react-native-safe-area-context';
 
 const Edit = ({ route, navigation }) => {
     const {
@@ -216,8 +216,8 @@ const Edit = ({ route, navigation }) => {
 
 
     return (
-        <Provider>
-            <StatusBar barStyle="dark-content" backgroundColor="#34495e" />
+        <SafeAreaView style={styles.container}>
+            <StatusBar barStyle={useColorScheme() === 'dark' ? 'light-content' : 'dark-content'} />
             <KeyboardAvoidingView
                 style={styles.flex1}
                 behavior={Platform.OS === 'ios' ? 'padding' : undefined}
@@ -244,7 +244,7 @@ const Edit = ({ route, navigation }) => {
                     </View>
                 </RNModal>
 
-                <View style={styles.container} ref={containerRef}>
+                <View ref={containerRef}>
                     <View style={styles.headingContainer}>
                         <TouchableOpacity onPress={() => navigation.goBack()} style={styles.backButton}>
                             <Ionicons name="arrow-back-outline" size={24} color="white" />
@@ -455,7 +455,7 @@ const Edit = ({ route, navigation }) => {
                     </View>
                 )}
             </KeyboardAvoidingView>
-        </Provider>
+        </SafeAreaView>
     );
 };
 

@@ -1,11 +1,12 @@
 /* eslint-disable react-hooks/exhaustive-deps */
 import React, { useEffect, useRef, useState } from 'react';
-import { StyleSheet, Text, TextInput, TouchableOpacity, View, KeyboardAvoidingView, StatusBar, Platform, Modal as RNModal } from 'react-native';
+import { StyleSheet, Text, TextInput, TouchableOpacity, View, KeyboardAvoidingView, StatusBar, useColorScheme, Platform, Modal as RNModal } from 'react-native';
 import { ActivityIndicator, Checkbox, Menu, Modal, Provider } from 'react-native-paper';
 import MaterialIcons from 'react-native-vector-icons/MaterialIcons';
 import { ScrollView } from 'react-native-gesture-handler';
 import validator from 'validator';
 import axios from 'axios';
+import { SafeAreaView } from 'react-native-safe-area-context';
 
 const SignUp = ({ navigation, route }) => {
     const { deviceToken } = route.params || {};
@@ -351,8 +352,8 @@ const SignUp = ({ navigation, route }) => {
 
     return (
         <>
-            <StatusBar barStyle="light-content" backgroundColor="#34495e" translucent={false} />
-            <Provider>
+            <SafeAreaView style={styles.container}>
+            <StatusBar barStyle={useColorScheme() === 'dark' ? 'light-content' : 'dark-content'} />
                 <RNModal
                     transparent
                     visible={errorModalVisible}
@@ -856,7 +857,7 @@ const SignUp = ({ navigation, route }) => {
                         </View>
                     </View>
                 </Modal>
-            </Provider >
+            </SafeAreaView >
         </>
     );
 };

@@ -9,6 +9,7 @@ import {
     TouchableOpacity,
     ScrollView,
     SafeAreaView,
+    useColorScheme,
     ActivityIndicator,
     Platform,
     StatusBar,
@@ -35,15 +36,15 @@ const Description = ({ navigation, route }) => {
     console.log('🔍 Description Screen — checkInAvailable:', checkInDistance);
 
     const [buttonState, setButtonState] = useState(() => {
-        if (!isRegistered) {return 'register';}
-        if (already_checked_in) {return 'checkedin';}
+        if (!isRegistered) { return 'register'; }
+        if (already_checked_in) { return 'checkedin'; }
         return 'checkin';
     });
 
     const [isLoading, setIsLoading] = useState(false);
 
     const handlePress = async () => {
-        if (isLoading) {return;}
+        if (isLoading) { return; }
 
         if (buttonState === 'register') {
             if (!id) {
@@ -78,7 +79,7 @@ const Description = ({ navigation, route }) => {
     const handleRegister = async (eventId) => {
         try {
             const token = await AsyncStorage.getItem('token');
-            if (!eventId) {return;}
+            if (!eventId) { return; }
 
             await axios.post(
                 'https://letsmeet-backend-47lv.onrender.com/api/user-events/register-event',
@@ -137,27 +138,21 @@ const Description = ({ navigation, route }) => {
 
     return (
         <>
-            <StatusBar
-                backgroundColor="#34495e"
-                barStyle={Platform.OS === 'ios' ? 'default' : 'dark-content'}
-            />
-            <View style={styles.background}>
+           <StatusBar barStyle={useColorScheme() === 'dark' ? 'light-content' : 'dark-content'} />
+            <SafeAreaView style={styles.container}>
+                    <View style={styles.header}>
+                        <TouchableOpacity style={styles.backArrow} onPress={() => navigation.goBack()}>
+                            <Ionicons name="arrow-back-outline" size={24} color="#f9efef" />
+                        </TouchableOpacity>
+                        <Text
+                            style={styles.headerTitle}
+                            numberOfLines={1}
+                            ellipsizeMode="tail"
+                        >
+                            {name.split(' ').slice(0, 4).join(' ') + (name.split(' ').length > 4 ? '...' : '')}
+                        </Text>
+                    </View>
 
-                <View style={styles.header}>
-                    <TouchableOpacity style={styles.backArrow} onPress={() => navigation.goBack()}>
-                        <Ionicons name="arrow-back-outline" size={24} color="#f9efef" />
-                    </TouchableOpacity>
-                    <Text
-                        style={styles.headerTitle}
-                        numberOfLines={1}
-                        ellipsizeMode="tail"
-                    >
-                        {name.split(' ').slice(0, 4).join(' ') + (name.split(' ').length > 4 ? '...' : '')}
-                    </Text>
-                </View>
-
-
-                <SafeAreaView style={styles.container}>
                     <ScrollView contentContainerStyle={styles.scrollContainer}>
                         {banner && (
                             <Image
@@ -247,18 +242,13 @@ const Description = ({ navigation, route }) => {
                             )}
                         </TouchableOpacity>
                     </ScrollView>
-                </SafeAreaView>
-            </View>
+            </SafeAreaView>
         </>
     );
 };
 
 const styles = StyleSheet.create({
     container: {
-        flex: 1,
-        backgroundColor: '#e9effc',
-    },
-    background: {
         flex: 1,
         backgroundColor: '#e9effc',
     },

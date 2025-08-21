@@ -1,7 +1,7 @@
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import axios from 'axios';
 import React, { useEffect, useState } from 'react';
-import { ActivityIndicator, Alert, Modal, SafeAreaView, ScrollView, StyleSheet, Text, TouchableOpacity, TouchableWithoutFeedback, View } from 'react-native';
+import { ActivityIndicator, Alert, Modal, SafeAreaView, ScrollView, StyleSheet, StatusBar,useColorScheme,Text, TouchableOpacity, TouchableWithoutFeedback, View } from 'react-native';
 import { TextInput } from 'react-native-gesture-handler';
 import Ionicons from 'react-native-vector-icons/Ionicons';
 import MaterialIcons from 'react-native-vector-icons/MaterialIcons';
@@ -154,7 +154,8 @@ const Complain = ({ navigation }) => {
     };
 
     return (
-        <View style={styles.background}>
+        <>
+             <StatusBar barStyle={useColorScheme() === 'dark' ? 'light-content' : 'dark-content'} />
             <SafeAreaView style={styles.container}>
                 <View style={styles.header}>
                     <Text style={styles.desk}>Complain Desk</Text>
@@ -253,7 +254,7 @@ const Complain = ({ navigation }) => {
                     </Modal>
                 )}
             </SafeAreaView>
-        </View>
+        </>
     );
 
 };
@@ -261,13 +262,9 @@ const Complain = ({ navigation }) => {
 export default Complain;
 
 const styles = StyleSheet.create({
-    background: {
-        flex: 1,
-        resizeMode: 'cover',
-        backgroundColor: '#e8effc',
-    },
     container: {
         flex: 1,
+        backgroundColor: '#e8effc',
     },
     scrollView: {
         padding: 16,

@@ -14,6 +14,7 @@ import {
     Platform,
     Linking,
     StatusBar,
+    useColorScheme,
     Dimensions,
 } from 'react-native';
 import logo from '../../assets/logo.png';
@@ -211,7 +212,7 @@ const Login = ({ navigation, route }) => {
 
     return (
         <>
-            <StatusBar barStyle="light-content" backgroundColor="#34495e" />
+            <StatusBar barStyle={useColorScheme() === 'dark' ? 'light-content' : 'dark-content'} />
             <KeyboardAvoidingView
                 style={styles.container}
                 behavior={Platform.OS === 'ios' ? 'padding' : 'height'}

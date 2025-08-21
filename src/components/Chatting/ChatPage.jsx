@@ -12,6 +12,7 @@ import {
     Platform,
     SafeAreaView,
     StatusBar,
+    useColorScheme,
     StyleSheet,
     Text,
     TextInput,
@@ -360,11 +361,7 @@ const ChatPage = ({ route }) => {
 
     return (
         <>
-            <StatusBar
-                translucent
-                backgroundColor="#34495e"
-                barStyle={Platform.OS === 'ios' ? 'default' : 'dark-content'}
-            />
+            <StatusBar barStyle={useColorScheme() === 'dark' ? 'light-content' : 'dark-content'} />
             <SafeAreaView style={styles.container}>
 
                 <View style={{ flex: 1 }}>

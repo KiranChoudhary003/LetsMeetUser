@@ -4,6 +4,7 @@ import {
   Image,
   SafeAreaView,
   StatusBar,
+  useColorScheme,
   StyleSheet,
   Text,
   TextInput,
@@ -135,7 +136,7 @@ const Meeting = ({ navigation }) => {
 
   return (
     <SafeAreaView style={{ flex: 1, backgroundColor: '#34495E' }}>
-      <StatusBar barStyle="light-content" backgroundColor="#34495E" />
+      <StatusBar barStyle={useColorScheme() === 'dark' ? 'light-content' : 'dark-content'} />
       <View style={{ flex: 1, backgroundColor: '#E8EFFC' }}>
         <View style={styles.header}>
           <Text style={styles.meetHeading}>Meetings</Text>
@@ -254,6 +255,8 @@ const styles = StyleSheet.create({
     flex: 1,
     fontSize: 16,
     color: '#000',
+    paddingVertical: Platform.OS === 'ios' ? 10 : 6,
+    paddingHorizontal: Platform.OS === 'ios' ? 4 : 4,
   },
   card: {
     flexDirection: 'row',

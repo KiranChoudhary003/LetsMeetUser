@@ -7,6 +7,7 @@ import {
     FlatList,
     Image, Platform,
     StatusBar,
+    useColorScheme,
     StyleSheet,
     Text,
     TextInput,
@@ -182,11 +183,7 @@ export default function UserListScreen() {
 
     return (
         <>
-            <StatusBar
-                translucent
-                backgroundColor="#34495e"
-                barStyle={Platform.OS === 'ios' ? 'default' : 'dark-content'}
-            />
+            <StatusBar barStyle={useColorScheme() === 'dark' ? 'light-content' : 'dark-content'} />
             <SafeAreaView style={styles.safeContainer}>
                 <View style={styles.headingContainer}>
                     <View style={styles.headerRow}>
@@ -200,6 +197,7 @@ export default function UserListScreen() {
                     <Entypo name="magnifying-glass" size={24} color="black" />
                     <TextInput
                         placeholder="Search users..."
+                        style={styles.searchInput}
                         onChangeText={setSearchQuery}
                         value={searchQuery}
                         placeholderTextColor="#888"
@@ -287,6 +285,13 @@ const styles = StyleSheet.create({
         borderRadius: 25,
         backgroundColor: '#f9f9f9f7',
     },
+    searchInput: {
+    flex: 1,
+    fontSize: 16,
+    color: '#000',
+    paddingVertical: Platform.OS === 'ios' ? 10 : 6,
+    paddingHorizontal: Platform.OS === 'ios' ? 4 : 4,
+  },
     userCard: {
         backgroundColor: '#fff',
         padding: 16,

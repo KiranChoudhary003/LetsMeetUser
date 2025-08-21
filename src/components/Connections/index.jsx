@@ -13,6 +13,7 @@ import {
   ActivityIndicator,
   SafeAreaView,
   StatusBar,
+  useColorScheme,
   Platform,
 } from 'react-native';
 import Entypo from 'react-native-vector-icons/Entypo';
@@ -520,10 +521,9 @@ const Connections = ({ navigation }) => {
 
 
   return (
-    <SafeAreaView style={{ flex: 1, backgroundColor: '#34495E' }}>
-      <StatusBar barStyle="light-content" backgroundColor="#34495E" />
-      <View style={{ flex: 1, backgroundColor: '#E8EFFC' }}>
-        <View style={styles.container}>
+    <>
+      <StatusBar barStyle={useColorScheme() === 'dark' ? 'light-content' : 'dark-content'} />
+      <SafeAreaView style={{ flex: 1, backgroundColor: '#e8effc',}}>
           <View style={styles.header}>
             <TouchableOpacity onPress={() => navigation.goBack()} style={styles.iconButton}>
               <Ionicons name="arrow-back-outline" size={24} color="white" />
@@ -791,9 +791,8 @@ const Connections = ({ navigation }) => {
               </Text>
             </Animated.View>
           )}
-        </View>
-      </View>
-    </SafeAreaView>
+      </SafeAreaView>
+    </>
   );
 
 };
@@ -801,17 +800,6 @@ const Connections = ({ navigation }) => {
 export default Connections;
 
 const styles = StyleSheet.create({
-  safeArea: {
-    flex: 1,
-    backgroundColor: '#E8EFFC',
-    paddingTop: Platform.OS === 'android' ? StatusBar.currentHeight : 0,
-  },
-
-  container: {
-    flex: 1,
-    backgroundColor: '#E8EFFC',
-  },
-
   header: {
     flexDirection: 'row',
     alignItems: 'center',
@@ -857,13 +845,13 @@ const styles = StyleSheet.create({
     borderRadius: 25,
     backgroundColor: '#f9f9f9f7',
   },
-
   searchInput: {
     flex: 1,
     fontSize: 16,
     color: '#000',
+    paddingVertical: Platform.OS === 'ios' ? 10 : 6,
+    paddingHorizontal: Platform.OS === 'ios' ? 4 : 4,
   },
-
   tabs: {
     flexDirection: 'row',
     justifyContent: 'space-around',
