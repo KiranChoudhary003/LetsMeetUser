@@ -12,7 +12,7 @@ import { BlurView } from '@react-native-community/blur';
 import { launchImageLibrary } from 'react-native-image-picker';
 import { CommonActions, useFocusEffect } from '@react-navigation/native';
 import FontAwesome from 'react-native-vector-icons/FontAwesome';
-import { getMessaging } from '@react-native-firebase/messaging';
+import messaging from '@react-native-firebase/messaging';
 
 const { width } = Dimensions.get('window');
 
@@ -138,7 +138,7 @@ const UserProfile = ({ navigation, route }) => {
             ).catch(() => {
             });
 
-            await getMessaging().deleteToken().catch(() => { });
+            await messaging().deleteToken().catch(() => { });
 
             await AsyncStorage.multiRemove(['token', 'user_photo']);
 
