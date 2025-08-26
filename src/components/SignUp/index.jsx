@@ -351,9 +351,10 @@ const SignUp = ({ navigation, route }) => {
 
 
     return (
-        <>
-            <SafeAreaView style={styles.container}>
+        <Provider>
             <StatusBar barStyle={useColorScheme() === 'dark' ? 'light-content' : 'dark-content'} />
+
+            <SafeAreaView style={styles.container}>
                 <RNModal
                     transparent
                     visible={errorModalVisible}
@@ -858,7 +859,7 @@ const SignUp = ({ navigation, route }) => {
                     </View>
                 </Modal>
             </SafeAreaView >
-        </>
+        </Provider>
     );
 };
 

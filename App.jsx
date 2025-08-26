@@ -321,50 +321,72 @@ const styles = StyleSheet.create({
 });
 
 
-// import React, { useEffect } from 'react';
-// import { View, Text, SafeAreaView, Alert } from 'react-native';
-// import messaging from '@react-native-firebase/messaging';
 
-// const App = () => {
+
+
+
+// import React, { useEffect, useRef, useState } from 'react';
+// import { SafeAreaView, StyleSheet, Text, View } from 'react-native';
+// import { Camera, useCameraDevices, useCodeScanner } from 'react-native-vision-camera';
+
+// export default function QRScanner() {
+//   const [hasPermission, setHasPermission] = useState(false);
+//   const devices = useCameraDevices();
+//   const device = devices.back || devices[0]; 
+//   const camera = useRef(null);
 
 //   useEffect(() => {
-//     // Request permission for iOS
-//     async function requestPermission() {
-//       const authStatus = await messaging().requestPermission();
-//       const enabled =
-//         authStatus === messaging.AuthorizationStatus.AUTHORIZED ||
-//         authStatus === messaging.AuthorizationStatus.PROVISIONAL;
-
-//       if (enabled) {
-//         console.log('Authorization status:', authStatus);
-//         fetchToken();
-//       } else {
-//         console.log('FCM permission denied');
-//         Alert.alert('FCM permission denied', 'You need to allow notifications to get FCM token.');
-//       }
-//     }
-
-//     // Get FCM token
-//     async function fetchToken() {
-//       try {
-//         const token = await messaging().getToken();
-//         console.log('FCM Token:', token);
-//         Alert.alert('FCM Token', token); // ⚡ Shows token in a popup
-//       } catch (err) {
-//         console.log('Error fetching FCM token:', err);
-//         Alert.alert('Error', 'Failed to fetch FCM token. Check console.');
-//       }
-//     }
-
-//     requestPermission();
+//     (async () => {
+//       const status = await Camera.requestCameraPermission();
+//       setHasPermission(status === 'authorized' || status === 'granted');
+//     })();
 //   }, []);
 
+//   const codeScanner = useCodeScanner({
+//     codeTypes: ['qr'], // ✅ keep minimal first
+//     onCodeScanned: (codes) => {
+//       console.log('📷 QR Code scanned:', codes);
+//       if (codes[0]?.value) {
+//         alert(`Scanned QR: ${codes[0].value}`);
+//       }
+//     },
+//   });
+
+//   if (!device) return <Text style={{ color: 'white' }}>No Camera Found</Text>;
+//   if (!hasPermission) return <Text style={{ color: 'white' }}>Camera permission not granted</Text>;
+
 //   return (
-//     <SafeAreaView style={{ flex: 1, justifyContent: 'center', alignItems: 'center' }}>
-//       <Text>👋 Hello World</Text>
-//       <Text>FCM token will appear as a popup</Text>
+//     <SafeAreaView style={styles.container}>
+//       <Camera
+//         ref={camera}
+//         style={StyleSheet.absoluteFill}
+//         device={device}
+//         isActive={true}
+//         codeScanner={codeScanner}
+//         onError={(e) => console.error('❌ Camera failed:', e)}
+//       />
+
+//       {/* Overlay Frame */}
+//       <View style={styles.frame}>
+//         <Text style={styles.frameText}>Align QR Code</Text>
+//       </View>
 //     </SafeAreaView>
 //   );
 // }
 
-// export default App;
+// const styles = StyleSheet.create({
+//   container: { flex: 1, backgroundColor: 'black'},
+//   frame: {
+//     position: 'absolute',
+//     top: '30%',
+//     left: '10%',
+//     width: '80%',
+//     height: 200,
+//     borderWidth: 3,
+//     borderColor: '#00FF00',
+//     borderRadius: 12,
+//     justifyContent: 'center',
+//     alignItems: 'center',
+//   },
+//   frameText: { color: 'white', fontSize: 16, marginTop: 10 },
+// });

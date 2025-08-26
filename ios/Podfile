@@ -1,57 +1,51 @@
-# Resolve react_native_pods.rb with node
-# require Pod::Executable.execute_command('node', ['-p',
-#   'require.resolve("react-native/scripts/react_native_pods.rb", {paths: [process.argv[1]]})',
-#   __dir__]).strip
+# --- Global new architecture flag ---
+$RNNewArchitectureEnabled = false
 
+# --- Helper to require node scripts ---
 def node_require(script)
-  # Resolve script with node to allow for hoisting
   require Pod::Executable.execute_command('node', ['-p',
-   "require.resolve(
-       '#{script}',
-      {paths: [process.argv[1]]},
-    )", __dir__]).strip
+    "require.resolve('#{script}', {paths: [process.argv[1]]})", __dir__]).strip
 end
 
-# Use it to require both react-native's and this package's scripts:
- node_require('react-native/scripts/react_native_pods.rb')
- node_require('react-native-permissions/scripts/setup.rb')
+# --- Load React Native + RNPermissions scripts ---
+node_require('react-native/scripts/react_native_pods.rb')
+node_require('react-native-permissions/scripts/setup.rb')
 
-platform :ios, '15.1'  # ✅ Match project requirement
+platform :ios, '15.1'
 
 prepare_react_native_project!
 
-
-setup_permissions([
-   'Camera',
-   'LocationAccuracy',
-   'LocationWhenInUse',
-   'Notifications',
-   'PhotoLibrary',
-   'PhotoLibraryAddOnly',
-])
-
-# ✅ Fix Firebase + Swift static library issues
 use_modular_headers!
-use_frameworks! :linkage => :static   # ✅ Required for Firebase + Swift pods
+use_frameworks! :linkage => :static
 
 target 'LetsMeet' do
   config = use_native_modules!
 
   use_react_native!(
-    :path => config[:reactNativePath],
-    :app_path => "#{Pod::Config.instance.installation_root}/..",
-    :fabric_enabled => false,
-    :hermes_enabled => false
+    path: config[:reactNativePath],
+    app_path: "#{Pod::Config.instance.installation_root}/..",
+    fabric_enabled: false,
+    hermes_enabled: true
   )
 
-  # ✅ Dependencies
-  pod 'lottie-react-native', :path => '../node_modules/lottie-react-native'
-  pod 'Firebase/Core'
-  pod 'Firebase/Messaging'
+  # ✅ Permissions – DO NOT manually add RNPermissions pod
+  setup_permissions([
+    'Camera',
+    'LocationAccuracy',
+    'LocationWhenInUse',
+    'Notifications',
+    'PhotoLibrary',
+    'PhotoLibraryAddOnly',
+  ])
 
-  # ✅ Ensure every pod respects iOS 15.1
+  # ✅ Other dependencies
+  pod 'lottie-react-native', :path => '../node_modules/lottie-react-native'
+  pod 'FirebaseCore'
+  pod 'FirebaseMessaging'
+
+  # ✅ Force iOS 15.1 for all pods
   pre_install do |installer|
-    Pod::UI.puts "🔧 Forcing iOS 15.1 for all pods..."
+    Pod::UI.puts '🔧 Forcing iOS 15.1 for all pods...'
     installer.pod_targets.each do |pod|
       if pod.respond_to?(:deployment_target=)
         pod.deployment_target = '15.1'
@@ -63,14 +57,12 @@ target 'LetsMeet' do
     react_native_post_install(
       installer,
       config[:reactNativePath],
-      :mac_catalyst_enabled => false
+      mac_catalyst_enabled: false
     )
 
     installer.pods_project.targets.each do |target|
       target.build_configurations.each do |config|
-        # ✅ Force iOS version
         config.build_settings['IPHONEOS_DEPLOYMENT_TARGET'] = '15.1'
-        # ✅ Allow non-modular includes (fixes UIKit / VisionCamera issues)
         config.build_settings['CLANG_ALLOW_NON_MODULAR_INCLUDES_IN_FRAMEWORK_MODULES'] = 'YES'
       end
     end

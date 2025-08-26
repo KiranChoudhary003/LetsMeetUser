@@ -99,7 +99,7 @@ export default function UserEvents({ route }) {
           key={index}
           name={event.event_name}
           organizer={event.organizer || 'Organizer'}
-          start_date={event.start_date || '2025-07-10'}
+          start_date={event.start_date }
           meetingsCount={event.meetings?.length || 0}
           eventId={event.event_id}
           meetings={Array.isArray(event.meetings) ? event.meetings : []}

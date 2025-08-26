@@ -1,7 +1,7 @@
 import React, { useEffect, useState, useRef } from 'react';
 import {
     StyleSheet, Text, TextInput, TouchableOpacity, View,
-    ActivityIndicator, StatusBar, ScrollView,useColorScheme,
+    ActivityIndicator, StatusBar, ScrollView, useColorScheme,
     KeyboardAvoidingView,
     Platform,
     Alert,
@@ -216,246 +216,248 @@ const Edit = ({ route, navigation }) => {
 
 
     return (
-        <SafeAreaView style={styles.container}>
+        <Provider>
             <StatusBar barStyle={useColorScheme() === 'dark' ? 'light-content' : 'dark-content'} />
-            <KeyboardAvoidingView
-                style={styles.flex1}
-                behavior={Platform.OS === 'ios' ? 'padding' : undefined}
-                keyboardVerticalOffset={Platform.OS === 'ios' ? 40 : 0}
-            >
-                {/* RN Modal for Error */}
-                <RNModal
-                    transparent
-                    visible={errorModalVisible}
-                    animationType="fade"
-                    onRequestClose={() => setErrorModalVisible(false)}
+            <SafeAreaView style={styles.container}>
+                <KeyboardAvoidingView
+                    style={styles.flex1}
+                    behavior={Platform.OS === 'ios' ? 'padding' : undefined}
+                    keyboardVerticalOffset={Platform.OS === 'ios' ? 40 : 0}
                 >
-                    <View style={styles.errorOverlay}>
-                        <View style={styles.errorBox}>
-                            <Text style={styles.errorTitle}>Required Field Missing</Text>
-                            <Text style={styles.errorText}>{errorMessage}</Text>
-                            <TouchableOpacity
-                                style={styles.errorButton}
-                                onPress={() => setErrorModalVisible(false)}
-                            >
-                                <Text style={styles.errorButtonText}>OK</Text>
-                            </TouchableOpacity>
-                        </View>
-                    </View>
-                </RNModal>
-
-                <View ref={containerRef}>
-                    <View style={styles.headingContainer}>
-                        <TouchableOpacity onPress={() => navigation.goBack()} style={styles.backButton}>
-                            <Ionicons name="arrow-back-outline" size={24} color="white" />
-                        </TouchableOpacity>
-                        <Text style={styles.title}>Edit Profile</Text>
-                        <View style={styles.backButton} />
-                    </View>
-
-                    <TextInput style={styles.input} placeholder="First Name" placeholderTextColor="#888" value={newFirstName} onChangeText={setNewFirstName} />
-                    <TextInput style={styles.input} placeholder="Middle Name (Optional)" placeholderTextColor="#888" value={newMiddleName} onChangeText={setNewMiddleName} />
-                    <TextInput style={styles.input} placeholder="Last Name" placeholderTextColor="#888" value={newLastName} onChangeText={setNewLastName} />
-                    <View
-                        style={{ width: "85%", alignSelf: "center", height: 45, marginBottom: 12 }}
-                        ref={emailRef}
-                        onLayout={() => {
-                            if (containerRef.current && emailRef.current) {
-                                emailRef.current.measureLayout(
-                                    containerRef.current,
-                                    (x, y, width, height) => {
-                                        setEmailPos({ x, y, width, height });
-                                    }
-                                );
-                            }
-                        }}
+                    {/* RN Modal for Error */}
+                    <RNModal
+                        transparent
+                        visible={errorModalVisible}
+                        animationType="fade"
+                        onRequestClose={() => setErrorModalVisible(false)}
                     >
-                        <TextInput
-                            style={[styles.input, { width: "100%", marginBottom: 0 }]}
-                            placeholder="E-mail*"
-                            placeholderTextColor="#888"
-                            value={newEmail}
-                            onChangeText={(text) => {
-                                const lower = text.toLowerCase();
-                                setNewEmail(lower);
-
-                                const isValid = emailRules.every((rule) => rule.check(lower));
-                                setShowEmailTooltip(text.length > 0 && !isValid);
-                            }}
-                            onFocus={() => {
-                                const isValid = emailRules.every((rule) => rule.check(email));
-                                if (email.length > 0 && !isValid) setShowEmailTooltip(true);
-                            }}
-                            onBlur={() => setShowEmailTooltip(false)}
-                        />
-                    </View>
-                    {/* <TextInput style={styles.input} placeholder="E-mail" placeholderTextColor="#888" value={newEmail} onChangeText={setNewEmail} /> */}
-                    <TextInput
-                        style={styles.input}
-                        placeholder={linkedInPrefix + 'your-username'}
-                        value={linkedInUsername ? linkedInPrefix + linkedInUsername : linkedInPrefix}
-                        onChangeText={(text) => {
-                            if (!text.startsWith(linkedInPrefix)) {
-                                setLinkedInUsername('');
-                                return;
-                            }
-
-                            if (text.trim() === linkedInPrefix.trim()) {
-                                setLinkedInUsername('');
-                                return;
-                            }
-
-                            if (text.includes('linkedin.com/in/')) {
-                                let usernamePart = text.split('linkedin.com/in/')[1] || '';
-                                usernamePart = usernamePart.replace(/\/+$/, '').trim();
-                                setLinkedInUsername(usernamePart);
-                                return;
-                            }
-
-                            let usernamePart = text.slice(linkedInPrefix.length).trim();
-                            setLinkedInUsername(usernamePart);
-                        }}
-                        onSelectionChange={({ nativeEvent: { selection } }) => {
-                            if (selection.start < linkedInPrefix.length) {
-                                selection.start = linkedInPrefix.length;
-                                selection.end = linkedInPrefix.length;
-                            }
-                        }}
-                        autoCapitalize="none"
-                        keyboardType="default"
-                    />
-                    <TextInput style={styles.input} placeholder="Company Name (Optional)" placeholderTextColor="#888" value={newCompanyName} onChangeText={setNewCompanyName} />
-
-                    {/* Role selection */}
-                    <TouchableOpacity
-                        ref={roleRef}
-                        onLayout={() => {
-                            roleRef.current?.measureInWindow((x, y, width, height) => {
-                                setAnchorLayout({ x, y, width, height });
-                                setInputWidth(width);
-                            });
-                        }}
-                        onPress={() => {
-                            roleRef.current?.measureInWindow((x, y, width, height) => {
-                                setAnchorLayout({ x, y, width, height });
-                                setInputWidth(width);
-                                setVisible(true);
-                            });
-                        }}
-                        style={styles.input}
-                    >
-                        <Text style={styles.anchorText}>{newJobRole || 'Role'}</Text>
-                    </TouchableOpacity>
-
-                    {anchorLayout && (
-                        <Menu
-                            visible={visible}
-                            onDismiss={() => setVisible(false)}
-                            anchor={{ x: anchorLayout.x, y: anchorLayout.y + anchorLayout.height }}
-                            anchorPosition="top"
-                            contentStyle={[
-                                styles.menuContent,
-                                { width: inputWidth },
-                            ]}
-                        >
-                            <ScrollView>
-                                {roles.map((role) => (
-                                    <View key={role} style={styles.menuItemContainer}>
-                                        <Menu.Item
-                                            onPress={() => {
-                                                setNewJobRole(role);
-                                                setVisible(false);
-                                            }}
-                                            title={role}
-                                            titleStyle={styles.menuItemTitle}
-                                        />
-                                    </View>
-                                ))}
-                            </ScrollView>
-                        </Menu>
-                    )}
-                    <TouchableOpacity style={styles.input} onPress={() => setModalVisible(true)}>
-                        <Text style={styles.anchorText}>
-                            Preferences {selectedRoles.length !== 0 ? ': ' + selectedRoles.length : ''}
-                        </Text>
-
-                    </TouchableOpacity>
-
-                    <PaperModal visible={modalVisible} transparent animationType="slide" onRequestClose={() => setModalVisible(false)}>
-                        <View style={styles.modalOverlay}>
-                            <View style={styles.modalContainer}>
-                                <ScrollView style={styles.scrollViewMaxHeight}>
-                                    {roles.map((role, index) => (
-                                        <TouchableOpacity key={index} style={styles.checkboxRow} onPress={() => toggleRole(role)}>
-                                            <Text style={styles.roleText}>{role}</Text>
-                                            <Checkbox.Android
-                                                status={selectedRoles.includes(role) ? 'checked' : 'unchecked'}
-                                                color="#34495e"
-                                            />
-                                        </TouchableOpacity>
-                                    ))}
-                                </ScrollView>
-                                <TouchableOpacity style={styles.doneButton} onPress={() => setModalVisible(false)}>
-                                    <Text style={styles.doneText}>Done</Text>
+                        <View style={styles.errorOverlay}>
+                            <View style={styles.errorBox}>
+                                <Text style={styles.errorTitle}>Required Field Missing</Text>
+                                <Text style={styles.errorText}>{errorMessage}</Text>
+                                <TouchableOpacity
+                                    style={styles.errorButton}
+                                    onPress={() => setErrorModalVisible(false)}
+                                >
+                                    <Text style={styles.errorButtonText}>OK</Text>
                                 </TouchableOpacity>
                             </View>
                         </View>
-                    </PaperModal>
+                    </RNModal>
 
-                    {!modalVisible && (
-                        <View style={styles.buttonContainer}>
-                            <TouchableOpacity style={styles.button} onPress={handleEdit} disabled={isSaving}>
-                                {isSaving ? (
-                                    <View style={styles.menuItemRow}>
-                                        <ActivityIndicator size="small" color="#fff" style={styles.activityIndicatorMargin} />
-                                        <Text style={styles.buttonText}>Saving...</Text>
-                                    </View>
-                                ) : (
-                                    <Text style={styles.buttonText}>Save</Text>
-                                )}
+                    <View ref={containerRef}>
+                        <View style={styles.headingContainer}>
+                            <TouchableOpacity onPress={() => navigation.goBack()} style={styles.backButton}>
+                                <Ionicons name="arrow-back-outline" size={24} color="white" />
                             </TouchableOpacity>
+                            <Text style={styles.title}>Edit Profile</Text>
+                            <View style={styles.backButton} />
+                        </View>
+
+                        <TextInput style={styles.input} placeholder="First Name" placeholderTextColor="#888" value={newFirstName} onChangeText={setNewFirstName} />
+                        <TextInput style={styles.input} placeholder="Middle Name (Optional)" placeholderTextColor="#888" value={newMiddleName} onChangeText={setNewMiddleName} />
+                        <TextInput style={styles.input} placeholder="Last Name" placeholderTextColor="#888" value={newLastName} onChangeText={setNewLastName} />
+                        <View
+                            style={{ width: "85%", alignSelf: "center", height: 45, marginBottom: 12 }}
+                            ref={emailRef}
+                            onLayout={() => {
+                                if (containerRef.current && emailRef.current) {
+                                    emailRef.current.measureLayout(
+                                        containerRef.current,
+                                        (x, y, width, height) => {
+                                            setEmailPos({ x, y, width, height });
+                                        }
+                                    );
+                                }
+                            }}
+                        >
+                            <TextInput
+                                style={[styles.input, { width: "100%", marginBottom: 0 }]}
+                                placeholder="E-mail*"
+                                placeholderTextColor="#888"
+                                value={newEmail}
+                                onChangeText={(text) => {
+                                    const lower = text.toLowerCase();
+                                    setNewEmail(lower);
+
+                                    const isValid = emailRules.every((rule) => rule.check(lower));
+                                    setShowEmailTooltip(text.length > 0 && !isValid);
+                                }}
+                                onFocus={() => {
+                                    const isValid = emailRules.every((rule) => rule.check(email));
+                                    if (email.length > 0 && !isValid) setShowEmailTooltip(true);
+                                }}
+                                onBlur={() => setShowEmailTooltip(false)}
+                            />
+                        </View>
+                        {/* <TextInput style={styles.input} placeholder="E-mail" placeholderTextColor="#888" value={newEmail} onChangeText={setNewEmail} /> */}
+                        <TextInput
+                            style={styles.input}
+                            placeholder={linkedInPrefix + 'your-username'}
+                            value={linkedInUsername ? linkedInPrefix + linkedInUsername : linkedInPrefix}
+                            onChangeText={(text) => {
+                                if (!text.startsWith(linkedInPrefix)) {
+                                    setLinkedInUsername('');
+                                    return;
+                                }
+
+                                if (text.trim() === linkedInPrefix.trim()) {
+                                    setLinkedInUsername('');
+                                    return;
+                                }
+
+                                if (text.includes('linkedin.com/in/')) {
+                                    let usernamePart = text.split('linkedin.com/in/')[1] || '';
+                                    usernamePart = usernamePart.replace(/\/+$/, '').trim();
+                                    setLinkedInUsername(usernamePart);
+                                    return;
+                                }
+
+                                let usernamePart = text.slice(linkedInPrefix.length).trim();
+                                setLinkedInUsername(usernamePart);
+                            }}
+                            onSelectionChange={({ nativeEvent: { selection } }) => {
+                                if (selection.start < linkedInPrefix.length) {
+                                    selection.start = linkedInPrefix.length;
+                                    selection.end = linkedInPrefix.length;
+                                }
+                            }}
+                            autoCapitalize="none"
+                            keyboardType="default"
+                        />
+                        <TextInput style={styles.input} placeholder="Company Name (Optional)" placeholderTextColor="#888" value={newCompanyName} onChangeText={setNewCompanyName} />
+
+                        {/* Role selection */}
+                        <TouchableOpacity
+                            ref={roleRef}
+                            onLayout={() => {
+                                roleRef.current?.measureInWindow((x, y, width, height) => {
+                                    setAnchorLayout({ x, y, width, height });
+                                    setInputWidth(width);
+                                });
+                            }}
+                            onPress={() => {
+                                roleRef.current?.measureInWindow((x, y, width, height) => {
+                                    setAnchorLayout({ x, y, width, height });
+                                    setInputWidth(width);
+                                    setVisible(true);
+                                });
+                            }}
+                            style={styles.input}
+                        >
+                            <Text style={styles.anchorText}>{newJobRole || 'Role'}</Text>
+                        </TouchableOpacity>
+
+                        {anchorLayout && (
+                            <Menu
+                                visible={visible}
+                                onDismiss={() => setVisible(false)}
+                                anchor={{ x: anchorLayout.x, y: anchorLayout.y + anchorLayout.height }}
+                                anchorPosition="top"
+                                contentStyle={[
+                                    styles.menuContent,
+                                    { width: inputWidth },
+                                ]}
+                            >
+                                <ScrollView>
+                                    {roles.map((role) => (
+                                        <View key={role} style={styles.menuItemContainer}>
+                                            <Menu.Item
+                                                onPress={() => {
+                                                    setNewJobRole(role);
+                                                    setVisible(false);
+                                                }}
+                                                title={role}
+                                                titleStyle={styles.menuItemTitle}
+                                            />
+                                        </View>
+                                    ))}
+                                </ScrollView>
+                            </Menu>
+                        )}
+                        <TouchableOpacity style={styles.input} onPress={() => setModalVisible(true)}>
+                            <Text style={styles.anchorText}>
+                                Preferences {selectedRoles.length !== 0 ? ': ' + selectedRoles.length : ''}
+                            </Text>
+
+                        </TouchableOpacity>
+
+                        <PaperModal visible={modalVisible} transparent animationType="slide" onRequestClose={() => setModalVisible(false)}>
+                            <View style={styles.modalOverlay}>
+                                <View style={styles.modalContainer}>
+                                    <ScrollView style={styles.scrollViewMaxHeight}>
+                                        {roles.map((role, index) => (
+                                            <TouchableOpacity key={index} style={styles.checkboxRow} onPress={() => toggleRole(role)}>
+                                                <Text style={styles.roleText}>{role}</Text>
+                                                <Checkbox.Android
+                                                    status={selectedRoles.includes(role) ? 'checked' : 'unchecked'}
+                                                    color="#34495e"
+                                                />
+                                            </TouchableOpacity>
+                                        ))}
+                                    </ScrollView>
+                                    <TouchableOpacity style={styles.doneButton} onPress={() => setModalVisible(false)}>
+                                        <Text style={styles.doneText}>Done</Text>
+                                    </TouchableOpacity>
+                                </View>
+                            </View>
+                        </PaperModal>
+
+                        {!modalVisible && (
+                            <View style={styles.buttonContainer}>
+                                <TouchableOpacity style={styles.button} onPress={handleEdit} disabled={isSaving}>
+                                    {isSaving ? (
+                                        <View style={styles.menuItemRow}>
+                                            <ActivityIndicator size="small" color="#fff" style={styles.activityIndicatorMargin} />
+                                            <Text style={styles.buttonText}>Saving...</Text>
+                                        </View>
+                                    ) : (
+                                        <Text style={styles.buttonText}>Save</Text>
+                                    )}
+                                </TouchableOpacity>
+                            </View>
+                        )}
+                    </View>
+                    {showEmailTooltip && !allEmailValid && emailPos && (
+                        <View
+                            style={[
+                                styles.tooltipOverlay,
+                                {
+                                    top: emailPos.y - emailTooltipHeight,
+                                    left: emailPos.x + emailPos.width - emailTooltipWidth,
+                                },
+                            ]}
+                            onLayout={(e) => {
+                                setEmailTooltipHeight(e.nativeEvent.layout.height);
+                                setEmailTooltipWidth(e.nativeEvent.layout.width);
+                            }}
+                        >
+                            <View style={styles.tooltip}>
+                                {emailRules.map((rule, index) => {
+                                    const passed = checkEmailRule(rule);
+                                    return (
+                                        <View
+                                            key={index}
+                                            style={{ flexDirection: "row", alignItems: "center", marginBottom: 4 }}
+                                        >
+                                            <MaterialIcons
+                                                name={passed ? "check-circle" : "cancel"}
+                                                size={16}
+                                                color={passed ? "lightgreen" : "red"}
+                                                style={{ marginRight: 6 }}
+                                            />
+                                            <Text style={styles.tooltipText}>{rule.message}</Text>
+                                        </View>
+                                    );
+                                })}
+                            </View>
+                            {/* arrow pointing downward into input */}
+                            <View style={styles.arrowDown} />
                         </View>
                     )}
-                </View>
-                {showEmailTooltip && !allEmailValid && emailPos && (
-                    <View
-                        style={[
-                            styles.tooltipOverlay,
-                            {
-                                top: emailPos.y - emailTooltipHeight,
-                                left: emailPos.x + emailPos.width - emailTooltipWidth,
-                            },
-                        ]}
-                        onLayout={(e) => {
-                            setEmailTooltipHeight(e.nativeEvent.layout.height);
-                            setEmailTooltipWidth(e.nativeEvent.layout.width);
-                        }}
-                    >
-                        <View style={styles.tooltip}>
-                            {emailRules.map((rule, index) => {
-                                const passed = checkEmailRule(rule);
-                                return (
-                                    <View
-                                        key={index}
-                                        style={{ flexDirection: "row", alignItems: "center", marginBottom: 4 }}
-                                    >
-                                        <MaterialIcons
-                                            name={passed ? "check-circle" : "cancel"}
-                                            size={16}
-                                            color={passed ? "lightgreen" : "red"}
-                                            style={{ marginRight: 6 }}
-                                        />
-                                        <Text style={styles.tooltipText}>{rule.message}</Text>
-                                    </View>
-                                );
-                            })}
-                        </View>
-                        {/* arrow pointing downward into input */}
-                        <View style={styles.arrowDown} />
-                    </View>
-                )}
-            </KeyboardAvoidingView>
-        </SafeAreaView>
+                </KeyboardAvoidingView>
+            </SafeAreaView>
+        </Provider>
     );
 };
 

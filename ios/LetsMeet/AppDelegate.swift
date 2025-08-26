@@ -33,7 +33,7 @@ class AppDelegate: UIResponder, UIApplicationDelegate {
     factory.startReactNative(
       withModuleName: "LetsMeet",
       in: window,
-      launchOptions: launchOptions
+      launchOptions: launchOptions,  
     )
 
     return true

@@ -100,101 +100,91 @@ const Welcome = ({ navigation }) => {
     });
   }, []);
 
-  const requestLocationPermissions = async () => {
-    const permission =
-      Platform.OS === 'android'
-        ? PERMISSIONS.ANDROID.ACCESS_FINE_LOCATION
-        : PERMISSIONS.IOS.LOCATION_WHEN_IN_USE;
+const requestLocationPermissions = async () => {
+  const permission =
+    Platform.OS === 'android'
+      ? PERMISSIONS.ANDROID.ACCESS_FINE_LOCATION
+      : PERMISSIONS.IOS.LOCATION_WHEN_IN_USE;
 
-    const askAgain = async () => {
-      const newStatus = await request(permission);
-      if (newStatus === RESULTS.GRANTED) return true;
-      if (newStatus === RESULTS.BLOCKED) {
-        Alert.alert(
-          'Location Permission Required',
-          'Please enable location permission from settings to proceed.',
-          [{ text: 'Open Settings', onPress: () => openSettings() }]
-        );
-        return false;
-      }
-      return new Promise((resolve) => {
-        Alert.alert(
-          'Location Required',
-          'This app requires location access to continue.',
-          [
-            {
-              text: 'Try Again',
-              onPress: async () => {
-                const result = await askAgain();
-                resolve(result);
-              },
+  const askAgain = async () => {
+    const newStatus = await request(permission);
+    Alert.alert("Location Permission Result", newStatus); // ✅ Added
+    if (newStatus === RESULTS.GRANTED) return true;
+    if (newStatus === RESULTS.BLOCKED) {
+      Alert.alert(
+        'Location Permission Required',
+        'Please enable location permission from settings to proceed.',
+        [{ text: 'Open Settings', onPress: () => openSettings() }]
+      );
+      return false;
+    }
+    return new Promise((resolve) => {
+      Alert.alert(
+        'Location Required',
+        'This app requires location access to continue.',
+        [
+          {
+            text: 'Try Again',
+            onPress: async () => {
+              const result = await askAgain();
+              resolve(result);
             },
-            { text: 'Cancel', style: 'cancel', onPress: () => resolve(false) },
-          ]
-        );
-      });
-    };
-
-    const result = await check(permission);
-    return result === RESULTS.GRANTED ? true : await askAgain();
+          },
+          { text: 'Cancel', style: 'cancel', onPress: () => resolve(false) },
+        ]
+      );
+    });
   };
 
-  const requestCameraPermission = async () => {
-    const permission =
-      Platform.OS === 'android' ? PERMISSIONS.ANDROID.CAMERA : PERMISSIONS.IOS.CAMERA;
+  const result = await check(permission);
+  Alert.alert("Location Permission Check", result); // ✅ Added
+  return result === RESULTS.GRANTED ? true : await askAgain();
+};
 
-    const result = await request(permission);
-    if (result === RESULTS.GRANTED) return true;
+const requestCameraPermission = async () => {
+  const permission =
+    Platform.OS === 'android' ? PERMISSIONS.ANDROID.CAMERA : PERMISSIONS.IOS.CAMERA;
 
-    Alert.alert(
-      'Camera Permission',
-      'Camera access is required to scan QR codes.',
-      [{ text: 'OK' }]
-    );
-    return false;
-  };
+  const result = await request(permission);
+  Alert.alert("Camera Permission Result", result); // ✅ Added
+  if (result === RESULTS.GRANTED) return true;
 
-  const requestStoragePermission = async () => {
-    try {
-      if (Platform.OS === 'android') {
-        if (Platform.Version >= 33) {
-          const result = await request(PERMISSIONS.ANDROID.READ_MEDIA_IMAGES);
-          if (result === RESULTS.GRANTED) return true;
+  Alert.alert(
+    'Camera Permission',
+    'Camera access is required to scan QR codes.',
+    [{ text: 'OK' }]
+  );
+  return false;
+};
 
-          if (result === RESULTS.BLOCKED) {
-            Alert.alert(
-              'Storage Permission Blocked',
-              'Please enable storage access from settings.',
-              [
-                { text: 'Open Settings', onPress: () => openSettings() },
-                { text: 'Cancel', style: 'cancel' },
-              ]
-            );
-          }
-          return false;
-        } else {
-          const write = await request(PERMISSIONS.ANDROID.WRITE_EXTERNAL_STORAGE);
-          if (write === RESULTS.GRANTED) return true;
-
-          if (write === RESULTS.BLOCKED) {
-            Alert.alert(
-              'Storage Permission Blocked',
-              'Please enable storage access from settings.',
-              [
-                { text: 'Open Settings', onPress: () => openSettings() },
-                { text: 'Cancel', style: 'cancel' },
-              ]
-            );
-          }
-          return false;
-        }
-      } else {
-        const result = await request(PERMISSIONS.IOS.PHOTO_LIBRARY);
+const requestStoragePermission = async () => {
+  try {
+    if (Platform.OS === 'android') {
+      if (Platform.Version >= 33) {
+        const result = await request(PERMISSIONS.ANDROID.READ_MEDIA_IMAGES);
+        Alert.alert("Storage Permission Result", result); // ✅ Added
         if (result === RESULTS.GRANTED) return true;
+
         if (result === RESULTS.BLOCKED) {
           Alert.alert(
-            'Photo Library Blocked',
-            'Please enable photo library access from settings.',
+            'Storage Permission Blocked',
+            'Please enable storage access from settings.',
+            [
+              { text: 'Open Settings', onPress: () => openSettings() },
+              { text: 'Cancel', style: 'cancel' },
+            ]
+          );
+        }
+        return false;
+      } else {
+        const write = await request(PERMISSIONS.ANDROID.WRITE_EXTERNAL_STORAGE);
+        Alert.alert("Storage Permission Result", write); // ✅ Added
+        if (write === RESULTS.GRANTED) return true;
+
+        if (write === RESULTS.BLOCKED) {
+          Alert.alert(
+            'Storage Permission Blocked',
+            'Please enable storage access from settings.',
             [
               { text: 'Open Settings', onPress: () => openSettings() },
               { text: 'Cancel', style: 'cancel' },
@@ -203,11 +193,74 @@ const Welcome = ({ navigation }) => {
         }
         return false;
       }
-    } catch (error) {
-      console.error('Storage permission error:', error);
+    } else {
+      const result = await request(PERMISSIONS.IOS.PHOTO_LIBRARY);
+      Alert.alert("Photo Library Permission Result", result); // ✅ Added
+      if (result === RESULTS.GRANTED) return true;
+      if (result === RESULTS.BLOCKED) {
+        Alert.alert(
+          'Photo Library Blocked',
+          'Please enable photo library access from settings.',
+          [
+            { text: 'Open Settings', onPress: () => openSettings() },
+            { text: 'Cancel', style: 'cancel' },
+          ]
+        );
+      }
       return false;
     }
-  };
+  } catch (error) {
+    console.error('Storage permission error:', error);
+    return false;
+  }
+};
+
+const requestNotificationPermission = async () => {
+  if (Platform.OS === 'android' && Platform.Version >= 33) {
+    const result = await PermissionsAndroid.request(
+      PermissionsAndroid.PERMISSIONS.POST_NOTIFICATIONS
+    );
+    Alert.alert("Notification Permission Result (Android)", result); // ✅ Added
+    if (result !== PermissionsAndroid.RESULTS.GRANTED) return null;
+  }
+
+  if (Platform.OS === 'ios') {
+    const { status } = await requestNotifications(['alert', 'sound', 'badge']);
+    Alert.alert("Notification Permission Result (iOS)", status); // ✅ Added
+    if (status !== 'granted') {
+      Alert.alert(
+        'Notifications Disabled',
+        'Please enable notifications in Settings to stay updated.',
+        [{ text: 'OK' }]
+      );
+      return null;
+    }
+  }
+
+  try {
+    const app = getApp(); // ✅ fix missing reference
+    const messaging = getMessaging(app);
+
+    // Add platform check
+    let token = null;
+    if (Platform.OS === 'android') {
+        await messaging.registerDeviceForRemoteMessages();
+        await requestPermission(messaging);
+        token = await getToken(messaging);
+        Alert.alert("FCM Token", token ?? "null"); // ✅ Added
+    } else {
+        console.warn('Skipping FCM token on iOS — requires paid Apple Developer account.');
+        Alert.alert("FCM Token", "iOS FCM token skipped (requires paid Apple Developer account)");
+    }
+
+    return token ?? null;
+} catch (error) {
+    console.error('FCM Token Error:', error);
+    return null;
+}
+
+};
+
 
   const getCurrentLocation = () => {
     return new Promise((resolve) => {
@@ -230,40 +283,7 @@ const Welcome = ({ navigation }) => {
       );
     });
   };
-
-  const requestNotificationPermission = async () => {
-    if (Platform.OS === 'android' && Platform.Version >= 33) {
-      const result = await PermissionsAndroid.request(
-        PermissionsAndroid.PERMISSIONS.POST_NOTIFICATIONS
-      );
-      if (result !== PermissionsAndroid.RESULTS.GRANTED) return null;
-    }
-
-    if (Platform.OS === 'ios') {
-      const { status } = await requestNotifications(['alert', 'sound', 'badge']);
-      if (status !== 'granted') {
-        Alert.alert(
-          'Notifications Disabled',
-          'Please enable notifications in Settings to stay updated.',
-          [{ text: 'OK' }]
-        );
-        return null;
-      }
-    }
-
-    try {
-      const app = getApp(); // ✅ fix missing reference
-      const messaging = getMessaging(app);
-
-      await requestPermission(messaging);
-      const token = await getToken(messaging);
-      return token ?? null;
-    } catch (error) {
-      console.error('FCM Token Error:', error);
-      return null;
-    }
-  };
-
+  
   return (
     <>
       <StatusBar barStyle="light-content" backgroundColor="#34495e" />
