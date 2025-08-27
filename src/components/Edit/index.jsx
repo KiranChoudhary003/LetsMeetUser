@@ -382,27 +382,6 @@ const Edit = ({ route, navigation }) => {
 
                         </TouchableOpacity>
 
-                        <PaperModal visible={modalVisible} transparent animationType="slide" onRequestClose={() => setModalVisible(false)}>
-                            <View style={styles.modalOverlay}>
-                                <View style={styles.modalContainer}>
-                                    <ScrollView style={styles.scrollViewMaxHeight}>
-                                        {roles.map((role, index) => (
-                                            <TouchableOpacity key={index} style={styles.checkboxRow} onPress={() => toggleRole(role)}>
-                                                <Text style={styles.roleText}>{role}</Text>
-                                                <Checkbox.Android
-                                                    status={selectedRoles.includes(role) ? 'checked' : 'unchecked'}
-                                                    color="#34495e"
-                                                />
-                                            </TouchableOpacity>
-                                        ))}
-                                    </ScrollView>
-                                    <TouchableOpacity style={styles.doneButton} onPress={() => setModalVisible(false)}>
-                                        <Text style={styles.doneText}>Done</Text>
-                                    </TouchableOpacity>
-                                </View>
-                            </View>
-                        </PaperModal>
-
                         {!modalVisible && (
                             <View style={styles.buttonContainer}>
                                 <TouchableOpacity style={styles.button} onPress={handleEdit} disabled={isSaving}>
@@ -456,6 +435,32 @@ const Edit = ({ route, navigation }) => {
                         </View>
                     )}
                 </KeyboardAvoidingView>
+                <PaperModal
+                    visible={modalVisible}
+                    transparent={true}
+                    animationType="slide"
+                    onRequestClose={() => setModalVisible(false)}
+                >
+                    <View style={styles.modalOverlay}>
+                        <View style={styles.modalContainer}>
+                            <ScrollView style={{ maxHeight: 250 }}>
+                                {roles.map((role, index) => (
+                                    <View key={index} style={styles.checkboxRow}>
+                                        <Text style={styles.roleText}>{role.toUpperCase()}</Text>
+                                        <Checkbox.Android
+                                            status={selectedRoles.includes(role) ? 'checked' : 'unchecked'}
+                                            onPress={() => toggleRole(role)}
+                                            color="#34495e"
+                                        />
+                                    </View>
+                                ))}
+                            </ScrollView>
+                            <TouchableOpacity style={styles.doneButton} onPress={() => setModalVisible(false)}>
+                                <Text style={{ color: 'white' }}>Done</Text>
+                            </TouchableOpacity>
+                        </View>
+                    </View>
+                </PaperModal>
             </SafeAreaView>
         </Provider>
     );
@@ -521,7 +526,7 @@ const styles = StyleSheet.create({
         borderColor: '#ccc',
         padding: 12,
         borderRadius: 8,
-        marginBottom: 15,
+        marginBottom: 12,
         alignSelf: 'center',
         width: '85%',
         height: 45,

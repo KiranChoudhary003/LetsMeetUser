@@ -684,21 +684,28 @@ const Scanner = ({ navigation }) => {
 
           <View style={{ flex: 1, alignItems: 'center', top: 70 }}>
             {device ? (
-              <Camera
+              <View
                 style={{
                   height: 500,
                   width: 295,
                   borderRadius: 20,
                   overflow: 'hidden',
                 }}
-                device={device}
-                isActive={true}
-                codeScanner={codeScanner} // ✅ now using codeScanner
-              />
+              >
+                <Camera
+                  style={{
+                    flex: 1,
+                  }}
+                  device={device}
+                  isActive={true}
+                  codeScanner={codeScanner}
+                />
+              </View>
             ) : (
               <ActivityIndicator size="large" color="#34495e" style={{ marginTop: 200 }} />
             )}
           </View>
+
 
           <View style={styles.overlayContainer}>
             <View style={styles.scannerBox}>
@@ -840,20 +847,13 @@ const styles = StyleSheet.create({
     borderRadius: 8,
   },
   buttonText: { color: '#fff', fontSize: 16 },
-  customMarker: {
-    borderColor: '#30D5C8',
-    borderWidth: 3,
-    width: 250,
-    height: 250,
-    borderRadius: 16,
-  },
   scannerBox: {
     width: 250,
     height: 250,
     top: 0,
     borderColor: '#34495e',
     borderWidth: 3,
-    borderRadius: 16,
+    borderRadius: 20,
     overflow: 'hidden',
     position: 'relative',
   },
@@ -874,6 +874,7 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
     alignItems: 'center',
     zIndex: 10,
+    borderRadius: 20,
   },
   loadingOverlay: {
     position: 'absolute',
