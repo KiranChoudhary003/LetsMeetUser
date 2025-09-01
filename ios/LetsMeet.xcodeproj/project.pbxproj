@@ -278,6 +278,7 @@
 			baseConfigurationReference = D6E57D22969207D197C6B49E /* Pods-LetsMeet.debug.xcconfig */;
 			buildSettings = {
 				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
+				ASSETCATALOG_COMPILER_INCLUDE_ALL_APPICON_ASSETS = NO;
 				CLANG_ENABLE_MODULES = YES;
 				CODE_SIGN_ENTITLEMENTS = LetsMeet/LetsMeet.entitlements;
 				CURRENT_PROJECT_VERSION = 1;
@@ -532,6 +533,7 @@
 			baseConfigurationReference = 316CD664B11FAF0A27B7A410 /* Pods-LetsMeet.release.xcconfig */;
 			buildSettings = {
 				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
+				ASSETCATALOG_COMPILER_INCLUDE_ALL_APPICON_ASSETS = NO;
 				CLANG_ENABLE_MODULES = YES;
 				CODE_SIGN_ENTITLEMENTS = LetsMeet/LetsMeet.entitlements;
 				CURRENT_PROJECT_VERSION = 1;
