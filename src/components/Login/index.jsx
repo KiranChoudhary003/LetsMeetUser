@@ -16,6 +16,7 @@ import {
     StatusBar,
     useColorScheme,
     Dimensions,
+    ScrollView,
 } from 'react-native';
 import logo from '../../assets/logo.png';
 import axios from 'axios';
@@ -215,10 +216,10 @@ const Login = ({ navigation, route }) => {
             <StatusBar barStyle={useColorScheme() === 'dark' ? 'light-content' : 'dark-content'} />
             <KeyboardAvoidingView
                 style={styles.container}
-                behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
+                behavior={Platform.OS === 'ios' ? 'padding' : 'padding'}
             >
                 <TouchableWithoutFeedback onPress={Keyboard.dismiss}>
-                    <View style={styles.inner}>
+                    <ScrollView contentContainerStyle={styles.inner}>
                         <Image source={logo} style={styles.logo} />
                         <Text style={styles.text}>Let's Meet</Text>
 
@@ -304,7 +305,7 @@ const Login = ({ navigation, route }) => {
                                 </View>
                             </View>
                         </Modal>
-                    </View>
+                    </ScrollView>
                 </TouchableWithoutFeedback>
 
                 <View style={styles.contactContainer}>

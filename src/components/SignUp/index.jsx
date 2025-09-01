@@ -133,52 +133,9 @@ const SignUp = ({ navigation, route }) => {
     };
 
     const validatePassword = (passwordToValidate) => {
-        const commonPasswords = [
-            'Password@123', 'Admin@123', 'Welcome@123', 'Test@123', 'Qwerty@123',
-            'Aa@12345', 'Pass@123', 'India@123', 'User@123', 'Hello@123', 'P@ssw0rd',
-            'P@ssword1', 'Abc@1234', 'Temp@123', 'Demo@123', 'Sample@123',
-            'Login@123', 'Letmein@123'
-        ];
-
-        const dictionaryWords = [
-            'password', 'admin', 'welcome', 'test', 'qwerty', 'abc', 'abcd',
-            'letmein', 'user', 'temp', 'demo', 'login', 'india', 'hello', 'sample',
-            'football', 'iloveyou', 'monkey', 'dragon', 'sunshine', 'princess',
-            'master', 'shadow', 'superman', 'batman', 'pokemon', 'naruto',
-        ];
-
-        const isCommonPattern = (password) => {
-            const lower = password.toLowerCase();
-            for (let word of dictionaryWords) {
-                const pattern = new RegExp(`^[^a-zA-Z]*${word}[^a-zA-Z]*$`, 'i');
-                if (pattern.test(password)) {
-                    return true;
-                }
-            }
-            const currentYear = new Date().getFullYear();
-            const years = [];
-            for (let y = 2000; y <= currentYear + 2; y++) {
-                years.push(String(y));
-            }
-            for (let year of years) {
-                if (
-                    lower.startsWith(year) ||
-                    lower.endsWith(year) ||
-                    /^[^a-zA-Z]*\d{4}[^a-zA-Z]*$/.test(lower)
-                ) {
-                    return true;
-                }
-            }
-            if (lower.includes('123') || lower.includes('abc') || lower.includes('qwerty')) {
-                return true;
-            }
-            return false;
-        };
-
         if (!passwordToValidate.trim()) {
             return 'Password is required';
         }
-
         const trimmedPassword = passwordToValidate.trim();
         if (trimmedPassword.length < 8) {
             return 'Password must be at least 8 characters long';
@@ -204,17 +161,8 @@ const SignUp = ({ navigation, route }) => {
         if (/[^A-Za-z0-9!@#$%^&*(),.?":{}|<>]/.test(trimmedPassword)) {
             return 'Password contains invalid characters';
         }
-        if (commonPasswords.includes(trimmedPassword)) {
-            return 'Password is too common. Choose a stronger one';
-        }
-        if (isCommonPattern(trimmedPassword)) {
-            return 'Password is too predictable. Choose a stronger one';
-        }
         return true;
     };
-
-
-
 
 
     const handleSubmit = async () => {
@@ -291,7 +239,7 @@ const SignUp = ({ navigation, route }) => {
             });
 
             const data = await response.json();
-
+            console.log(data);
             if (response.status === 201) {
                 setalertMessage('Please check your email to activate your account.');
                 setAlertAction(() => () => navigation.replace('Login', { deviceToken }));

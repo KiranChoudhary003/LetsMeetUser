@@ -108,7 +108,6 @@ const requestLocationPermissions = async () => {
 
   const askAgain = async () => {
     const newStatus = await request(permission);
-    Alert.alert("Location Permission Result", newStatus); // ✅ Added
     if (newStatus === RESULTS.GRANTED) return true;
     if (newStatus === RESULTS.BLOCKED) {
       Alert.alert(
@@ -137,7 +136,6 @@ const requestLocationPermissions = async () => {
   };
 
   const result = await check(permission);
-  Alert.alert("Location Permission Check", result); // ✅ Added
   return result === RESULTS.GRANTED ? true : await askAgain();
 };
 
@@ -146,7 +144,6 @@ const requestCameraPermission = async () => {
     Platform.OS === 'android' ? PERMISSIONS.ANDROID.CAMERA : PERMISSIONS.IOS.CAMERA;
 
   const result = await request(permission);
-  Alert.alert("Camera Permission Result", result); // ✅ Added
   if (result === RESULTS.GRANTED) return true;
 
   Alert.alert(
@@ -162,7 +159,6 @@ const requestStoragePermission = async () => {
     if (Platform.OS === 'android') {
       if (Platform.Version >= 33) {
         const result = await request(PERMISSIONS.ANDROID.READ_MEDIA_IMAGES);
-        Alert.alert("Storage Permission Result", result); // ✅ Added
         if (result === RESULTS.GRANTED) return true;
 
         if (result === RESULTS.BLOCKED) {
@@ -178,7 +174,6 @@ const requestStoragePermission = async () => {
         return false;
       } else {
         const write = await request(PERMISSIONS.ANDROID.WRITE_EXTERNAL_STORAGE);
-        Alert.alert("Storage Permission Result", write); // ✅ Added
         if (write === RESULTS.GRANTED) return true;
 
         if (write === RESULTS.BLOCKED) {
@@ -195,7 +190,6 @@ const requestStoragePermission = async () => {
       }
     } else {
       const result = await request(PERMISSIONS.IOS.PHOTO_LIBRARY);
-      Alert.alert("Photo Library Permission Result", result); // ✅ Added
       if (result === RESULTS.GRANTED) return true;
       if (result === RESULTS.BLOCKED) {
         Alert.alert(
@@ -220,13 +214,11 @@ const requestNotificationPermission = async () => {
     const result = await PermissionsAndroid.request(
       PermissionsAndroid.PERMISSIONS.POST_NOTIFICATIONS
     );
-    Alert.alert("Notification Permission Result (Android)", result); // ✅ Added
     if (result !== PermissionsAndroid.RESULTS.GRANTED) return null;
   }
 
   if (Platform.OS === 'ios') {
     const { status } = await requestNotifications(['alert', 'sound', 'badge']);
-    Alert.alert("Notification Permission Result (iOS)", status); // ✅ Added
     if (status !== 'granted') {
       Alert.alert(
         'Notifications Disabled',
@@ -247,7 +239,6 @@ const requestNotificationPermission = async () => {
         await messaging.registerDeviceForRemoteMessages();
         await requestPermission(messaging);
         token = await getToken(messaging);
-        Alert.alert("FCM Token", token ?? "null"); // ✅ Added
     } else {
         console.warn('Skipping FCM token on iOS — requires paid Apple Developer account.');
         Alert.alert("FCM Token", "iOS FCM token skipped (requires paid Apple Developer account)");

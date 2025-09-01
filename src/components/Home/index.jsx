@@ -1,27 +1,16 @@
 /* eslint-disable react-hooks/exhaustive-deps */
 /* eslint-disable react-native/no-inline-styles */
-import React, { useRef, useState, useEffect, useContext, useMemo, useCallback } from 'react';
-import { Modal, TouchableWithoutFeedback, ActivityIndicator, Alert } from 'react-native';
-import {
-    ScrollView,
-    Text,
-    View,
-    SafeAreaView,
-    StatusBar,useColorScheme,
-    TouchableOpacity,
-    StyleSheet,
-    Animated,
-    Pressable,
-} from 'react-native';
-import { LocationContext } from '../LocationContext/LocationContext';
 import AsyncStorage from '@react-native-async-storage/async-storage';
-import axios from 'axios';
-import Ionicons from 'react-native-vector-icons/Ionicons';
-import { Calendar } from 'react-native-calendars';
 import { useFocusEffect } from '@react-navigation/native';
+import axios from 'axios';
 import dayjs from 'dayjs';
-import utc from 'dayjs/plugin/utc';
 import timezone from 'dayjs/plugin/timezone';
+import utc from 'dayjs/plugin/utc';
+import React, { useCallback, useContext, useEffect, useMemo, useRef, useState } from 'react';
+import { ActivityIndicator, Alert, Animated, Modal, Pressable, SafeAreaView, ScrollView, StatusBar, StyleSheet, Text, TouchableOpacity, TouchableWithoutFeedback, useColorScheme, View } from 'react-native';
+import { Calendar } from 'react-native-calendars';
+import Ionicons from 'react-native-vector-icons/Ionicons';
+import { LocationContext } from '../LocationContext/LocationContext';
 dayjs.extend(utc);
 dayjs.extend(timezone);
 
@@ -89,6 +78,7 @@ const EventCard = ({
                             <View
                                 style={{
                                     backgroundColor: '#4CAF50',
+                                    opacity: 0.6,
                                     paddingHorizontal: 12,
                                     paddingVertical: 4,
                                     borderRadius: 20,
@@ -96,7 +86,7 @@ const EventCard = ({
                                     justifyContent: 'center',
                                 }}
                             >
-                                <Text style={{ color: '#fff', fontWeight: 'bold', fontSize: 12 }}>
+                                <Text disabled={true} style={{ color: '#fff', fontWeight: 'bold', fontSize: 12 }}>
                                     Checked-In
                                 </Text>
                             </View>
@@ -232,11 +222,21 @@ const Home = ({ navigation }) => {
 
     useFocusEffect(
         React.useCallback(() => {
+            // Case 1: First load
             if (eventData.length === 0) {
                 fetchUpcomingEvents();
+                return;
             }
         }, [eventData, fetchUpcomingEvents])
     );
+
+    useEffect(() => {
+        if (eventData.length > 0) {
+            setFilteredEvents(filterEvents(eventData, selectedFilter, customDate, location, global));
+        }
+    }, [eventData, selectedFilter, customDate, location, global]);
+
+
 
     const filterEvents = (events, filterType, filterDate, location) => {
         const now = new Date();
@@ -259,7 +259,7 @@ const Home = ({ navigation }) => {
                 );
 
             case 'Choose from Calendar':
-                if (!filterDate) {return [];}
+                if (!filterDate) { return []; }
                 return events.filter(event =>
                     dayjs.utc(event.date).local().format('YYYY-MM-DD') === dayjs(filterDate).format('YYYY-MM-DD')
                 );
@@ -382,6 +382,7 @@ const Home = ({ navigation }) => {
 
             const rawEvents = response.data.events;
             const checkInDistance = response.data.check_in_distance;
+            console.log(response.data);
 
             await AsyncStorage.setItem('check_in_distance', checkInDistance.toString());
 
@@ -629,6 +630,22 @@ const Home = ({ navigation }) => {
                                                     checkInAvailable: event.check_in_available,
                                                     already_checked_in: event.already_checked_in,
                                                     checkInDistance: event.check_in_distance,
+                                                    onRegisterSuccess: (eventId, latestCheckInAvailable) => {
+                                                        setEventData((prev) =>
+                                                            prev.map((item) =>
+                                                                item.id === eventId
+                                                                    ? { ...item, is_registered: true, check_in_available: latestCheckInAvailable }
+                                                                    : item
+                                                            )
+                                                        );
+                                                    },
+                                                    onCheckInSuccess: (eventId) => {
+                                                        setEventData((prev) =>
+                                                            prev.map((item) =>
+                                                                item.id === eventId ? { ...item, already_checked_in: true } : item
+                                                            )
+                                                        );
+                                                    },
                                                 })
                                             }
                                         />
