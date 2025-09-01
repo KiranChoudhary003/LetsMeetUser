@@ -1,7 +1,10 @@
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import axios from 'axios';
 import React, { useEffect, useState } from 'react';
-import { ActivityIndicator, Alert, Modal, SafeAreaView, ScrollView, StyleSheet, StatusBar,useColorScheme,Text, TouchableOpacity, TouchableWithoutFeedback, View } from 'react-native';
+import {
+    ActivityIndicator, Alert, Modal, SafeAreaView, ScrollView,
+    StyleSheet, StatusBar, useColorScheme, Text, TouchableOpacity, TouchableWithoutFeedback, View, RefreshControl,
+} from 'react-native';
 import { TextInput } from 'react-native-gesture-handler';
 import Ionicons from 'react-native-vector-icons/Ionicons';
 import MaterialIcons from 'react-native-vector-icons/MaterialIcons';
@@ -59,6 +62,8 @@ const Complain = ({ navigation }) => {
     const [allComplains, setAllComplains] = useState([]);
     const [loading, setLoading] = useState(true);
     const [saving, setSaving] = useState(false);
+    const [isFirstLoad, setIsFirstLoad] = useState(true);
+
 
     useEffect(() => {
         const loadData = async () => {
@@ -95,6 +100,7 @@ const Complain = ({ navigation }) => {
         } catch (error) {
         } finally {
             setLoading(false);
+            if (isFirstLoad) setIsFirstLoad(false);
         }
     };
 
@@ -155,7 +161,7 @@ const Complain = ({ navigation }) => {
 
     return (
         <>
-             <StatusBar barStyle={useColorScheme() === 'dark' ? 'light-content' : 'dark-content'} />
+            <StatusBar barStyle={useColorScheme() === 'dark' ? 'light-content' : 'dark-content'} />
             <SafeAreaView style={styles.container}>
                 <View style={styles.header}>
                     <Text style={styles.desk}>Complain Desk</Text>
@@ -168,13 +174,21 @@ const Complain = ({ navigation }) => {
                     </TouchableOpacity>
                 </View>
 
-                {loading ? (
+                {loading && complains.length === 0 ? (
                     <View style={styles.loaderContainer}>
                         <ActivityIndicator size="large" color="#34495e" />
                         <Text style={{ marginTop: 8, color: '#444' }}>Loading complaints...</Text>
                     </View>
                 ) : (
-                    <ScrollView contentContainerStyle={styles.scrollView}>
+                    <ScrollView contentContainerStyle={styles.scrollView}
+                        refreshControl={
+                            <RefreshControl
+                                refreshing={loading && !isFirstLoad && complains.length > 0}
+                                onRefresh={fetchComplains}
+                                colors={["#34495e"]}
+                                tintColor="#34495e"
+                            />
+                        }>
 
                         <View style={styles.complainCard}>
                             {complains.length === 0 ? (
@@ -431,7 +445,7 @@ const styles = StyleSheet.create({
         paddingHorizontal: 12,
         marginHorizontal: 16,
         elevation: 50,
-        width : 150,
+        width: 150,
     },
     filterOption: {
         paddingVertical: 10,
@@ -442,7 +456,7 @@ const styles = StyleSheet.create({
         backgroundColor: 'rgba(255,255,255,.29)',
         width: '100%',
         paddingVertical: 10,
-        paddingLeft : 5,
+        paddingLeft: 5,
         borderRadius: 10,
     },
     filterText: { fontSize: 14, color: '#fff' },

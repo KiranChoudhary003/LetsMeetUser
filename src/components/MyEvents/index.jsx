@@ -5,7 +5,7 @@ import axios from 'axios';
 import React, { useContext, useEffect, useRef, useState } from 'react';
 import {
   ActivityIndicator, Alert, Animated,
-  Pressable, SafeAreaView, ScrollView, StatusBar, useColorScheme, StyleSheet, Text, TouchableOpacity, View,
+  Pressable, SafeAreaView, ScrollView, StatusBar, useColorScheme, StyleSheet, Text, TouchableOpacity, View, RefreshControl,
 } from 'react-native';
 import { LocationContext } from '../LocationContext/LocationContext';
 
@@ -207,6 +207,7 @@ const EventsScreen = ({ navigation }) => {
   const [eventData, setEventData] = useState([]);
   const [loading, setLoading] = useState(true);
   const { location } = useContext(LocationContext);
+  const [isFirstLoad, setIsFirstLoad] = useState(true);
   const events = groupEventsByMonth(eventData);
 
   const handleCheckIn = async (eventId) => {
@@ -290,6 +291,7 @@ const EventsScreen = ({ navigation }) => {
       console.error('🚨 fetchUpcomingEvents error:', error);
     } finally {
       setLoading(false);
+      if (isFirstLoad) setIsFirstLoad(false);
     }
   };
 
@@ -316,34 +318,72 @@ const EventsScreen = ({ navigation }) => {
   return (
     <View style={styles.background}>
       <SafeAreaView style={styles.container}>
-        <StatusBar barStyle={useColorScheme() === 'dark' ? 'light-content' : 'dark-content'} />
+        <StatusBar
+          barStyle={
+            useColorScheme() === "dark" ? "light-content" : "dark-content"
+          }
+        />
         <View style={styles.header}>
           {/* Centered Title */}
           <View style={styles.eventsLabel}>
             <Text style={styles.eventsLabelText}>My Events</Text>
           </View>
-
         </View>
 
-        <ScrollView contentContainerStyle={styles.scrollView}>
-          {loading ? (
-            <View style={{ flex: 1, justifyContent: 'center', alignItems: 'center' }}>
-              <Text style={{ marginBottom: 10, fontSize: 16, color: '#555' }}>Loading your events...</Text>
+        <ScrollView
+          contentContainerStyle={styles.scrollView}
+          refreshControl={
+            <RefreshControl
+              refreshing={loading && !isFirstLoad && eventData.length > 0}
+              onRefresh={fetchUpcomingEvents}
+              colors={["#34495e"]}
+              tintColor="#34495e"
+            />
+          }
+        >
+          {loading && eventData.length === 0 ? (
+            <View
+              style={{ flex: 1, justifyContent: "center", alignItems: "center" }}
+            >
+              <Text
+                style={{ marginBottom: 10, fontSize: 16, color: "#555" }}
+              >
+                Loading your events...
+              </Text>
               <ActivityIndicator size="large" color="#34495e" />
             </View>
           ) : eventData.length === 0 ? (
-            <View style={{ alignItems: 'center', marginTop: 60, paddingHorizontal: 24 }}>
-              <Text style={{ fontSize: 18, fontWeight: '600', color: '#2c3e50', marginTop: 16, textAlign: 'center' }}>
+            <View
+              style={{ alignItems: "center", marginTop: 60, paddingHorizontal: 24 }}
+            >
+              <Text
+                style={{
+                  fontSize: 18,
+                  fontWeight: "600",
+                  color: "#2c3e50",
+                  marginTop: 16,
+                  textAlign: "center",
+                }}
+              >
                 No Events Found
               </Text>
-              <Text style={{ fontSize: 14, color: '#7f8c8d', textAlign: 'center', marginTop: 6 }}>
+              <Text
+                style={{
+                  fontSize: 14,
+                  color: "#7f8c8d",
+                  textAlign: "center",
+                  marginTop: 6,
+                }}
+              >
                 You haven't registered or attended any events yet.
               </Text>
             </View>
           ) : (
             Object.entries(events).map(([month, data]) => (
               <View key={month} style={styles.monthSection}>
-                <Text style={styles.monthTitle}>{`${data.monthName} ${data.year}`}</Text>
+                <Text style={styles.monthTitle}>
+                  {`${data.monthName} ${data.year}`}
+                </Text>
 
                 {data.events.map((event) => (
                   <EventCard
@@ -361,7 +401,7 @@ const EventsScreen = ({ navigation }) => {
                     onCheckIn={() => handleCheckIn(event.id)}
                     checkInDistance={event.check_in_distance}
                     onPress={() =>
-                      navigation.navigate('MyEventsDescription', {
+                      navigation.navigate("MyEventsDescription", {
                         id: event.id,
                         name: event.name,
                         organizer: event.organizer,
@@ -380,7 +420,8 @@ const EventsScreen = ({ navigation }) => {
                         pendingRequests: event.pendingRequests,
                         checkInDistance: event.check_in_distance,
                         fetchUpcomingEvents,
-                      })}
+                      })
+                    }
                   />
                 ))}
               </View>
@@ -388,9 +429,9 @@ const EventsScreen = ({ navigation }) => {
           )}
         </ScrollView>
       </SafeAreaView>
-
     </View>
   );
+
 };
 
 const styles = StyleSheet.create({

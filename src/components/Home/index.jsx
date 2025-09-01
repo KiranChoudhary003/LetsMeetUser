@@ -7,7 +7,10 @@ import dayjs from 'dayjs';
 import timezone from 'dayjs/plugin/timezone';
 import utc from 'dayjs/plugin/utc';
 import React, { useCallback, useContext, useEffect, useMemo, useRef, useState } from 'react';
-import { ActivityIndicator, Alert, Animated, Modal, Pressable, SafeAreaView, ScrollView, StatusBar, StyleSheet, Text, TouchableOpacity, TouchableWithoutFeedback, useColorScheme, View } from 'react-native';
+import {
+    ActivityIndicator, Alert, Animated, Modal, Pressable, SafeAreaView, ScrollView, StatusBar, StyleSheet,
+    Text, TouchableOpacity, TouchableWithoutFeedback, useColorScheme, View, RefreshControl,
+} from 'react-native';
 import { Calendar } from 'react-native-calendars';
 import Ionicons from 'react-native-vector-icons/Ionicons';
 import { LocationContext } from '../LocationContext/LocationContext';
@@ -211,6 +214,7 @@ const Home = ({ navigation }) => {
     const [showDatePicker, setShowDatePicker] = useState(false);
     const [hasDateBeenPicked, setHasDateBeenPicked] = useState(false);
     const [loading, setLoading] = useState(false);
+    const [isFirstLoad, setIsFirstLoad] = useState(true);
     const [checkInDistance, setCheckInDistance] = useState(null);
 
     const formatDateToLocalYYYYMMDD = (date) => {
@@ -408,6 +412,7 @@ const Home = ({ navigation }) => {
         } catch (error) {
         } finally {
             setLoading(false);
+            if (isFirstLoad) setIsFirstLoad(false);
         }
     }, [location, selectedFilter, customDate]);
 
@@ -487,7 +492,15 @@ const Home = ({ navigation }) => {
                         )}
                     </View>
                 </View>
-                <ScrollView contentContainerStyle={styles.scrollView}>
+                <ScrollView contentContainerStyle={styles.scrollView}
+                    refreshControl={
+                        <RefreshControl
+                            refreshing={loading && !isFirstLoad && eventData.length > 0}
+                            onRefresh={fetchUpcomingEvents}
+                            colors={["#34495e"]}
+                            tintColor="#34495e"
+                        />
+                    }>
                     {showFilters && (
                         <Modal
                             animationType="slide"
@@ -584,7 +597,7 @@ const Home = ({ navigation }) => {
                             </TouchableOpacity>
                         </Modal>
                     )}
-                    {loading ? (
+                    {loading && eventData.length === 0 ? (
                         <View style={{ marginTop: 40, alignItems: 'center' }}>
                             <ActivityIndicator size="large" color="#34495e" />
                             <Text style={{ marginTop: 10, color: '#34495e', fontWeight: '600' }}>Loading events...</Text>
