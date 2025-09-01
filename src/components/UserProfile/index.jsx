@@ -184,129 +184,133 @@ const UserProfile = ({ navigation, route }) => {
 
     return (
         <>
-        <StatusBar barStyle={useColorScheme() === 'dark' ? 'light-content' : 'dark-content'} />
-        <SafeAreaView style={styles.container}>
-            <ScrollView contentContainerStyle={{ flexGrow: 1 }}>
-                <View style={styles.headerContainer}>
-                    <View style={styles.header}>
-                        <TouchableOpacity onPress={() => navigation.goBack()}>
-                            <MaterialIcons name="arrow-back" size={24} color="#fff" />
-                        </TouchableOpacity>
-                        <Text style={styles.profileHeader}>Profile</Text>
-                        {isViewingOwnProfile && (
-                            <TouchableOpacity style={styles.profileEdit} onPress={handleProfileEdit}>
-                                <MaterialIcons name="edit" size={24} color="#fff" />
+            <StatusBar barStyle={useColorScheme() === 'dark' ? 'light-content' : 'dark-content'} />
+            <SafeAreaView style={styles.container}>
+                <ScrollView contentContainerStyle={{ flexGrow: 1 }}>
+                    <View style={styles.headerContainer}>
+                        <View style={styles.header}>
+                            <TouchableOpacity onPress={() => navigation.goBack()}>
+                                <MaterialIcons name="arrow-back" size={24} color="#fff" />
                             </TouchableOpacity>
-                        )}
-                    </View>
-                    <View style={styles.userName}>
-                        <Text style={styles.userDetail}>
-                            {userProfile.first_name} {userProfile.middle_name} {userProfile.last_name}
-                        </Text>
-                    </View>
-                    <View style={styles.userRole}>
-                        <Text style={styles.userDetail}>{userProfile.attendees_role}</Text>
-                    </View>
-                </View>
-
-                <View style={styles.profileWrapper}>
-                    <TouchableOpacity onPress={() => setProfileView(true)}>
-                        <Image source={getProfileImageSource()} style={styles.profile} />
-                    </TouchableOpacity>
-                </View>
-
-                <Modal visible={profileView} transparent animationType="fade">
-                    <BlurView style={styles.blur} blurType="light" blurAmount={15} />
-                    <TouchableOpacity style={styles.modalOverlay} onPressOut={() => setProfileView(false)}>
-                        <View style={styles.modalContent}>
-                            <Image
-                                source={getProfileImageSource()}
-                                style={styles.fullImage}
-                                resizeMode="contain"
-                                />
+                            <Text style={styles.profileHeader}>Profile</Text>
                             {isViewingOwnProfile && (
-                                <TouchableOpacity style={styles.editIcon} onPress={handleEditPhoto}>
+                                <TouchableOpacity style={styles.profileEdit} onPress={handleProfileEdit}>
                                     <MaterialIcons name="edit" size={24} color="#fff" />
                                 </TouchableOpacity>
                             )}
                         </View>
-                    </TouchableOpacity>
-                </Modal>
-                {isViewingOwnProfile && loading ? (
-                    <View style={{ marginTop: 150, alignItems: 'center' }}>
-                        <ActivityIndicator size="large" color="#34495e" />
-                        <Text style={{ marginTop: 10, color: '#34495e', fontWeight: '600' }}>Loading Profile...</Text>
-                    </View>
-                ) : (
-                    <View style={styles.user}>
-                        <View style={styles.iconRow}>
-                            {userProfile.email && (
-                                <TouchableOpacity
-                                onPress={() => Linking.openURL(`mailto:${userProfile.email}`)}
-                                activeOpacity={0.7}
-                                style={styles.iconButton}
-                                >
-                                    <MaterialIcons name="email" size={24} color="#34495e" />
-                                </TouchableOpacity>
-                            )}
+                        <View style={styles.userName}>
+                            <Text style={styles.userDetail}>
+                                {[userProfile.first_name, userProfile.middle_name, userProfile.last_name]
+                                    .filter(Boolean)
+                                    .join(" ")}
+                            </Text>
 
-                            {userProfile.linkedin_url && (
-                                <TouchableOpacity
-                                onPress={() => Linking.openURL(userProfile.linkedin_url)}
-                                activeOpacity={0.7}
-                                style={styles.iconButton}
-                                >
-                                    <FontAwesome name="linkedin" size={24} color="#0A66C2" />
-                                </TouchableOpacity>
-                            )}
                         </View>
+                        <View style={styles.userRole}>
+                            <Text style={styles.userDetail}>{userProfile.attendees_role}</Text>
+                        </View>
+                    </View>
 
-                        <View style={styles.preferenceSection}>
-                            <View style={styles.preferenceRow}>
-                                <Text style={styles.preferenceLabel}>Company Name: </Text>
-                                <Text style={styles.companyDetails}>
-                                    {userProfile.company_name && userProfile.company_name.trim() !== ''
-                                        ? userProfile.company_name
-                                        : 'Not Provided'}
-                                </Text>
+                    <View style={styles.profileWrapper}>
+                        <TouchableOpacity onPress={() => setProfileView(true)}>
+                            <Image source={getProfileImageSource()} style={styles.profile} />
+                        </TouchableOpacity>
+                    </View>
+
+                    <Modal visible={profileView} transparent animationType="fade">
+                        <BlurView style={styles.blur} blurType="light" blurAmount={15} />
+                        <FontAwesome name="close" size={28} color="#ffffff" style={styles.profileCloseIcon} onPress={() => setProfileView(false)} />
+                        <TouchableOpacity style={styles.modalOverlay} onPressOut={() => setProfileView(false)}>
+                            <View style={styles.modalContent}>
+                                <Image
+                                    source={getProfileImageSource()}
+                                    style={styles.fullImage}
+                                    resizeMode="contain"
+                                />
+                                {isViewingOwnProfile && (
+                                    <TouchableOpacity style={styles.editIcon} onPress={handleEditPhoto}>
+                                        <MaterialIcons name="edit" size={24} color="#fff" />
+                                    </TouchableOpacity>
+                                )}
                             </View>
+                        </TouchableOpacity>
+                    </Modal>
+                    {isViewingOwnProfile && loading ? (
+                        <View style={{ marginTop: 150, alignItems: 'center' }}>
+                            <ActivityIndicator size="large" color="#34495e" />
+                            <Text style={{ marginTop: 10, color: '#34495e', fontWeight: '600' }}>Loading Profile...</Text>
+                        </View>
+                    ) : (
+                        <View style={styles.user}>
+                            <View style={styles.iconRow}>
+                                {userProfile.email && (
+                                    <TouchableOpacity
+                                        onPress={() => Linking.openURL(`mailto:${userProfile.email}`)}
+                                        activeOpacity={0.7}
+                                        style={styles.iconButton}
+                                    >
+                                        <MaterialIcons name="email" size={24} color="#34495e" />
+                                    </TouchableOpacity>
+                                )}
 
-                            <View style={styles.preferenceRow}>
-                                <Text style={styles.preferenceLabel}>Preferences:</Text>
-
-                                {userProfile.preference?.length > 0 ? null : (
-                                    <Text style={styles.noneText}>None</Text>
+                                {userProfile.linkedin_url && (
+                                    <TouchableOpacity
+                                        onPress={() => Linking.openURL(userProfile.linkedin_url)}
+                                        activeOpacity={0.7}
+                                        style={styles.iconButton}
+                                    >
+                                        <FontAwesome name="linkedin" size={24} color="#0A66C2" />
+                                    </TouchableOpacity>
                                 )}
                             </View>
 
-                            {userProfile.preference?.length > 0 && (
-                                <ScrollView
-                                style={styles.preferenceScroll}
-                                contentContainerStyle={styles.tagContainer}
-                                showsVerticalScrollIndicator={false}
-                                >
-                                    {userProfile.preference.map((item, index) => (
-                                        <View key={index} style={styles.tag}>
-                                            <Text style={styles.tagText}>{item}</Text>
-                                        </View>
-                                    ))}
-                                </ScrollView>
-                            )}
-                        </View>
+                            <View style={styles.preferenceSection}>
+                                <View style={styles.preferenceRow}>
+                                    <Text style={styles.preferenceLabel}>Company Name: </Text>
+                                    <Text style={styles.companyDetails}>
+                                        {userProfile.company_name && userProfile.company_name.trim() !== ''
+                                            ? userProfile.company_name
+                                            : 'Not Provided'}
+                                    </Text>
+                                </View>
 
-                        {isViewingOwnProfile && (
-                            logoutLoading ? (
-                                <ActivityIndicator size="large" color="#34495e" style={{ marginTop: 10 }} />
-                            ) : (
-                                <TouchableOpacity onPress={handleLogout}>
-                                    <Text style={styles.logout}>Logout</Text>
-                                </TouchableOpacity>
-                            ))}
-                    </View>
-                )}
-            </ScrollView>
-        </SafeAreaView >
-                </>
+                                <View style={styles.preferenceRow}>
+                                    <Text style={styles.preferenceLabel}>Preferences:</Text>
+
+                                    {userProfile.preference?.length > 0 ? null : (
+                                        <Text style={styles.noneText}>None</Text>
+                                    )}
+                                </View>
+
+                                {userProfile.preference?.length > 0 && (
+                                    <ScrollView
+                                        style={styles.preferenceScroll}
+                                        contentContainerStyle={styles.tagContainer}
+                                        showsVerticalScrollIndicator={false}
+                                    >
+                                        {userProfile.preference.map((item, index) => (
+                                            <View key={index} style={styles.tag}>
+                                                <Text style={styles.tagText}>{item}</Text>
+                                            </View>
+                                        ))}
+                                    </ScrollView>
+                                )}
+                            </View>
+
+                            {isViewingOwnProfile && (
+                                logoutLoading ? (
+                                    <ActivityIndicator size="large" color="#34495e" style={{ marginTop: 10 }} />
+                                ) : (
+                                    <TouchableOpacity onPress={handleLogout}>
+                                        <Text style={styles.logout}>Logout</Text>
+                                    </TouchableOpacity>
+                                ))}
+                        </View>
+                    )}
+                </ScrollView>
+            </SafeAreaView >
+        </>
     );
 };
 
@@ -457,6 +461,12 @@ const styles = StyleSheet.create({
         bottom: 0,
         left: 0,
         right: 0,
+    },
+    profileCloseIcon: {
+        position: 'absolute',
+        top: 40,
+        right: 20,
+        zIndex: 10,
     },
     modalContent: {
         backgroundColor: '#f7faff',

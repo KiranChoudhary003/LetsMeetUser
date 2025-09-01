@@ -807,7 +807,6 @@ const styles = StyleSheet.create({
     backgroundColor: '#34495E',
     paddingHorizontal: 12,
     paddingVertical: 12,
-    height: 70,
   },
 
   headerTitleContainer: {

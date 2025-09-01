@@ -15,10 +15,10 @@ const SignUp = ({ navigation, route }) => {
     const [visible, setVisible] = useState(false);
     const [modalVisible, setModalVisible] = useState(false);
     const [selectedRoles, setSelectedRoles] = useState([]);
-    const [fullName, setFullName] = React.useState('');
-    const [firstName, setFirstName] = React.useState('');
-    const [middleName, setMiddleName] = React.useState('');
-    const [lastName, setLastName] = React.useState('');
+    const [fullName, setFullName] = useState('');
+    const [firstName, setFirstName] = useState('');
+    const [middleName, setMiddleName] = useState('');
+    const [lastName, setLastName] = useState('');
     const [email, setEmail] = useState('');
     const linkedInPrefix = 'https://www.linkedin.com/in/';
     const [linkedInUsername, setLinkedInUsername] = useState('');

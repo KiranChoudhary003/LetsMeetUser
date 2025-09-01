@@ -382,7 +382,6 @@ const Home = ({ navigation }) => {
 
             const rawEvents = response.data.events;
             const checkInDistance = response.data.check_in_distance;
-            console.log(response.data);
 
             await AsyncStorage.setItem('check_in_distance', checkInDistance.toString());
 

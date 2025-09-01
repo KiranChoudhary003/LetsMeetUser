@@ -30,6 +30,7 @@ const Edit = ({ route, navigation }) => {
     const [newFirstName, setNewFirstName] = useState(first_name || '');
     const [newMiddleName, setNewMiddleName] = useState(middle_name || '');
     const [newLastName, setNewLastName] = useState(last_name || '');
+    const [fullName, setFullName] = React.useState('');
     const [newEmail, setNewEmail] = useState(email || '');
     const linkedInPrefix = 'https://www.linkedin.com/in/';
     const [linkedInUsername, setLinkedInUsername] = useState(
@@ -86,6 +87,35 @@ const Edit = ({ route, navigation }) => {
         setErrorModalVisible(true);
     };
 
+    useEffect(() => {
+        const combined = [first_name, middle_name, last_name].filter(Boolean).join(' ');
+        setFullName(combined);
+    }, [first_name, middle_name, last_name]);
+
+    const onFullNameChange = (text) => {
+        setFullName(text);
+
+        const parts = text.trim().split(/\s+/);
+
+        if (parts.length === 1) {
+            // Only first name
+            setNewFirstName(parts[0]);
+            setNewMiddleName('');
+            setNewLastName('');
+        } else if (parts.length === 2) {
+            // First + Last
+            setNewFirstName(parts[0]);
+            setNewMiddleName('');
+            setNewLastName(parts[1]);
+        } else {
+            // First + Middle + Last (or longer)
+            setNewFirstName(parts[0]);
+            setNewMiddleName(parts[1]);
+            setNewLastName(parts.slice(2).join(' '));
+        }
+    };
+
+
     const validateEmail = (emailToValidate) => {
         if (!emailToValidate.trim()) {
             return 'Email is required';
@@ -114,12 +144,8 @@ const Edit = ({ route, navigation }) => {
 
 
     const validateFields = () => {
-        if (!newFirstName.trim()) {
-            showError('First Name is required');
-            return false;
-        }
-        if (!newLastName.trim()) {
-            showError('Last Name is required');
+        if (!fullName.trim()) {
+            showError('Full Name is required');
             return false;
         }
 
@@ -187,8 +213,8 @@ const Edit = ({ route, navigation }) => {
                 'https://letsmeet-backend-47lv.onrender.com/api/user-profile/edit',
                 {
                     first_name: formattedFirstName,
-                    middle_name: formattedMiddleName,
-                    last_name: formattedLastName,
+                    middle_name: formattedMiddleName || null,
+                    last_name: formattedLastName || null,
                     email: newEmail.trim(),
                     linkedin_url: linkedInPrefix + linkedInUsername,
                     company_name: newCompanyName.trim(),
@@ -253,10 +279,17 @@ const Edit = ({ route, navigation }) => {
                             <Text style={styles.title}>Edit Profile</Text>
                             <View style={styles.backButton} />
                         </View>
-
+                        {/* 
                         <TextInput style={styles.input} placeholder="First Name" placeholderTextColor="#888" value={newFirstName} onChangeText={setNewFirstName} />
                         <TextInput style={styles.input} placeholder="Middle Name (Optional)" placeholderTextColor="#888" value={newMiddleName} onChangeText={setNewMiddleName} />
-                        <TextInput style={styles.input} placeholder="Last Name" placeholderTextColor="#888" value={newLastName} onChangeText={setNewLastName} />
+                        <TextInput style={styles.input} placeholder="Last Name" placeholderTextColor="#888" value={newLastName} onChangeText={setNewLastName} /> */}
+                        <TextInput
+                            style={styles.input}
+                            placeholder="Full Name*"
+                            placeholderTextColor="#888"
+                            value={fullName}
+                            onChangeText={onFullNameChange}
+                        />
                         <View
                             style={{ width: "85%", alignSelf: "center", height: 45, marginBottom: 12 }}
                             ref={emailRef}
