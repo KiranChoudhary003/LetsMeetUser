@@ -36,7 +36,7 @@ const UserMeetings = ({ route, navigation }) => {
 
     useEffect(() => {
         const fetchMeetings = async () => {
-            if (!event?.id) {return;}
+            if (!event?.id) { return; }
 
             try {
                 const token = await AsyncStorage.getItem('token');
@@ -78,6 +78,18 @@ const UserMeetings = ({ route, navigation }) => {
         fetchMeetings();
     }, []);
 
+    const getUserImageSource = (photo) => {
+        if (!photo || photo.trim() === '') return null; // No photo
+
+        if (photo.startsWith('data:image')) {
+            return { uri: photo }; // Already a valid data URI
+        }
+
+        // Backend sends raw base64, so prepend correct header
+        return { uri: `data:image/jpeg;base64,${photo}` };
+    };
+
+
     const filteredRequests = requests.filter(user =>
         user.name.toLowerCase().includes(search.toLowerCase())
     );
@@ -88,10 +100,7 @@ const UserMeetings = ({ route, navigation }) => {
             : 'NA';
 
         const handleImagePress = () => {
-            const imgUri = item.image?.startsWith('data:image')
-                ? item.image
-                : item.image ? item.image : '';
-            setPreviewImage(imgUri);
+            setPreviewImage(item.image || '');
             setPreviewName(initials);
             setProfileView(true);
         };
@@ -101,17 +110,13 @@ const UserMeetings = ({ route, navigation }) => {
                 <View style={styles.userInfo}>
                     <TouchableOpacity onPress={handleImagePress}>
                         <View style={styles.profileCircle}>
-                            {item.image && item.image.length > 10 ? (
-                                <Image
-                                    source={{ uri: item.image }}
-                                    style={styles.profileImage}
-                                />
+                            {getUserImageSource(item.image) ? (
+                                <Image source={getUserImageSource(item.image)} style={styles.profileImage} />
                             ) : (
                                 <Text style={styles.initialsText}>{initials}</Text>
                             )}
                         </View>
                     </TouchableOpacity>
-
                     <TouchableOpacity
                         onPress={() => navigation.navigate('MeetingRecord', {
                             user: {
@@ -213,12 +218,8 @@ const UserMeetings = ({ route, navigation }) => {
                     />
                     <TouchableOpacity style={styles.modalOverlay} onPressOut={() => setProfileView(false)}>
                         <View style={styles.modalContent}>
-                            {previewImage && previewImage.length > 100 ? (
-                                <Image
-                                    source={{ uri: previewImage }}
-                                    style={styles.fullImage}
-                                    resizeMode="contain"
-                                />
+                            {getUserImageSource(previewImage) ? (
+                                <Image source={getUserImageSource(previewImage)} style={styles.fullImage} resizeMode="contain" />
                             ) : (
                                 <View style={[styles.circle, styles.fullImageFallback]}>
                                     <Text style={styles.initialsPreview}>{previewName}</Text>
@@ -269,12 +270,12 @@ const styles = StyleSheet.create({
         backgroundColor: '#f9f9f9f7',
     },
     searchInput: {
-    flex: 1,
-    fontSize: 16,
-    color: '#000',
-    paddingVertical: Platform.OS === 'ios' ? 10 : 6,
-    paddingHorizontal: Platform.OS === 'ios' ? 4 : 4,
-  },
+        flex: 1,
+        fontSize: 16,
+        color: '#000',
+        paddingVertical: Platform.OS === 'ios' ? 10 : 6,
+        paddingHorizontal: Platform.OS === 'ios' ? 4 : 4,
+    },
     card: {
         flexDirection: 'row',
         justifyContent: 'space-between',
@@ -362,12 +363,15 @@ const styles = StyleSheet.create({
         shadowColor: '#000',
         shadowOpacity: 0.3,
         shadowRadius: 10,
-        elevation: 10,
+        borderWidth: 1,
+        borderColor: '#34495E',
     },
     fullImage: {
         width: width * 0.8,
         height: width * 0.8,
         borderRadius: width * 0.4,
+        borderWidth: 1,
+        borderColor: '#34495E',
     },
     fullImageFallback: {
         backgroundColor: '#211e1e',
@@ -376,6 +380,8 @@ const styles = StyleSheet.create({
         width: width * 0.8,
         height: width * 0.8,
         borderRadius: width * 0.4,
+        borderWidth: 1,
+        borderColor: '#34495E',
     },
     initialsPreview: {
         color: '#fff',

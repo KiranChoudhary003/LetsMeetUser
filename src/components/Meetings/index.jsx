@@ -102,6 +102,19 @@ const Meeting = ({ navigation }) => {
     fetchMeetings();
   }, []);
 
+
+  const getUserImageSource = (photo) => {
+    if (!photo || photo.trim() === '') return null; // No photo
+
+    if (photo.startsWith('data:image')) {
+      return { uri: photo }; // Already a valid data URI
+    }
+
+    // Backend sends raw base64, so prepend correct header
+    return { uri: `data:image/jpeg;base64,${photo}` };
+  };
+
+
   const filteredRequests = requests.filter(user =>
     user.name.toLowerCase().includes(search.toLowerCase())
   );
@@ -121,8 +134,8 @@ const Meeting = ({ navigation }) => {
         <View style={styles.userInfo}>
           <TouchableOpacity onPress={handleImagePress}>
             <View style={styles.profileCircle}>
-              {item.photo && item.photo.length > 10 ? (
-                <Image source={{ uri: item.photo }} style={styles.profileImage} />
+              {getUserImageSource(item.photo) ? (
+                <Image source={getUserImageSource(item.photo)} style={styles.profileImage} />
               ) : (
                 <Text style={styles.initialsText}>{initials}</Text>
               )}
@@ -212,8 +225,8 @@ const Meeting = ({ navigation }) => {
           />
           <TouchableOpacity style={styles.modalOverlay} onPressOut={() => setProfileView(false)}>
             <View style={styles.modalContent}>
-              {previewImage && previewImage.length > 100 ? (
-                <Image source={{ uri: previewImage }} style={styles.fullImage} resizeMode="contain" />
+              {getUserImageSource(previewImage) ? (
+                <Image source={getUserImageSource(previewImage)} style={styles.fullImage} resizeMode="contain" />
               ) : (
                 <View style={[styles.circle, styles.fullImageFallback]}>
                   <Text style={styles.initialsPreview}>{previewName}</Text>
@@ -359,12 +372,15 @@ const styles = StyleSheet.create({
     shadowColor: '#000',
     shadowOpacity: 0.3,
     shadowRadius: 10,
-    elevation: 10,
+    borderWidth: 1,
+    borderColor: '#34495E',
   },
   fullImage: {
     width: width * 0.8,
     height: width * 0.8,
     borderRadius: width * 0.4,
+    borderWidth: 1,
+    borderColor: '#34495E',
   },
   fullImageFallback: {
     backgroundColor: '#211e1e',
@@ -373,6 +389,8 @@ const styles = StyleSheet.create({
     width: width * 0.8,
     height: width * 0.8,
     borderRadius: width * 0.4,
+    borderWidth: 1,
+    borderColor: '#34495E',
   },
   initialsPreview: {
     color: '#fff',
