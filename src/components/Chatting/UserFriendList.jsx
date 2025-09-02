@@ -12,6 +12,7 @@ import {
     TextInput,
     TouchableOpacity,
     View,
+    Platform,
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import Entypo from 'react-native-vector-icons/Entypo';

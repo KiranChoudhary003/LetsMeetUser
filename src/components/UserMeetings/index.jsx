@@ -12,6 +12,7 @@ import {
     View,
     ActivityIndicator,
     Modal,
+    Platform,
 } from 'react-native';
 import Entypo from 'react-native-vector-icons/Entypo';
 import { Dimensions } from 'react-native';
