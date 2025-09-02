@@ -26,6 +26,7 @@ export default function UserListScreen() {
     const [users, setUsers] = useState([]);
     const [searchQuery, setSearchQuery] = useState('');
     const [loading, setLoading] = useState(true);
+    const [isFirstLoad, setIsFirstLoad] = useState(true);
 
     useFocusEffect(
         useCallback(() => {
@@ -45,6 +46,7 @@ export default function UserListScreen() {
         } catch (error) {
         } finally {
             setLoading(false);
+            if (isFirstLoad) setIsFirstLoad(false);
         }
     };
 
@@ -163,27 +165,34 @@ export default function UserListScreen() {
                         placeholderTextColor="#888"
                     />
                 </View>
-                {loading ? (
-                    <View style={styles.loadingContainer}>
-                        <ActivityIndicator size="large" color="#34495e" />
-                        <Text style={styles.loadingText}>Fetching your connections. Please wait...</Text>
-                    </View>
-                ) : users.length === 0 ? (
-                    <View style={styles.emptyState}>
-                        <Text style={styles.emptyText}>You have no connections.</Text>
-                    </View>
-                ) : filteredUsers.length === 0 ? (
-                    <View style={styles.emptyState}>
-                        <Text style={styles.emptyText}>No users found.</Text>
-                    </View>
-                ) : (
-                    <FlatList
-                        data={filteredUsers}
-                        keyExtractor={item => item.id.toString()}
-                        renderItem={renderItem}
-                        contentContainerStyle={{ paddingBottom: 20 }}
-                    />
-                )}
+                <FlatList
+                    data={filteredUsers}
+                    keyExtractor={item => item.id.toString()}
+                    renderItem={renderItem}
+                    contentContainerStyle={{ flexGrow: 1, paddingBottom: 20 }}
+                    keyboardShouldPersistTaps="handled"
+                    refreshing={loading && !isFirstLoad && users.length > 0}
+                    onRefresh={fetchConnections}
+                    ListEmptyComponent={
+                        loading ? (
+                            <View style={styles.loadingContainer}>
+                                <ActivityIndicator size="large" color="#34495e" />
+                                <Text style={styles.loadingText}>
+                                    Fetching your connections. Please wait...
+                                </Text>
+                            </View>
+                        ) : users.length === 0 ? (
+                            <View style={styles.emptyState}>
+                                <Text style={styles.emptyText}>You have no connections.</Text>
+                            </View>
+                        ) : (
+                            <View style={styles.emptyState}>
+                                <Text style={styles.emptyText}>No users found.</Text>
+                            </View>
+                        )
+                    }
+                />
+
             </SafeAreaView>
         </>
     );
@@ -231,12 +240,12 @@ const styles = StyleSheet.create({
         backgroundColor: '#f9f9f9f7',
     },
     searchInput: {
-    flex: 1,
-    fontSize: 16,
-    color: '#000',
-    paddingVertical: Platform.OS === 'ios' ? 10 : 6,
-    paddingHorizontal: Platform.OS === 'ios' ? 4 : 4,
-  },
+        flex: 1,
+        fontSize: 16,
+        color: '#000',
+        paddingVertical: Platform.OS === 'ios' ? 10 : 6,
+        paddingHorizontal: Platform.OS === 'ios' ? 4 : 4,
+    },
     userCard: {
         backgroundColor: '#fff',
         padding: 16,

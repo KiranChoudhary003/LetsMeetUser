@@ -14,7 +14,7 @@ import {
     TouchableOpacity,
     View,
 } from 'react-native';
-import { SafeAreaView } from 'react-native-safe-area-context'; // ✅ added
+import { SafeAreaView } from 'react-native-safe-area-context';
 import Entypo from 'react-native-vector-icons/Entypo';
 import Ionicons from 'react-native-vector-icons/Ionicons';
 import { io } from 'socket.io-client';
@@ -28,6 +28,7 @@ export default function UserListScreen() {
     const [users, setUsers] = useState([]);
     const [searchQuery, setSearchQuery] = useState('');
     const [loading, setLoading] = useState(true);
+    const [isFirstLoad, setIsFirstLoad] = useState(true);
 
     useFocusEffect(
         useCallback(() => {
@@ -51,6 +52,7 @@ export default function UserListScreen() {
             console.error('Error fetching connections:', error);
         } finally {
             setLoading(false);
+            if (isFirstLoad) setIsFirstLoad(false);
         }
     };
 
@@ -203,31 +205,28 @@ export default function UserListScreen() {
                         placeholderTextColor="#888"
                     />
                 </View>
-                {loading ? (
-                    <View style={{ alignItems: 'center', marginTop: 30 }}>
-                        <ActivityIndicator size="large" color="#34495e" />
-                        <Text style={{ marginTop: 10, color: '#555', fontSize: 14 }}>
-                            Loading your connections...
-                        </Text>
-                    </View>
-                ) : filteredUsers.length === 0 ? (
-                    <Text style={styles.noUsersText}>No users found</Text>
-                ) : (
-                    <FlatList
-                        data={filteredUsers}
-                        keyExtractor={(item) => item.id.toString()}
-                        renderItem={renderItem}
-                        contentContainerStyle={{ paddingBottom: 20 }}
-                        extraData={users} // ✅ Ensures FlatList re-renders on state update
-                        keyboardShouldPersistTaps="handled" // ✅ Allows input + touch to work smoothly
-                        ListEmptyComponent={
-                            !loading && (
-                                <Text style={styles.noUsersText}>No users found</Text>
-                            )
-                        }
-                    />
-
-                )}
+                <FlatList
+                    data={filteredUsers}
+                    keyExtractor={(item) => item.id.toString()}
+                    renderItem={renderItem}
+                    contentContainerStyle={{ flexGrow: 1, paddingBottom: 20 }}
+                    refreshing={loading && !isFirstLoad && users.length > 0}
+                    onRefresh={fetchConnections}
+                    extraData={users}
+                    keyboardShouldPersistTaps="handled"
+                    ListEmptyComponent={
+                        loading ? (
+                            <View style={{ alignItems: 'center', marginTop: 30 }}>
+                                <ActivityIndicator size="large" color="#34495e" />
+                                <Text style={{ marginTop: 10, color: '#555', fontSize: 14 }}>
+                                    Loading your connections...
+                                </Text>
+                            </View>
+                        ) : (
+                            <Text style={styles.noUsersText}>No users found</Text>
+                        )
+                    }
+                />
 
                 <TouchableOpacity
                     style={styles.floatingButton}
@@ -241,12 +240,6 @@ export default function UserListScreen() {
 }
 
 const styles = StyleSheet.create({
-    container: {
-        flex: 1,
-        backgroundColor: '#f9fafe',
-        paddingHorizontal: 16,
-        paddingTop: Platform.OS === 'android' ? 40 : 16,
-    },
     safeContainer: {
         flex: 1,
         backgroundColor: '#e8effc',
@@ -256,6 +249,7 @@ const styles = StyleSheet.create({
         backgroundColor: '#34495E',
         paddingVertical: 12,
         paddingHorizontal: 16,
+        height: 70,
     },
 
     headerRow: {
@@ -286,12 +280,12 @@ const styles = StyleSheet.create({
         backgroundColor: '#f9f9f9f7',
     },
     searchInput: {
-    flex: 1,
-    fontSize: 16,
-    color: '#000',
-    paddingVertical: Platform.OS === 'ios' ? 10 : 6,
-    paddingHorizontal: Platform.OS === 'ios' ? 4 : 4,
-  },
+        flex: 1,
+        fontSize: 16,
+        color: '#000',
+        paddingVertical: Platform.OS === 'ios' ? 10 : 6,
+        paddingHorizontal: Platform.OS === 'ios' ? 4 : 4,
+    },
     userCard: {
         backgroundColor: '#fff',
         padding: 16,

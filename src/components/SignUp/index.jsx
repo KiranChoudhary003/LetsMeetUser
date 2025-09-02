@@ -428,7 +428,7 @@ const SignUp = ({ navigation, route }) => {
                                 {/* LinkedIn Input */}
                                 <TextInput
                                     style={styles.input}
-                                    placeholder={'LinkedIn*'}
+                                    placeholder={'LinkedIn* (Username)'}
                                     placeholderTextColor="#888"
                                     value={linkedInUsername ? linkedInPrefix + linkedInUsername : ''}
                                     onChangeText={(text) => {

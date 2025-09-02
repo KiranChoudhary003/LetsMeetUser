@@ -34,27 +34,47 @@ const Meeting = ({ navigation }) => {
     const fetchMeetings = async () => {
       try {
         const token = await AsyncStorage.getItem('token');
-        const response = await axios.get('https://letsmeet-backend-47lv.onrender.com/api/user-events/meetings', {
-          headers: {
-            Authorization: `Bearer ${token}`,
-          },
-        });
+        const response = await axios.get(
+          'https://letsmeet-backend-47lv.onrender.com/api/user-events/meetings',
+          {
+            headers: {
+              Authorization: `Bearer ${token}`,
+            },
+          }
+        );
 
         const usersWithMeetings = [];
 
         response.data?.connections?.forEach(connection => {
           const user = connection.user;
+
           const eventsWithMeetings = connection.events
             ?.filter(e => e.meetings && e.meetings.length > 0)
-            .map(e => ({
-              ...e,
-              meetings: e.meetings.map(m => ({
+            .map(e => {
+              // Find the latest meeting without sorting
+              const lastMeeting = e.meetings.reduce((latest, m) => {
+                return new Date(m.created_at) > new Date(latest.created_at) ? m : latest;
+              }, e.meetings[0]);
+
+              // Map all meetings as before
+              const formattedMeetings = e.meetings.map(m => ({
                 id: m.meeting_id,
                 desc: m.notes || 'No notes available',
                 date: new Date(m.created_at).toLocaleDateString(),
                 time: new Date(m.created_at).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }),
-              })),
-            }));
+              }));
+
+              return {
+                ...e,
+                lastMeetingDate: lastMeeting
+                  ? {
+                    date: new Date(lastMeeting.created_at).toLocaleDateString(),
+                    time: new Date(lastMeeting.created_at).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }),
+                  }
+                  : null,
+                meetings: formattedMeetings,
+              };
+            });
 
           if (eventsWithMeetings.length > 0) {
             usersWithMeetings.push({
@@ -78,7 +98,6 @@ const Meeting = ({ navigation }) => {
         setLoading(false);
       }
     };
-
     fetchMeetings();
   }, []);
 
@@ -110,17 +129,11 @@ const Meeting = ({ navigation }) => {
           </TouchableOpacity>
 
           <TouchableOpacity
-            onPress={() => navigation.navigate('UserEvents', {
-              user: {
-                first_name: item.name,
-                attendees_role: item.role,
-                photo: item.photo,
-                email: item.email,
-                linkedin_url: item.linkedin,
-                preference: Array.isArray(item.preference) ? item.preference : [],
-              },
-              events: item.events,
-            })}
+            onPress={() =>
+              navigation.navigate('UserEvents', {
+                events: item.events,
+              })
+            }
             style={{ flex: 1 }}
           >
             <View style={{ flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between' }}>

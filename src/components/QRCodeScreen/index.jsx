@@ -60,7 +60,7 @@ const QRCodeScreen = ({ navigation }) => {
         </View>
         <View style={styles.container}>
           <View style={styles.card}>
-            <Text style={styles.cardTitle}>Scan QR</Text>
+            <Text style={styles.cardTitle}>Your Profile QR Code</Text>
             <View style={styles.qrBox}>
               {loading ? (
                 <ActivityIndicator size="large" color="#34495e" />

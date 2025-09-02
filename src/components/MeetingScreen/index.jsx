@@ -248,7 +248,7 @@ const styles = StyleSheet.create({
     marginTop: 20,
   },
   meetingCard: {
-    paddingVertical: 18,
+    paddingVertical: 10,
     flexDirection: 'row',
     alignItems: 'center',
     borderBottomWidth: 0.5,

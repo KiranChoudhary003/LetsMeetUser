@@ -12,6 +12,7 @@ import {
   TouchableOpacity,
   TextInput,
   Dimensions,
+  Platform,
 } from 'react-native';
 import MaterialIcons from 'react-native-vector-icons/MaterialIcons';
 import { useNavigation } from '@react-navigation/native';
@@ -19,7 +20,7 @@ import Entypo from 'react-native-vector-icons/Entypo';
 
 const { width } = Dimensions.get('window');
 
-const EventCard = ({ name, organizer, start_date, meetingsCount, eventId, meetings }) => {
+const EventCard = ({ name, lastMeetingDate, meetingsCount, eventId, meetings }) => {
   const scale = new Animated.Value(1);
   const navigation = useNavigation();
 
@@ -42,7 +43,7 @@ const EventCard = ({ name, organizer, start_date, meetingsCount, eventId, meetin
   return (
     <Pressable onPressIn={handlePressIn} onPressOut={handlePressOut} onPress={handleNavigate}>
       <Animated.View style={[styles.card, { transform: [{ scale }] }]}>
-        <View style={{ flex: 1 }}>
+        <View style={{ flex: 1}}>
           <View style={styles.eventHeaderRow}>
             <Text style={styles.eventName} numberOfLines={2}
               ellipsizeMode="tail">{name}</Text>
@@ -50,9 +51,11 @@ const EventCard = ({ name, organizer, start_date, meetingsCount, eventId, meetin
               <Text style={styles.meetingsCountText}>Meetings: {meetingsCount}</Text>
             </View>
           </View>
-          <Text style={styles.eventOrganizer}>{organizer}</Text>
           <Text style={styles.eventDate}>
-            {new Date(start_date).toLocaleDateString()}
+            Last Meeting:
+            {lastMeetingDate
+              ? ` ${lastMeetingDate.date} at ${lastMeetingDate.time}`
+              : 'No meetings yet'}
           </Text>
         </View>
       </Animated.View>
@@ -62,7 +65,7 @@ const EventCard = ({ name, organizer, start_date, meetingsCount, eventId, meetin
 
 export default function UserEvents({ route }) {
   const navigation = useNavigation();
-  const { user, events = [] } = route.params; // get user + events from previous screen
+  const { events = [] } = route.params;
   const [search, setSearch] = useState('');
 
   const filteredEvents = events.filter(event =>
@@ -71,43 +74,42 @@ export default function UserEvents({ route }) {
 
   return (
     <>
-    <StatusBar barStyle={useColorScheme() === 'dark' ? 'light-content' : 'dark-content'} />
-    <SafeAreaView style={styles.container}>
-      <View style={styles.header}>
-        <TouchableOpacity onPress={() => navigation.goBack()} style={styles.backButton}>
-          <MaterialIcons name="arrow-back" size={24} color="#fff" />
-        </TouchableOpacity>
-        <Text style={styles.headerText}>Events</Text>
-      </View>
+      <StatusBar barStyle={useColorScheme() === 'dark' ? 'light-content' : 'dark-content'} />
+      <SafeAreaView style={styles.container}>
+        <View style={styles.header}>
+          <TouchableOpacity onPress={() => navigation.goBack()} style={styles.backButton}>
+            <MaterialIcons name="arrow-back" size={24} color="#fff" />
+          </TouchableOpacity>
+          <Text style={styles.headerText}>Events</Text>
+        </View>
 
-      <View style={styles.searchBar}>
-        <Entypo name="magnifying-glass" size={24} color="black" />
-        <TextInput
-          placeholder="Search event..."
-          value={search}
-          onChangeText={setSearch}
-          style={styles.searchInput}
-          placeholderTextColor="#888"
+        <View style={styles.searchBar}>
+          <Entypo name="magnifying-glass" size={24} color="black" />
+          <TextInput
+            placeholder="Search event..."
+            value={search}
+            onChangeText={setSearch}
+            style={styles.searchInput}
+            placeholderTextColor="#888"
           />
-      </View>
+        </View>
 
-      <Text style={styles.totalEventsText}>Total Events: {filteredEvents.length}</Text>
+        <Text style={styles.totalEventsText}>Total Events: {filteredEvents.length}</Text>
 
-      <ScrollView contentContainerStyle={styles.scrollView}>
-        {filteredEvents.map((event, index) => (
-          <EventCard
-          key={index}
-          name={event.event_name}
-          organizer={event.organizer || 'Organizer'}
-          start_date={event.start_date }
-          meetingsCount={event.meetings?.length || 0}
-          eventId={event.event_id}
-          meetings={Array.isArray(event.meetings) ? event.meetings : []}
-          />
-        ))}
-      </ScrollView>
-    </SafeAreaView>
-        </>
+        <ScrollView contentContainerStyle={styles.scrollView}>
+          {filteredEvents.map((event, index) => (
+            <EventCard
+              key={index}
+              name={event.event_name}
+              meetingsCount={event.meetings?.length || 0}
+              eventId={event.event_id}
+              meetings={Array.isArray(event.meetings) ? event.meetings : []}
+              lastMeetingDate={event.lastMeetingDate}
+            />
+          ))}
+        </ScrollView>
+      </SafeAreaView>
+    </>
   );
 }
 
@@ -169,7 +171,7 @@ const styles = StyleSheet.create({
   },
   card: {
     width: '100%',
-    minHeight: 70,
+    minHeight: 50,
     marginVertical: 6,
     borderBottomWidth: 0.5,
     flexDirection: 'row',
