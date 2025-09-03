@@ -228,7 +228,7 @@ const Edit = ({ route, navigation }) => {
                     },
                 }
             );
-
+            console.log('PUT API Response:', response.data);
             if (response.status === 200) {
                 Alert.alert('Success', 'Profile updated successfully');
                 navigation.goBack();

@@ -9,11 +9,11 @@ import MaterialIcons from 'react-native-vector-icons/MaterialIcons';
 import profile from '../../assets/profile.png';
 import axios from 'axios';
 import { BlurView } from '@react-native-community/blur';
-import { launchImageLibrary } from 'react-native-image-picker';
 import { CommonActions, useFocusEffect } from '@react-navigation/native';
 import FontAwesome from 'react-native-vector-icons/FontAwesome';
 import MaterialCommunityIcons from 'react-native-vector-icons/MaterialCommunityIcons';
 import messaging from '@react-native-firebase/messaging';
+import ImagePicker from 'react-native-image-crop-picker';
 const { width } = Dimensions.get('window');
 
 const UserProfile = ({ navigation, route }) => {
@@ -82,6 +82,7 @@ const UserProfile = ({ navigation, route }) => {
         return true;
     };
 
+
     const handleEditPhoto = async () => {
         const permissionGranted = await requestGalleryPermission();
         if (!permissionGranted) {
@@ -89,39 +90,73 @@ const UserProfile = ({ navigation, route }) => {
             return;
         }
 
-        launchImageLibrary({ mediaType: 'photo', quality: 0.8 }, async (response) => {
-            if (response.didCancel || response.errorCode) { return; }
+        try {
+            // Open picker with cropping enabled
+            const image = await ImagePicker.openPicker({
+                cropping: true,                // enables crop UI
+                freeStyleCropEnabled: true,    // user can resize/adjust crop rectangle
+                compressImageQuality: 0.8,
+                mediaType: 'photo',
+            });
 
-            const asset = response.assets?.[0];
-            if (!asset?.uri) { return; }
+            if (!image?.path) return;
 
             const formData = new FormData();
             formData.append('photo', {
-                uri: asset.uri,
-                type: asset.type,
-                name: asset.fileName || 'photo.jpg',
+                uri: image.path,
+                type: image.mime,
+                name: 'photo.jpg',
             });
 
-            try {
-                const token = await AsyncStorage.getItem('token');
-                await axios.put(
-                    'https://letsmeet-backend-47lv.onrender.com/api/user-profile/edit',
-                    formData,
-                    {
-                        headers: {
-                            'Content-Type': 'multipart/form-data',
-                            Authorization: `Bearer ${token}`,
-                        },
-                    }
-                );
-                Alert.alert('Success', 'Photo updated');
-                setProfileView(false);
-                fetchProfileData();
-            } catch (err) {
-                Alert.alert('Error', 'Upload failed');
-            }
-        });
+            const token = await AsyncStorage.getItem('token');
+            await axios.put(
+                'https://letsmeet-backend-47lv.onrender.com/api/user-profile/edit',
+                formData,
+                {
+                    headers: {
+                        'Content-Type': 'multipart/form-data',
+                        Authorization: `Bearer ${token}`,
+                    },
+                }
+            );
+
+            Alert.alert('Success', 'Photo updated');
+            setProfileView(false);
+            fetchProfileData();
+        } catch (err) {
+            if (err.code === 'E_PICKER_CANCELLED') return; // user cancelled
+            Alert.alert('Error', 'Upload failed');
+        }
     };
+
+
+//     const handleDeletePhoto = async () => {
+//     try {
+//         const formData = new FormData();
+//         formData.append('photo', null); // send null
+
+//         const token = await AsyncStorage.getItem('token');
+//         await axios.put(
+//             'https://letsmeet-backend-47lv.onrender.com/api/user-profile/edit',
+//             formData,
+//             {
+//                 headers: {
+//                     'Content-Type': 'multipart/form-data', // must be multipart for FormData
+//                     Authorization: `Bearer ${token}`,
+//                 },
+//             }
+//         );
+
+//         Alert.alert('Success', 'Photo removed');
+//         setProfileView(false);
+//         fetchProfileData();
+//     } catch (err) {
+//         Alert.alert('Error', 'Request failed');
+//     }
+// };
+
+
+
 
     const handleLogout = async () => {
         try {
@@ -240,6 +275,13 @@ const UserProfile = ({ navigation, route }) => {
                                 )}
                             </View>
                         </TouchableOpacity>
+                        {/* <FontAwesome
+                            name="close"
+                            size={28}
+                            color="#c52121"
+                            style={styles.editIcon}
+                            onPress={handleDeletePhoto}
+                        /> */}
                     </Modal>
                     {isViewingOwnProfile && loading ? (
                         <View style={{ marginTop: 150, alignItems: 'center' }}>

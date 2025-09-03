@@ -21,7 +21,9 @@
 
     <!-- For saving images/videos -->
     <uses-permission android:name="android.permission.WRITE_EXTERNAL_STORAGE"
-        android:maxSdkVersion="28" />
+    android:maxSdkVersion="28"
+    tools:replace="android:maxSdkVersion" />
+
 
     <!-- Required for camera feature -->
     <uses-feature android:name="android.hardware.camera" android:required="false" />
