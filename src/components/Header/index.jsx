@@ -6,10 +6,11 @@ import {
   TouchableOpacity,
   View,
   Alert,
-  StatusBar,useColorScheme,
+  StatusBar, useColorScheme,
 } from 'react-native';
 import profile from '../../assets/profile.png';
 import Ionicons from 'react-native-vector-icons/Ionicons';
+import MaterialCommunityIcons from 'react-native-vector-icons/MaterialCommunityIcons';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import axios from 'axios';
 
@@ -28,7 +29,7 @@ const Header = () => {
   const fetchUserProfile = async () => {
     try {
       const token = await AsyncStorage.getItem('token');
-      if (!token) {return;}
+      if (!token) { return; }
 
       const response = await axios.get(
         'https://letsmeet-backend-47lv.onrender.com/api/user-profile',
@@ -54,7 +55,7 @@ const Header = () => {
 
   const getProfileImageSource = () => {
     const photo = userProfile?.photo?.trim();
-    if (!photo) {return profile;}
+    if (!photo) { return profile; }
 
     if (photo.startsWith('data:image') || photo.startsWith('http')) {
       return { uri: photo };
@@ -71,7 +72,7 @@ const Header = () => {
     <>
       <StatusBar barStyle={useColorScheme() === 'dark' ? 'light-content' : 'dark-content'} />
       <View style={styles.customHeader}>
-        <View style={{ flexDirection: 'row', gap: 20 }}>
+        <View style={{ flexDirection: 'row', gap: 25 }}>
           <TouchableOpacity onPress={handleProfile}>
             <Image
               source={getProfileImageSource()}
@@ -80,8 +81,7 @@ const Header = () => {
             />
           </TouchableOpacity>
           <TouchableOpacity onPress={handleQRCode}>
-            <Ionicons
-              name="scan-outline"
+            <MaterialCommunityIcons name="qrcode-scan"
               size={30}
               color="#f9efef"
               style={styles.Chatstyle}
@@ -89,7 +89,7 @@ const Header = () => {
           </TouchableOpacity>
         </View>
 
-        <View style={{ flexDirection: 'row', gap: 20 }}>
+        <View style={{ flexDirection: 'row', gap: 25 }}>
           <TouchableOpacity onPress={() => navigation.navigate('Connection')}>
             <Ionicons
               name="people-outline"
@@ -126,8 +126,8 @@ const styles = StyleSheet.create({
     height: 70,
   },
   profile: {
-    width: 30,
-    height: 30,
+    width: 32,
+    height: 32,
     borderRadius: 15,
   },
   Chatstyle: {

@@ -19,6 +19,7 @@ import Entypo from 'react-native-vector-icons/Entypo';
 import Ionicons from 'react-native-vector-icons/Ionicons';
 import { io } from 'socket.io-client';
 import profile from '../../assets/profile.png';
+import MaterialCommunityIcons from 'react-native-vector-icons/MaterialCommunityIcons';
 
 
 const API_URL = 'https://letsmeet-backend-47lv.onrender.com/api';
@@ -108,6 +109,10 @@ export default function UserListScreen() {
         user.last_name.toLowerCase().includes(searchQuery.toLowerCase())
     );
 
+    const handleQRCode = () => {
+        navigation.navigate('QRCode');
+    };
+
     const renderItem = ({ item }) => {
         const unreadCount = item.unread_count || 0;
 
@@ -188,12 +193,17 @@ export default function UserListScreen() {
             <StatusBar barStyle={useColorScheme() === 'dark' ? 'light-content' : 'dark-content'} />
             <SafeAreaView style={styles.safeContainer}>
                 <View style={styles.headingContainer}>
-                    <View style={styles.headerRow}>
-                        <TouchableOpacity onPress={() => navigation.goBack()} style={styles.backButton}>
-                            <Ionicons name="arrow-back-outline" size={24} color="white" />
-                        </TouchableOpacity>
-                        <Text style={styles.title}>Connections</Text>
-                    </View>
+                    <TouchableOpacity onPress={() => navigation.goBack()} style={styles.backButton}>
+                        <Ionicons name="arrow-back-outline" size={24} color="white" />
+                    </TouchableOpacity>
+                    <Text style={styles.title}>Connections</Text>
+                    <TouchableOpacity onPress={handleQRCode}>
+                        <MaterialCommunityIcons name="qrcode-scan"
+                            size={30}
+                            color="#f9efef"
+                            style={styles.Chatstyle}
+                        />
+                    </TouchableOpacity>
                 </View>
                 <View style={styles.searchBar}>
                     <Entypo name="magnifying-glass" size={24} color="black" />
@@ -247,28 +257,13 @@ const styles = StyleSheet.create({
 
     headingContainer: {
         backgroundColor: '#34495E',
-        paddingVertical: 12,
         paddingHorizontal: 16,
         height: 70,
-    },
-
-    headerRow: {
         flexDirection: 'row',
         alignItems: 'center',
-        justifyContent: 'center',
-        position: 'relative',
-        height: 40,
+        justifyContent: 'space-between',
     },
-
-    backButton: {
-        position: 'absolute',
-        left: 0,
-        top: 0,
-        bottom: 0,
-        justifyContent: 'center',
-        paddingRight: 12,
-    },
-    title: { fontSize: 22, fontWeight: 'bold', color: '#ffffff' },
+    title: { fontSize: 22, fontWeight: 'bold', color: '#ffffff', flex: 1, textAlign: 'center' },
     searchBar: {
         margin: 15,
         paddingHorizontal: 10,

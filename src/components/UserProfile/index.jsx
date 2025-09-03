@@ -12,6 +12,7 @@ import { BlurView } from '@react-native-community/blur';
 import { launchImageLibrary } from 'react-native-image-picker';
 import { CommonActions, useFocusEffect } from '@react-navigation/native';
 import FontAwesome from 'react-native-vector-icons/FontAwesome';
+import MaterialCommunityIcons from 'react-native-vector-icons/MaterialCommunityIcons';
 import messaging from '@react-native-firebase/messaging';
 const { width } = Dimensions.get('window');
 
@@ -153,7 +154,9 @@ const UserProfile = ({ navigation, route }) => {
         }
     };
 
-
+    const handleQRCode = () => {
+        navigation.navigate('QRCode');
+    };
 
     const handleProfileEdit = () => {
         navigation.navigate('Edit', {
@@ -193,10 +196,12 @@ const UserProfile = ({ navigation, route }) => {
                                 <MaterialIcons name="arrow-back" size={24} color="#fff" />
                             </TouchableOpacity>
                             <Text style={styles.profileHeader}>Profile</Text>
-                            {isViewingOwnProfile && (
-                                <TouchableOpacity style={styles.profileEdit} onPress={handleProfileEdit}>
+                            {isViewingOwnProfile ? (
+                                <TouchableOpacity onPress={handleProfileEdit}>
                                     <MaterialIcons name="edit" size={24} color="#fff" />
                                 </TouchableOpacity>
+                            ) : (
+                                <View style={{ width: 24 }} />
                             )}
                         </View>
                         <View style={styles.userName}>
@@ -263,6 +268,12 @@ const UserProfile = ({ navigation, route }) => {
                                         <FontAwesome name="linkedin" size={24} color="#0A66C2" />
                                     </TouchableOpacity>
                                 )}
+                                <TouchableOpacity onPress={handleQRCode} style={styles.iconButton} activeOpacity={0.7}>
+                                    <MaterialCommunityIcons name="qrcode-scan"
+                                        size={24}
+                                        color="#34495e"
+                                    />
+                                </TouchableOpacity>
                             </View>
 
                             <View style={styles.preferenceSection}>
@@ -344,10 +355,13 @@ const styles = StyleSheet.create({
         paddingHorizontal: 20,
         paddingTop: 15,
     },
+
     profileHeader: {
         color: 'white',
         fontSize: 24,
         fontWeight: '600',
+        textAlign: 'center',
+        flex: 1, // <- ensures it takes middle space
     },
     profileEdit: {
         padding: 4,

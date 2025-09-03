@@ -218,7 +218,7 @@ const Edit = ({ route, navigation }) => {
                     email: newEmail.trim(),
                     linkedin_url: linkedInPrefix + linkedInUsername,
                     company_name: newCompanyName.trim(),
-                    jobRole: newJobRole.trim(),
+                    attendees_role: newJobRole.trim(),
                     preference: selectedRoles,
                 },
                 {
