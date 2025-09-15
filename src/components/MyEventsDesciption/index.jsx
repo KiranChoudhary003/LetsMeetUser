@@ -202,7 +202,7 @@ const MyEventsDesciption = ({ navigation, route }) => {
                                                 ? checkInAvailable
                                                     ? '#4CAF50'
                                                     : '#aaa'
-                                                : 'white',
+                                                : '#e8effc',
                                     borderColor:
                                         buttonState === 'checkedin' || buttonState === 'missed'
                                             ? 'transparent'
@@ -320,6 +320,8 @@ const styles = StyleSheet.create({
         borderRadius: 10,
         backgroundColor: '#f0f0f0',
         alignItems: 'center',
+        borderColor: '#000',
+        borderWidth: 0.2,
         marginTop: 10,
         width: 300,
     },

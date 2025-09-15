@@ -176,30 +176,9 @@ const groupEventsByMonth = (events) => {
 
 
 const formatDate = (date) => {
-    if (!date) return '';
-    const IST = 'Asia/Kolkata';
-    let parsedDate;
-
-    try {
-        if (dayjs.isDayjs(date)) {
-            // If already a dayjs object, assume UTC and convert to IST
-            parsedDate = date.utc().tz(IST);
-        } else if (typeof date === 'string') {
-            // Parse ISO 8601 string in UTC and convert to IST
-            parsedDate = dayjs.utc(date).tz(IST);
-        } else if (date instanceof Date) {
-            // Convert JS Date to UTC and then to IST
-            parsedDate = dayjs(date).utc().tz(IST);
-        } else {
-            return '';
-        }
-
-        if (!parsedDate.isValid()) return '';
-        return parsedDate.format('MM-DD-YYYY');
-    } catch (e) {
-        console.warn('Date parsing failed:', date, e);
-        return '';
-    }
+  if (!date) {return '';}
+  const parsedDate = dayjs(date).utc();
+  return parsedDate.isValid() ? parsedDate.local().format('MM-DD-YYYY') : '';
 };
 
 
