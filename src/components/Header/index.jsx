@@ -1,5 +1,5 @@
-import { useNavigation } from '@react-navigation/native';
-import React, { useEffect, useState } from 'react';
+import { useNavigation, useFocusEffect } from '@react-navigation/native';
+import React, { useEffect, useState, useCallback } from 'react';
 import {
   Image,
   StyleSheet,
@@ -52,6 +52,12 @@ const Header = () => {
   useEffect(() => {
     fetchUserProfile();
   }, []);
+
+  useFocusEffect(
+    useCallback(() => {
+      fetchUserProfile();
+    }, [])
+  );
 
   const getProfileImageSource = () => {
     const photo = userProfile?.photo?.trim();

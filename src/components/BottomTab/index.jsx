@@ -26,17 +26,17 @@ const BottomTab = () => {
             iconInactive: 'calendar-month-outline',
             label: 'Events',
         },
-                {
+        {
             name: 'Meetings',
             iconActive: 'card-account-details',
             iconInactive: 'card-account-details-outline',
             label: 'Meetings',
         },
         {
-            name: 'Complain',
+            name: 'SupportDesk',
             iconActive: 'message-alert',
             iconInactive: 'message-alert-outline',
-            label: 'Complain',
+            label: 'Support',
         },
     ];
 

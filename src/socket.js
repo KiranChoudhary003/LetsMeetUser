@@ -1,93 +1,78 @@
 import AsyncStorage from '@react-native-async-storage/async-storage';
-import {jwtDecode} from 'jwt-decode';
-import {io} from 'socket.io-client';
+import jwtDecode from 'jwt-decode';
+import { io } from 'socket.io-client';
 
 let socket = null;
 let initialized = false;
-let connecting = false;
+let connectingPromise = null;
 
 export const connectSocket = async (passedToken = null) => {
-  if (initialized && socket?.connected) {
-    return socket;
-  }
+  if (initialized && socket?.connected) return socket;
 
-  if (connecting) {
-    return new Promise((resolve, reject) => {
-      const interval = setInterval(() => {
-        if (initialized && socket?.connected) {
-          clearInterval(interval);
-          resolve(socket);
-        }
-      }, 100);
-      setTimeout(() => {
-        clearInterval(interval);
-        reject(new Error('Timeout while waiting for socket to connect'));
-      }, 7000);
-    });
-  }
+  if (connectingPromise) return connectingPromise;
 
-  connecting = true;
-
-  let token = passedToken;
-  if (!token) {
-    token = await AsyncStorage.getItem('token');
+  connectingPromise = (async () => {
+    let token = passedToken;
+    if (!token) token = await AsyncStorage.getItem('token');
     if (!token) {
-      connecting = false;
+      connectingPromise = null;
       console.warn('⚠️ No token found. Skipping socket connection.');
       return null;
     }
-  }
 
-  try {
-    const decoded = jwtDecode(token);
-    const userId = decoded?.id || decoded?.user?.id;
-    if (userId) {
-      await AsyncStorage.setItem('userId', String(userId));
+    try {
+      const decoded = jwtDecode(token);
+      const userId = decoded?.id || decoded?.user?.id;
+      if (userId) await AsyncStorage.setItem('userId', String(userId));
+    } catch (e) {
+      console.warn('JWT decode failed:', e.message);
     }
-  } catch (e) {
-    console.warn('JWT decode failed:', e.message);
-  }
 
-  if (socket) {
-    socket.disconnect();
-  }
-
-  socket = io('https://letsmeet-backend-47lv.onrender.com', {
-    auth: {token},
-    transports: ['websocket'],
-    reconnection: true,
-    reconnectionAttempts: Infinity,
-    reconnectionDelay: 2000,
-    reconnectionDelayMax: 5000,
-    timeout: 20000,
-    pingTimeout: 25000,
-    pingInterval: 10000,
-  });
-
-  socket.on('connect', () => {
-    console.log('✅ Socket connected');
-    initialized = true;
-    connecting = false;
-  });
-
-  socket.on('disconnect', reason => {
-    console.warn('⚠️ Socket disconnected:', reason);
-    if (reason === 'io server disconnect') {
-      socket.connect(); // manual reconnect
+    if (socket) {
+      socket.removeAllListeners();
+      socket.disconnect();
     }
-  });
 
-  socket.on('connect_error', err => {
-    console.error('❌ Socket connection error:', err.message);
-    connecting = false;
-  });
-
-  return new Promise((resolve, reject) => {
-    socket.once('connect', () => {
-      resolve(socket);
+    socket = io('https://letsmeet-backend-47lv.onrender.com', {
+      auth: { token },
+      transports: ['websocket'],
+      reconnection: true,
+      reconnectionAttempts: Infinity,
+      reconnectionDelay: 2000,
+      reconnectionDelayMax: 5000,
+      timeout: 20000,
+      pingTimeout: 25000,
+      pingInterval: 10000,
     });
-    socket.once('connect_error', reject);
-  });
+
+    socket.on('connect', () => {
+      console.log('✅ Socket connected');
+      initialized = true;
+    });
+
+    socket.on('disconnect', reason => {
+      console.warn('⚠️ Socket disconnected:', reason);
+      // Optional: reset initialized flag
+      initialized = false;
+    });
+
+    socket.on('connect_error', err => {
+      console.error('❌ Socket connection error:', err.message);
+    });
+
+    return new Promise((resolve, reject) => {
+      socket.once('connect', () => {
+        connectingPromise = null;
+        resolve(socket);
+      });
+      socket.once('connect_error', err => {
+        connectingPromise = null;
+        reject(err);
+      });
+    });
+  })();
+
+  return connectingPromise;
 };
 
 export const getSocket = () => {

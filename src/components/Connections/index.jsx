@@ -51,7 +51,7 @@ const highlightText = (text, highlight) => {
 
 const Connections = ({ navigation }) => {
   const roleInputRef = useRef(null);
-  const [selectedTab, setSelectedTab] = useState('Requests');
+  const [selectedTab, setSelectedTab] = useState('Attendees');
   const [search, setSearch] = useState('');
   const [acceptedUsers, setAcceptedUsers] = useState({});
   const [showFilters, setShowFilters] = useState(false);
@@ -73,6 +73,8 @@ const Connections = ({ navigation }) => {
   const [roleSearch, setRoleSearch] = useState('');
   const [loading, setLoading] = useState(true);
   const [isFirstLoad, setIsFirstLoad] = useState(true);
+  const [undoCountdown, setUndoCountdown] = useState(5);
+
 
 
 
@@ -85,27 +87,48 @@ const Connections = ({ navigation }) => {
     }
   }, [showFilters]);
 
+  useEffect(() => {
+    let countdownInterval;
+
+    if (showUndo && (undoUser || undoRequestUser)) {
+      setUndoCountdown(5);
+
+      countdownInterval = setInterval(() => {
+        setUndoCountdown(prev => {
+          if (prev <= 1) {
+            clearInterval(countdownInterval);
+            return 0;
+          }
+          return prev - 1;
+        });
+      }, 1000);
+    }
+
+    return () => clearInterval(countdownInterval);
+  }, [showUndo, undoUser, undoRequestUser]);
+
+
 
   const scrollRef = useRef();
   const handleScroll = (event) => {
     const index = Math.round(event.nativeEvent.contentOffset.x / width);
-    setSelectedTab(index === 0 ? 'Requests' : 'Connections req. sent');
+    setSelectedTab(index === 0 ? 'Attendees' : 'Inbox');
   };
 
   const handleTabPress = (index) => {
-    setSelectedTab(index === 0 ? 'Requests' : 'Connections req. sent');
     scrollRef.current.scrollTo({ x: width * index, animated: true });
   };
 
-  const requestsFiltered = requests.filter(user =>
+  const attendeesFiltered = allUsers.filter(user =>
+    user.name.toLowerCase().includes(search.toLowerCase()) &&
+    (!sentFilter || user.role === sentFilter)
+  );
+
+  const inboxFiltered = requests.filter(user =>
     user.name.toLowerCase().includes(search.toLowerCase()) &&
     (!requestFilter || user.role === requestFilter)
   );
 
-  const connectionsFiltered = allUsers.filter(user =>
-    user.name.toLowerCase().includes(search.toLowerCase()) &&
-    (!sentFilter || user.role === sentFilter)
-  );
 
   const fetchData = async () => {
     setLoading(true);
@@ -407,7 +430,7 @@ const Connections = ({ navigation }) => {
     setShowUndo(false);
   };
 
-  const currentFilter = selectedTab === 'Requests' ? requestFilter : sentFilter;
+  const currentFilter = selectedTab === 'Inbox' ? requestFilter : sentFilter;
 
   const renderItem = ({ item }) => {
     const transformedUser = {
@@ -486,11 +509,11 @@ const Connections = ({ navigation }) => {
               requestStatus[item.id] === 'Requested' && styles.disabledButton,
             ]}
             onPress={() =>
-              selectedTab === 'Requests' ? handleAccept(item) : handleRequestToggle(item)
+              selectedTab === 'Inbox' ? handleAccept(item) : handleRequestToggle(item)
             }
           >
             <Text style={styles.actionButtonText}>
-              {selectedTab === 'Requests'
+              {selectedTab === 'Inbox'
                 ? acceptedUsers[item.id]
                   ? 'Accepted'
                   : 'Accept'
@@ -500,7 +523,7 @@ const Connections = ({ navigation }) => {
             </Text>
           </TouchableOpacity>
 
-          {selectedTab === 'Requests' && !acceptedUsers[item.id] && (
+          {selectedTab === 'Inbox' && !acceptedUsers[item.id] && (
             <TouchableOpacity
               style={styles.cancelButton}
               onPress={() => handleCancel(item)}
@@ -527,7 +550,7 @@ const Connections = ({ navigation }) => {
             <TouchableOpacity
               onPress={() => {
                 if (currentFilter) {
-                  selectedTab === 'Requests' ? setRequestFilter('') : setSentFilter('');
+                  selectedTab === 'Inbox' ? setRequestFilter('') : setSentFilter('');
                 }
               }}
             >
@@ -560,7 +583,7 @@ const Connections = ({ navigation }) => {
         </View>
 
         <View style={styles.tabs}>
-          {['Requests', 'Connections req. sent'].map((tab, index) => (
+          {['Attendees', 'Inbox'].map((tab, index) => (
             <TouchableOpacity
               key={tab}
               onPress={() => handleTabPress(index)}
@@ -579,48 +602,21 @@ const Connections = ({ navigation }) => {
           horizontal
           pagingEnabled
           showsHorizontalScrollIndicator={false}
-          onScroll={handleScroll}
+          onMomentumScrollEnd={(event) => {
+            const index = Math.round(event.nativeEvent.contentOffset.x / width);
+            setSelectedTab(index === 0 ? 'Attendees' : 'Inbox'); // update after scroll ends
+          }}
           scrollEventThrottle={16}
           refreshControl={
             <RefreshControl
-              refreshing={loading && !isFirstLoad && (connectionsFiltered.length > 0 || requestsFiltered.length > 0)}
+              refreshing={loading && !isFirstLoad && (attendeesFiltered.length > 0 || inboxFiltered.length > 0)}
               onRefresh={fetchData}
               colors={["#34495e"]}
               tintColor="#34495e"
             />
           }
         >
-          <View style={{ width }}>
-            {loading ? (
-              <View style={{ alignItems: 'center', marginTop: 40 }}>
-                <ActivityIndicator size="large" color="#34495e" />
-                <Text style={{ marginTop: 10, fontSize: 16, color: '#333' }}>
-                  Fetching connections...
-                </Text>
-              </View>
-            ) : (requestsFiltered.length === 0 ? (
-              <View style={styles.filterResultContainer}>
-                <Text style={styles.filterResultText}>
-                  No pending requests found!
-                </Text>
-                <LottieView
-                  style={styles.lottieContainer}
-                  source={require('../../assets/Not-Found.json')}
-                  autoPlay
-                  loop
-                  resizeMode="cover"
-                />
-              </View>
-            ) : (
-              <FlatList
-                data={requestsFiltered}
-                keyExtractor={(item) => item.id.toString()}
-                renderItem={renderItem}
-                contentContainerStyle={styles.list}
-                keyboardShouldPersistTaps="handled"
-              />
-            ))}
-          </View>
+
 
           <View style={{ width }}>
             {loading ? (
@@ -630,7 +626,7 @@ const Connections = ({ navigation }) => {
                   Fetching connections...
                 </Text>
               </View>
-            ) : (connectionsFiltered.length === 0 ? (
+            ) : (attendeesFiltered.length === 0 ? (
               <View style={styles.filterResultContainer}>
                 <Text style={styles.filterResultText}>
                   No connections found!
@@ -645,7 +641,7 @@ const Connections = ({ navigation }) => {
               </View>
             ) : (
               <FlatList
-                data={connectionsFiltered}
+                data={attendeesFiltered}
                 keyExtractor={(item) => item.id.toString()}
                 renderItem={renderItem}
                 contentContainerStyle={styles.list}
@@ -653,6 +649,39 @@ const Connections = ({ navigation }) => {
               />
             ))}
           </View>
+
+          <View style={{ width }}>
+            {loading ? (
+              <View style={{ alignItems: 'center', marginTop: 40 }}>
+                <ActivityIndicator size="large" color="#34495e" />
+                <Text style={{ marginTop: 10, fontSize: 16, color: '#333' }}>
+                  Fetching connections...
+                </Text>
+              </View>
+            ) : (inboxFiltered.length === 0 ? (
+              <View style={styles.filterResultContainer}>
+                <Text style={styles.filterResultText}>
+                  No pending requests found!
+                </Text>
+                <LottieView
+                  style={styles.lottieContainer}
+                  source={require('../../assets/Not-Found.json')}
+                  autoPlay
+                  loop
+                  resizeMode="cover"
+                />
+              </View>
+            ) : (
+              <FlatList
+                data={inboxFiltered}
+                keyExtractor={(item) => item.id.toString()}
+                renderItem={renderItem}
+                contentContainerStyle={styles.list}
+                keyboardShouldPersistTaps="handled"
+              />
+            ))}
+          </View>
+
         </ScrollView>
 
 
@@ -667,11 +696,18 @@ const Connections = ({ navigation }) => {
                 ? `Accepted ${undoUser.name}`
                 : `Sent request to ${undoRequestUser.name}`}
             </Text>
-            <TouchableOpacity onPress={handleUndo}>
-              <Text style={styles.undoButton}>Undo</Text>
-            </TouchableOpacity>
+
+            <View style={styles.undoRightContainer}>
+              <View style={styles.countdownCircle}>
+                <Text style={styles.countdownText}>{undoCountdown}</Text>
+              </View>
+              <TouchableOpacity onPress={handleUndo}>
+                <Text style={styles.undoButton}>Undo</Text>
+              </TouchableOpacity>
+            </View>
           </Animated.View>
         )}
+
 
         {showFilters && (
           <Modal animationType="fade" transparent visible={showFilters}>
@@ -683,7 +719,7 @@ const Connections = ({ navigation }) => {
               <TouchableWithoutFeedback>
                 <View style={styles.filterOptions}>
                   {(() => {
-                    const activeUsers = selectedTab === 'Requests' ? requests : allUsers;
+                    const activeUsers = selectedTab === 'Inbox' ? requests : allUsers;
                     if (activeUsers.length === 0) {
                       return <Text style={styles.noUsersText}>No users available to filter</Text>;
                     }
@@ -734,7 +770,7 @@ const Connections = ({ navigation }) => {
                                   ]}
                                   activeOpacity={0.7}
                                   onPress={() => {
-                                    selectedTab === 'Requests'
+                                    selectedTab === 'Inbox'
                                       ? setRequestFilter(role)
                                       : setSentFilter(role);
                                     setShowFilters(false);
@@ -1089,6 +1125,28 @@ const styles = StyleSheet.create({
     fontSize: 14,
   },
 
+  undoRightContainer: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 8,
+  },
+
+  countdownCircle: {
+    width: 30,
+    height: 30,
+    borderRadius: 15,
+    borderWidth: 2,
+    borderColor: '#007BFF',
+    justifyContent: 'center',
+    alignItems: 'center',
+  },
+
+  countdownText: {
+    color: '#007BFF',
+    fontWeight: 'bold',
+    fontSize: 14,
+  },
+
   toastContainer: {
     position: 'absolute',
     bottom: 80,
@@ -1180,4 +1238,3 @@ const styles = StyleSheet.create({
     color: '#555',
   },
 });
-

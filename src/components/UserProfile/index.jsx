@@ -2,7 +2,7 @@ import React, { useCallback, useEffect, useState } from 'react';
 import {
     Image, Modal, StyleSheet, Text, TouchableOpacity, View, Alert, Linking,
     Platform, PermissionsAndroid, ScrollView, SafeAreaView, Dimensions,
-    ActivityIndicator, StatusBar, useColorScheme
+    ActivityIndicator, StatusBar, useColorScheme,
 } from 'react-native';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import MaterialIcons from 'react-native-vector-icons/MaterialIcons';
@@ -21,9 +21,12 @@ const UserProfile = ({ navigation, route }) => {
     const [profileView, setProfileView] = useState(false);
     const [loading, setloading] = useState('');
     const [logoutLoading, setLogoutLoading] = useState('');
-
+    const [showImageOptions, setShowImageOptions] = useState(false);
     const passedUser = route?.params?.user;
     const isViewingOwnProfile = !passedUser;
+    const isDarkMode = useColorScheme() === 'dark';
+    const [uploading, setUploading] = useState(false);
+
 
     const fetchProfileData = async () => {
         try {
@@ -67,9 +70,10 @@ const UserProfile = ({ navigation, route }) => {
 
     const requestGalleryPermission = async () => {
         if (Platform.OS === 'android') {
-            const permissionType = Platform.Version >= 33
-                ? PermissionsAndroid.PERMISSIONS.READ_MEDIA_IMAGES
-                : PermissionsAndroid.PERMISSIONS.READ_EXTERNAL_STORAGE;
+            const permissionType =
+                Platform.Version >= 33
+                    ? PermissionsAndroid.PERMISSIONS.READ_MEDIA_IMAGES
+                    : PermissionsAndroid.PERMISSIONS.READ_EXTERNAL_STORAGE;
 
             const granted = await PermissionsAndroid.request(permissionType, {
                 title: 'Permission',
@@ -82,24 +86,54 @@ const UserProfile = ({ navigation, route }) => {
         return true;
     };
 
+    const requestCameraPermission = async () => {
+        if (Platform.OS === 'android') {
+            const granted = await PermissionsAndroid.request(
+                PermissionsAndroid.PERMISSIONS.CAMERA,
+                {
+                    title: 'Camera Permission',
+                    message: 'Allow access to camera',
+                    buttonPositive: 'OK',
+                }
+            );
+            return granted === PermissionsAndroid.RESULTS.GRANTED;
+        }
+        return true;
+    };
 
-    const handleEditPhoto = async () => {
-        const permissionGranted = await requestGalleryPermission();
-        if (!permissionGranted) {
-            Alert.alert('Permission Denied', 'Cannot access gallery');
+
+    const pickImage = async (fromCamera = false) => {
+        setProfileView(false);
+        setShowImageOptions(false);
+
+        const hasPermission = fromCamera
+            ? await requestCameraPermission()
+            : await requestGalleryPermission();
+
+        if (!hasPermission) {
+            Alert.alert('Permission Denied', 'Cannot access camera/gallery without permission.');
             return;
         }
 
         try {
-            // Open picker with cropping enabled
-            const image = await ImagePicker.openPicker({
-                cropping: true,                // enables crop UI
-                freeStyleCropEnabled: true,    // user can resize/adjust crop rectangle
-                compressImageQuality: 0.8,
-                mediaType: 'photo',
-            });
+            const image = fromCamera
+                ? await ImagePicker.openCamera({
+                    cropping: true,
+                    freeStyleCropEnabled: true,
+                    compressImageQuality: 0.8,
+                    mediaType: 'photo',
+                    useFrontCamera: true,
+                })
+                : await ImagePicker.openPicker({
+                    cropping: true,
+                    freeStyleCropEnabled: true,
+                    compressImageQuality: 0.8,
+                    mediaType: 'photo',
+                });
 
             if (!image?.path) return;
+
+            setUploading(true);
 
             const formData = new FormData();
             formData.append('photo', {
@@ -120,40 +154,16 @@ const UserProfile = ({ navigation, route }) => {
                 }
             );
 
-            Alert.alert('Success', 'Photo updated');
-            setProfileView(false);
+            Alert.alert('Success', 'Profile updated successfully');
             fetchProfileData();
         } catch (err) {
-            if (err.code === 'E_PICKER_CANCELLED') return; // user cancelled
+            if (err.code === 'E_PICKER_CANCELLED') return;
             Alert.alert('Error', 'Upload failed');
+        } finally {
+            setUploading(false);
+            setShowImageOptions(false);
         }
     };
-
-
-//     const handleDeletePhoto = async () => {
-//     try {
-//         const formData = new FormData();
-//         formData.append('photo', null); // send null
-
-//         const token = await AsyncStorage.getItem('token');
-//         await axios.put(
-//             'https://letsmeet-backend-47lv.onrender.com/api/user-profile/edit',
-//             formData,
-//             {
-//                 headers: {
-//                     'Content-Type': 'multipart/form-data', // must be multipart for FormData
-//                     Authorization: `Bearer ${token}`,
-//                 },
-//             }
-//         );
-
-//         Alert.alert('Success', 'Photo removed');
-//         setProfileView(false);
-//         fetchProfileData();
-//     } catch (err) {
-//         Alert.alert('Error', 'Request failed');
-//     }
-// };
 
 
 
@@ -222,7 +232,7 @@ const UserProfile = ({ navigation, route }) => {
 
     return (
         <>
-            <StatusBar barStyle={useColorScheme() === 'dark' ? 'light-content' : 'dark-content'} />
+            <StatusBar barStyle={isDarkMode ? 'light-content' : 'dark-content'} />
             <SafeAreaView style={styles.container}>
                 <ScrollView contentContainerStyle={{ flexGrow: 1 }}>
                     <View style={styles.headerContainer}>
@@ -255,9 +265,14 @@ const UserProfile = ({ navigation, route }) => {
                     <View style={styles.profileWrapper}>
                         <TouchableOpacity onPress={() => setProfileView(true)}>
                             <Image source={getProfileImageSource()} style={styles.profile} />
+
+                            {uploading && (
+                                <View style={styles.uploadOverlay}>
+                                    <ActivityIndicator size="large" color="#fff" />
+                                </View>
+                            )}
                         </TouchableOpacity>
                     </View>
-
                     <Modal visible={profileView} transparent animationType="fade">
                         <BlurView style={styles.blur} blurType="light" blurAmount={15} />
                         <FontAwesome name="close" size={28} color="#ffffff" style={styles.profileCloseIcon} onPress={() => setProfileView(false)} />
@@ -269,19 +284,12 @@ const UserProfile = ({ navigation, route }) => {
                                     resizeMode="contain"
                                 />
                                 {isViewingOwnProfile && (
-                                    <TouchableOpacity style={styles.editIcon} onPress={handleEditPhoto}>
+                                    <TouchableOpacity style={styles.editIcon} onPress={() => setShowImageOptions(true)}>
                                         <MaterialIcons name="edit" size={24} color="#fff" />
                                     </TouchableOpacity>
                                 )}
                             </View>
                         </TouchableOpacity>
-                        {/* <FontAwesome
-                            name="close"
-                            size={28}
-                            color="#c52121"
-                            style={styles.editIcon}
-                            onPress={handleDeletePhoto}
-                        /> */}
                     </Modal>
                     {isViewingOwnProfile && loading ? (
                         <View style={{ marginTop: 150, alignItems: 'center' }}>
@@ -361,6 +369,96 @@ const UserProfile = ({ navigation, route }) => {
                                 ))}
                         </View>
                     )}
+
+                    <Modal
+                        visible={showImageOptions}
+                        transparent
+                        animationType="slide"
+                        onRequestClose={() => setShowImageOptions(false)}
+                    >
+                        <TouchableOpacity
+                            style={styles.modalOverlayBottom}
+                            activeOpacity={1}
+                            onPressOut={() => setShowImageOptions(false)}
+                        >
+                            <View
+                                style={[
+                                    styles.bottomModal,
+                                    { backgroundColor: isDarkMode ? '#1c1c1e' : '#fff', shadowColor: isDarkMode ? '#000' : '#aaa' }
+                                ]}
+                            >
+                                {/* Modal Header with Title + Close Icon */}
+                                <View style={{ flexDirection: 'row', justifyContent: 'space-between', width: '100%', marginBottom: 18, alignItems: 'center' }}>
+                                    <Text
+                                        style={[
+                                            styles.modalTitle,
+                                            { color: isDarkMode ? '#fff' : '#000', fontSize: 18 } // white in dark, black in light
+                                        ]}
+                                    >
+                                        Choose Option
+                                    </Text>
+
+                                    <TouchableOpacity onPress={() => setShowImageOptions(false)}>
+                                        <MaterialIcons
+                                            name="close"
+                                            size={28}
+                                            color={isDarkMode ? '#fff' : '#000'} // white in dark, black in light
+                                        />
+                                    </TouchableOpacity>
+                                </View>
+
+                                {/* Take Photo Button */}
+                                <TouchableOpacity
+                                    style={[
+                                        styles.optionButton,
+                                        { backgroundColor: isDarkMode ? '#2c2c2e' : '#f0f4fa' }
+                                    ]}
+                                    onPress={() => pickImage(true)}
+                                >
+                                    <MaterialIcons
+                                        name="photo-camera"
+                                        size={24}
+                                        color={isDarkMode ? '#fff' : '#000'} // white/black
+                                        style={{ marginRight: 10 }}
+                                    />
+                                    <Text
+                                        style={[
+                                            styles.optionText,
+                                            { color: isDarkMode ? '#fff' : '#000' } // white/black
+                                        ]}
+                                    >
+                                        Take Photo
+                                    </Text>
+                                </TouchableOpacity>
+
+                                {/* Choose from Gallery Button */}
+                                <TouchableOpacity
+                                    style={[
+                                        styles.optionButton,
+                                        { backgroundColor: isDarkMode ? '#2c2c2e' : '#f0f4fa' }
+                                    ]}
+                                    onPress={() => pickImage(false)}
+                                >
+                                    <MaterialIcons
+                                        name="photo-library"
+                                        size={24}
+                                        color={isDarkMode ? '#fff' : '#000'} // white/black
+                                        style={{ marginRight: 10 }}
+                                    />
+                                    <Text
+                                        style={[
+                                            styles.optionText,
+                                            { color: isDarkMode ? '#fff' : '#000' } // white/black
+                                        ]}
+                                    >
+                                        Choose from Gallery
+                                    </Text>
+                                </TouchableOpacity>
+                            </View>
+                        </TouchableOpacity>
+                    </Modal>
+
+
                 </ScrollView>
             </SafeAreaView >
         </>
@@ -384,6 +482,17 @@ const styles = StyleSheet.create({
         borderColor: '#fff',
         backgroundColor: '#fff',
     },
+    uploadOverlay: {
+        position: 'absolute',
+        top: 0,
+        left: 0,
+        width: width * 0.4,
+        height: width * 0.4,
+        borderRadius: (width * 0.4) / 2,
+        backgroundColor: 'rgba(0,0,0,0.5)', // dark semi-transparent overlay
+        justifyContent: 'center',
+        alignItems: 'center',
+    },
     headerContainer: {
         backgroundColor: '#34495e',
         paddingBottom: 60,
@@ -403,7 +512,7 @@ const styles = StyleSheet.create({
         fontSize: 24,
         fontWeight: '600',
         textAlign: 'center',
-        flex: 1, // <- ensures it takes middle space
+        flex: 1,
     },
     profileEdit: {
         padding: 4,
@@ -613,9 +722,68 @@ const styles = StyleSheet.create({
         fontSize: 14,
         fontWeight: '500',
     },
+    modalOverlayBottom: {
+        flex: 1,
+        backgroundColor: 'rgba(0,0,0,0.3)',
+        justifyContent: 'flex-end',
+    },
 
+    bottomModal: {
+        paddingVertical: 22,
+        paddingHorizontal: 20,
+        borderTopLeftRadius: 25,
+        borderTopRightRadius: 25,
+        alignItems: 'center',
+        shadowOffset: { width: 0, height: -3 },
+        shadowOpacity: 0.15,
+        shadowRadius: 8,
+        elevation: 10,
+    },
 
+    modalTitle: {
+        fontSize: 18,
+        fontWeight: '700',
+        marginBottom: 18,
+        letterSpacing: 0.5,
+    },
 
+    optionButton: {
+        flexDirection: 'row',
+        alignItems: 'center',
+        justifyContent: 'center',
+        paddingVertical: 14,
+        paddingHorizontal: 20,
+        borderRadius: 15,
+        width: '100%',
+        marginBottom: 12,
+        shadowOffset: { width: 0, height: 2 },
+        shadowOpacity: 0.15,
+        shadowRadius: 6,
+        elevation: 6,
+    },
+
+    optionText: {
+        fontSize: 16,
+        fontWeight: '600',
+        marginLeft: 12,
+    },
+
+    cancelButton: {
+        paddingVertical: 14,
+        borderRadius: 15,
+        width: '100%',
+        marginTop: 10,
+        alignItems: 'center',
+        shadowOffset: { width: 0, height: 2 },
+        shadowOpacity: 0.15,
+        shadowRadius: 6,
+        elevation: 6,
+    },
+
+    cancelText: {
+        fontSize: 16,
+        fontWeight: '600',
+    }
 });
 
 export default UserProfile;

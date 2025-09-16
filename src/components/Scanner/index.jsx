@@ -44,7 +44,7 @@ const Scanner = ({ navigation }) => {
   const devices = useCameraDevices();
   const device = devices.back || devices[0];
 
-  // ✅ New code scanner hook (instead of frameProcessor)
+  // ✅ New code scanner hook
   const codeScanner = useCodeScanner({
     codeTypes: ['qr'],
     onCodeScanned: (codes) => {
@@ -65,12 +65,16 @@ const Scanner = ({ navigation }) => {
     ).start();
   }, [moveAnim]);
 
+  // ✅ Fixed socket setup & cleanup
   useEffect(() => {
-    let socket;
+    let activeSocket; // store socket reference for cleanup
 
     const setupSocket = async () => {
       try {
-        socket = await getSocket();
+        const socket = await getSocket();
+        if (!socket) return; // prevent crashes if null
+
+        activeSocket = socket;
 
         socket.on('write_meeting_notes', ({ meetingId }) => {
           clearTimeout(timeoutIdRef.current);
@@ -105,19 +109,19 @@ const Scanner = ({ navigation }) => {
             setScanCompleted(false);
           }, 3000);
         });
-      } catch (err) { }
+      } catch (err) {}
     };
 
     setupSocket();
 
     return () => {
       try {
-        getSocket();
-        socket.off('meeting_request');
-        socket.off('write_meeting_notes');
-        socket.off('meeting_error');
-        socket.off('meeting_declined');
-      } catch (err) { }
+        if (activeSocket) {
+          activeSocket.off('write_meeting_notes');
+          activeSocket.off('meeting_error');
+          activeSocket.off('meeting_declined');
+        }
+      } catch (err) {}
     };
   }, [navigation]);
 
@@ -176,6 +180,14 @@ const Scanner = ({ navigation }) => {
       setScannedData(data);
 
       const socket = await getSocket();
+      if (!socket) {
+        setConnectionStatus('fail');
+        setFailureReason('Unable to connect to server. Please try again.');
+        setShowPopup(true);
+        setLoading(false);
+        loadingRef.current = false;
+        return;
+      }
 
       const payload = {
         targetUserId: data.id,
@@ -223,9 +235,7 @@ const Scanner = ({ navigation }) => {
                 }}
               >
                 <Camera
-                  style={{
-                    flex: 1,
-                  }}
+                  style={{ flex: 1 }}
                   device={device}
                   isActive={true}
                   codeScanner={codeScanner}
@@ -235,7 +245,6 @@ const Scanner = ({ navigation }) => {
               <ActivityIndicator size="large" color="#34495e" style={{ marginTop: 200 }} />
             )}
           </View>
-
 
           <View style={styles.overlayContainer}>
             <View style={styles.scannerBox}>
@@ -296,8 +305,8 @@ const Scanner = ({ navigation }) => {
                         connectionStatus === 'success'
                           ? '#2ecc71'
                           : connectionStatus === 'invalid'
-                            ? 'red'
-                            : '#000',
+                          ? 'red'
+                          : '#000',
                     },
                   ]}
                 >

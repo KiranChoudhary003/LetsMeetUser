@@ -6,7 +6,7 @@ import BottomTab from '../BottomTab';
 import { createStackNavigator } from '@react-navigation/stack';
 import Home from '../Home/index.jsx';
 import MyEvents from '../MyEvents/index.jsx';
-import Complain from '../Complain/index.jsx';
+import SupportDesk from '../Complain/index.jsx';
 import Meetings from '../Meetings/index.jsx';
 
 const InnerStack = createStackNavigator();
@@ -24,7 +24,7 @@ const Layout = () => {
           <InnerStack.Navigator screenOptions={{ headerShown: false }}>
             <InnerStack.Screen name="Home" component={Home} />
             <InnerStack.Screen name="MyEvents" component={MyEvents} />
-            <InnerStack.Screen name="Complain" component={Complain} />
+            <InnerStack.Screen name="SupportDesk" component={SupportDesk} />
             <InnerStack.Screen name="Meetings" component={Meetings} />
           </InnerStack.Navigator>
         </View>

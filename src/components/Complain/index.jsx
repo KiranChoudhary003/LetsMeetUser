@@ -9,9 +9,15 @@ import { TextInput } from 'react-native-gesture-handler';
 import Ionicons from 'react-native-vector-icons/Ionicons';
 import MaterialIcons from 'react-native-vector-icons/MaterialIcons';
 
-const ComplainCard = ({ description, status, updatedAt }) => {
+const TicketCard = ({ description, status, updatedAt }) => {
+    let formattedStatus;
 
-    const formattedStatus = status.replace(/_/g, ' ').toUpperCase();
+    if (status === 'complete') {
+        formattedStatus = 'RESOLVED';
+    } else {
+        formattedStatus = status.replace(/_/g, ' ').toUpperCase();
+    }
+
     let statusColor = '#000';
     let backgroundColor = '#fff';
     let borderColor = '#e74c3c';
@@ -29,19 +35,30 @@ const ComplainCard = ({ description, status, updatedAt }) => {
 
     return (
         <View style={styles.card}>
-            <View style={styles.complainData}>
-                <View style={styles.complainDetails}>
+            <View style={styles.ticketData}>
+                <View style={styles.ticketDetails}>
                     <Text style={styles.description}>{description}</Text>
                 </View>
                 <View style={styles.date}>
                     <View>
                         <Text style={styles.updatedDate}>Updated Date</Text>
                         <Text style={styles.lastDate}>
-                            {new Date(updatedAt).toLocaleDateString()}
+                            {new Date(updatedAt).toLocaleString("en-US", {
+                                month: "2-digit",
+                                day: "2-digit",
+                                year: "numeric",
+                                hour: "2-digit",
+                                minute: "2-digit",
+                                hour12: false,
+                            })}
                         </Text>
                     </View>
 
-                    <View style={[styles.complainStatus, { backgroundColor: backgroundColor }, { borderColor: borderColor }]}>
+                    <View style={[
+                        styles.ticketStatus,
+                        { backgroundColor: backgroundColor },
+                        { borderColor: borderColor }
+                    ]}>
                         <Text style={[styles.updateStatus, { color: statusColor, fontWeight: 'bold' }]}>
                             {formattedStatus}
                         </Text>
@@ -52,35 +69,38 @@ const ComplainCard = ({ description, status, updatedAt }) => {
     );
 };
 
-const Complain = ({ navigation }) => {
+
+const SupportDesk = () => {
 
     const [showModal, setShowModal] = useState(false);
-    const [complains, setComplains] = useState([]);
-    const [newComplain, setNewComplain] = useState('');
+    const [tickets, setTickets] = useState([]);
+    const [newTicket, setNewTicket] = useState('');
     const [filter, setFilter] = useState(false);
     const [selectedFilter, setSelectedFilter] = useState(null);
-    const [allComplains, setAllComplains] = useState([]);
+    const [allTickets, setAllTickets] = useState([]);
     const [loading, setLoading] = useState(true);
     const [saving, setSaving] = useState(false);
     const [isFirstLoad, setIsFirstLoad] = useState(true);
+    const [alertVisible, setAlertVisible] = useState(false);
+    const [alertMessage, setAlertMessage] = useState("");
 
 
     useEffect(() => {
         const loadData = async () => {
-            const cached = await AsyncStorage.getItem('complaintsData');
+            const cached = await AsyncStorage.getItem('ticketsData');
             if (cached) {
                 const data = JSON.parse(cached);
-                setAllComplains(data);
+                setAllTickets(data);
                 applyFilter(data, selectedFilter);
             }
-            fetchComplains();
+            fetchTickets();
         };
         loadData();
     }, []);
 
 
 
-    const fetchComplains = async () => {
+    const fetchTickets = async () => {
         setLoading(true);
         try {
             const token = await AsyncStorage.getItem('token');
@@ -93,10 +113,12 @@ const Complain = ({ navigation }) => {
                     },
                 }
             );
-            const data = response.data.reports;
-            setAllComplains(data);
+            const data = response.data.reports.sort(
+                (a, b) => new Date(b.updated_at) - new Date(a.updated_at)
+            );
+            setAllTickets(data);
             applyFilter(data, selectedFilter);
-            await AsyncStorage.setItem('complaintsData', JSON.stringify(data));
+            await AsyncStorage.setItem('ticketsData', JSON.stringify(data));
         } catch (error) {
         } finally {
             setLoading(false);
@@ -104,9 +126,9 @@ const Complain = ({ navigation }) => {
         }
     };
 
-    const submitComplain = async () => {
-        if (!newComplain.trim()) {
-            Alert.alert('Validation Error', 'Complain cannot be empty.');
+    const submitTicket = async () => {
+        if (!newTicket.trim()) {
+            Alert.alert('Validation Error', 'Ticket cannot be empty.');
             return;
         }
 
@@ -116,7 +138,7 @@ const Complain = ({ navigation }) => {
 
             await axios.post(
                 'https://letsmeet-backend-47lv.onrender.com/api/user-profile/submit-report',
-                { Description: newComplain },
+                { Description: newTicket },
                 {
                     headers: {
                         Authorization: `Bearer ${token}`,
@@ -125,13 +147,13 @@ const Complain = ({ navigation }) => {
                 }
             );
 
-            Alert.alert('Success', 'Your complaint has been submitted.');
-            setNewComplain('');
+            Alert.alert('Success', 'Your ticket has been submitted Successfully.');
+            setNewTicket('');
             setShowModal(false);
 
-            await fetchComplains();
+            await fetchTickets();
         } catch (err) {
-            Alert.alert('Error', 'Something went wrong while submitting your complaint.');
+            Alert.alert('Error', 'Something went wrong while submitting your ticket.');
         } finally {
             setSaving(false);
         }
@@ -140,21 +162,28 @@ const Complain = ({ navigation }) => {
 
 
     useEffect(() => {
-        applyFilter(allComplains, selectedFilter);
-    }, [selectedFilter, allComplains]);
+        applyFilter(allTickets, selectedFilter);
+    }, [selectedFilter, allTickets]);
 
 
     const applyFilter = (data, filterStatus) => {
         if (!filterStatus) {
-            setComplains(data);
+            setTickets(data);
         } else {
-            const filtered = data.filter(item => item.status === filterStatus);
-            setComplains(filtered);
+            const filtered = data.filter(
+                item => item.status?.toLowerCase() === filterStatus.toLowerCase()
+            );
+            setTickets(filtered);
         }
     };
 
     const handleFilterChange = (option) => {
-        const normalized = option === 'All' ? null : option.toLowerCase().replace(' ', '_');
+        const normalized = option === 'All'
+            ? null
+            : option === 'Resolved'
+                ? 'complete'
+                : option.toLowerCase().replace(' ', '_');
+
         setSelectedFilter(normalized);
         setFilter(false);
     };
@@ -164,44 +193,44 @@ const Complain = ({ navigation }) => {
             <StatusBar barStyle={useColorScheme() === 'dark' ? 'light-content' : 'dark-content'} />
             <SafeAreaView style={styles.container}>
                 <View style={styles.header}>
-                    <Text style={styles.desk}>Complain Desk</Text>
+                    <Text style={styles.desk}>Support Desk</Text>
                 </View>
 
-                <View style={styles.complain}>
-                    <Text style={styles.myComplain}>My Complain</Text>
+                <View style={styles.ticketHeader}>
+                    <Text style={styles.myTickets}>My Tickets</Text>
                     <TouchableOpacity onPress={() => setFilter(true)}>
                         <Ionicons name="filter" size={16} color="#000" />
                     </TouchableOpacity>
                 </View>
 
-                {loading && complains.length === 0 ? (
+                {loading && tickets.length === 0 ? (
                     <View style={styles.loaderContainer}>
                         <ActivityIndicator size="large" color="#34495e" />
-                        <Text style={{ marginTop: 8, color: '#444' }}>Loading complaints...</Text>
+                        <Text style={{ marginTop: 8, color: '#444' }}>Loading tickets...</Text>
                     </View>
                 ) : (
                     <ScrollView contentContainerStyle={styles.scrollView}
                         refreshControl={
                             <RefreshControl
-                                refreshing={loading && !isFirstLoad && complains.length > 0}
-                                onRefresh={fetchComplains}
+                                refreshing={loading && !isFirstLoad && tickets.length > 0}
+                                onRefresh={fetchTickets}
                                 colors={["#34495e"]}
                                 tintColor="#34495e"
                             />
                         }>
 
-                        <View style={styles.complainCard}>
-                            {complains.length === 0 ? (
+                        <View style={styles.ticketCard}>
+                            {tickets.length === 0 ? (
                                 <Text style={{ textAlign: 'center', color: '#666', marginTop: 20 }}>
-                                    No complaints found.
+                                    No tickets found.
                                 </Text>
                             ) : (
-                                complains.map((complain) => (
-                                    <ComplainCard
-                                        key={complain.id}
-                                        description={complain.description}
-                                        status={complain.status}
-                                        updatedAt={complain.updated_at}
+                                tickets.map((ticket) => (
+                                    <TicketCard
+                                        key={ticket.id}
+                                        description={ticket.description}
+                                        status={ticket.status}
+                                        updatedAt={ticket.updated_at}
                                     />
                                 ))
                             )}
@@ -222,13 +251,22 @@ const Complain = ({ navigation }) => {
                         >
                             <TouchableWithoutFeedback>
                                 <View style={styles.filterOptions}>
-                                    {['All', 'Pending', 'In Progress', 'Complete'].map((option) => {
-                                        const normalized = option === 'All' ? null : option.toLowerCase().replace(' ', '_');
+                                    {['All', 'Pending', 'In Progress', 'Resolved'].map((option) => {
+                                        const normalized = option === 'All'
+                                            ? null
+                                            : option === 'Resolved'
+                                                ? 'complete'
+                                                : option.toLowerCase().replace(' ', '_');
+
                                         const isActive = selectedFilter === normalized;
 
                                         return (
-                                            <TouchableOpacity key={option} onPress={() => handleFilterChange(option)} style={styles.filterOption}>
-                                                <Text style={[styles.filterText, isActive && styles.filterActive]}>
+                                            <TouchableOpacity
+                                                key={option}
+                                                onPress={() => handleFilterChange(option)}
+                                                style={[styles.filterOption, isActive && styles.filterActive]}
+                                            >
+                                                <Text style={styles.filterText}>
                                                     {option}
                                                 </Text>
                                             </TouchableOpacity>
@@ -236,6 +274,7 @@ const Complain = ({ navigation }) => {
                                     })}
                                 </View>
                             </TouchableWithoutFeedback>
+
                         </TouchableOpacity>
                     </Modal>
                 )}
@@ -248,15 +287,15 @@ const Complain = ({ navigation }) => {
                             onPress={() => setShowModal(false)}
                         >
                             <View style={styles.modalContent}>
-                                <Text style={styles.modalTitle}>New Complain</Text>
+                                <Text style={styles.modalTitle}>New Ticket</Text>
                                 <TextInput
                                     style={styles.input}
-                                    placeholder="Enter the complaint"
+                                    placeholder="Enter the ticket"
                                     placeholderTextColor="#888"
-                                    value={newComplain}
-                                    onChangeText={setNewComplain}
+                                    value={newTicket}
+                                    onChangeText={setNewTicket}
                                 />
-                                <TouchableOpacity style={styles.saveButton} onPress={submitComplain} disabled={saving}>
+                                <TouchableOpacity style={styles.saveButton} onPress={submitTicket} disabled={saving}>
                                     <View style={{ flexDirection: 'row', alignItems: 'center' }}>
                                         <Text style={styles.saveButtonText}>Save</Text>
                                         {saving && <ActivityIndicator size="small" color="#fff" style={{ marginLeft: 10 }} />}
@@ -273,7 +312,7 @@ const Complain = ({ navigation }) => {
 
 };
 
-export default Complain;
+export default SupportDesk;
 
 const styles = StyleSheet.create({
     container: {
@@ -294,7 +333,6 @@ const styles = StyleSheet.create({
         fontSize: 18,
         fontWeight: 'bold',
         color: '#fff',
-        backgroundColor: '#34495e',
         paddingHorizontal: 16,
         paddingVertical: 6,
         borderWidth: 1,
@@ -307,33 +345,17 @@ const styles = StyleSheet.create({
         shadowRadius: 4,
         elevation: 3,
     },
-    complain: {
+    ticketHeader: {
         display: 'flex',
         flexDirection: 'row',
         justifyContent: 'space-between',
         marginVertical: 10,
         marginHorizontal: 20,
     },
-    myComplain: {
+    myTickets: {
         fontSize: 20,
         fontWeight: 'bold',
         color: '#888',
-    },
-    heading: {
-        display: 'flex',
-        flexDirection: 'row',
-        justifyContent: 'space-between',
-        marginTop: 10,
-    },
-    status: {
-        fontSize: 20,
-        fontWeight: 'bold',
-        marginRight: 55,
-    },
-    complainDescription: {
-        fontSize: 20,
-        fontWeight: 'bold',
-        marginLeft: 10.0,
     },
     description: {
         fontSize: 18,
@@ -407,12 +429,12 @@ const styles = StyleSheet.create({
         color: '#fff',
         fontWeight: '600',
     },
-    complainData: {
+    ticketData: {
         width: '100%',
         flexDirection: 'column',
         justifyContent: 'space-between',
     },
-    complainStatus: {
+    ticketStatus: {
         width: 110,
         borderWidth: 1,
         borderRadius: 50,
@@ -422,7 +444,7 @@ const styles = StyleSheet.create({
         paddingVertical: 3,
     },
 
-    complainDetails: {
+    ticketDetails: {
         width: '100%',
     },
     date: {
@@ -449,17 +471,15 @@ const styles = StyleSheet.create({
     },
     filterOption: {
         paddingVertical: 10,
-        paddingHorizontal: 5,
         borderRadius: 10,
     },
     filterActive: {
         backgroundColor: 'rgba(255,255,255,.29)',
         width: '100%',
         paddingVertical: 10,
-        paddingLeft: 5,
         borderRadius: 10,
     },
-    filterText: { fontSize: 14, color: '#fff' },
+    filterText: { fontSize: 14, color: '#fff', marginLeft: 8 },
 
     clearFilterButton: {
         marginTop: 2,

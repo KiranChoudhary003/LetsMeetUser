@@ -41,7 +41,6 @@ import MeetingRecords from './src/components/MeetingRecords';
 
 enableScreens();
 const Stack = createStackNavigator();
-
 const App = () => {
   const navigationRef = useNavigationContainerRef();
   const socketSetupDone = useRef(false);
@@ -82,7 +81,9 @@ const App = () => {
                     useNativeDriver: false,
                   }).start();
 
-                  if (timeoutIdRef.current) { clearTimeout(timeoutIdRef.current); }
+                  if (timeoutIdRef.current) {
+                    clearTimeout(timeoutIdRef.current);
+                  }
                   timeoutIdRef.current = setTimeout(() => {
                     setMeetingExpired(true);
                   }, 9000);
@@ -92,6 +93,11 @@ const App = () => {
                 },
                 onMeetingError: () => { },
                 onMeetingDeclined: () => { },
+              });
+
+              // 🔑 reset setup flag on disconnect so listeners can re-attach
+              newSocket.on('disconnect', () => {
+                socketSetupDone.current = false;
               });
             }
           }
@@ -103,52 +109,63 @@ const App = () => {
     return () => clearInterval(intervalId);
   }, []);
 
-
   useEffect(() => {
     const pingInterval = setInterval(() => {
       const socket = getSocket();
       if (socket && socket.connected) {
         socket.emit('ping');
       }
-    }, 60000); // 60 seconds
+    }, 60000);
 
     return () => clearInterval(pingInterval);
   }, []);
 
-
-  const clearMeetingTimeouts = () => {
-    clearTimeout(timeoutIdRef.current);
+  const clearMeetingState = () => {
+    if (timeoutIdRef.current) {
+      clearTimeout(timeoutIdRef.current);
+      timeoutIdRef.current = null;
+    }
     progressAnim.setValue(0);
+    setMeetingData(null);
+    setMeetingExpired(false);
   };
 
   const handleAccept = () => {
     if (meetingData) {
       const socket = getSocket();
-      socket.emit('respond_meeting_request', {
-        fromUserId: meetingData.fromUserId,
-        eventId: meetingData.eventId,
-        accept: true,
-      });
+      if (socket && socket.connected) {
+        socket.emit('respond_meeting_request', {
+          fromUserId: meetingData.fromUserId,
+          eventId: meetingData.eventId,
+          accept: true,
+        });
+      } else {
+        console.warn('⚠️ Socket not connected, could not emit accept');
+      }
     }
-    clearMeetingTimeouts();
+    clearMeetingState();
     setMeetingModalVisible(false);
   };
 
   const handleDecline = () => {
     if (meetingData) {
       const socket = getSocket();
-      socket.emit('respond_meeting_request', {
-        fromUserId: meetingData.fromUserId,
-        eventId: meetingData.eventId,
-        accept: false,
-      });
+      if (socket && socket.connected) {
+        socket.emit('respond_meeting_request', {
+          fromUserId: meetingData.fromUserId,
+          eventId: meetingData.eventId,
+          accept: false,
+        });
+      } else {
+        console.warn('⚠️ Socket not connected, could not emit decline');
+      }
     }
-    clearMeetingTimeouts();
+    clearMeetingState();
     setMeetingModalVisible(false);
   };
 
   const handleExpiredOk = () => {
-    clearMeetingTimeouts();
+    clearMeetingState();
     setMeetingModalVisible(false);
   };
 
