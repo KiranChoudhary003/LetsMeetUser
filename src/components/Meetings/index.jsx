@@ -80,7 +80,11 @@ const Meeting = ({ navigation }) => {
           if (eventsWithMeetings.length > 0) {
             usersWithMeetings.push({
               id: user.id,
-              name: `${user.first_name} ${user.last_name}`,
+              name: [
+                user.first_name,
+                user.middle_name,
+                user.last_name
+              ].filter(Boolean).join(' '),
               role: user.role || 'Attendee',
               photo: user.photo || '',
               email: user.email || '',
@@ -166,7 +170,11 @@ const Meeting = ({ navigation }) => {
       <StatusBar barStyle={useColorScheme() === 'dark' ? 'light-content' : 'dark-content'} />
       <View style={{ flex: 1, backgroundColor: '#E8EFFC' }}>
         <View style={styles.header}>
-          <Text style={styles.meetHeading}>Meetings</Text>
+          <View style={styles.centerContainer}>
+            <View style={styles.eventsLabel}>
+              <Text style={styles.eventsLabelText}>Meetings</Text>
+            </View>
+          </View>
         </View>
 
         <View style={styles.searchBar}>
@@ -198,7 +206,7 @@ const Meeting = ({ navigation }) => {
           </View>
         ) : filteredRequests.length === 0 ? (
           <View style={styles.filterResultContainer}>
-            <Text style={styles.filterResultText}>No users with meetings found!</Text>
+            <Text style={styles.filterResultText}>No meetings found!</Text>
             <LottieView
               style={styles.lottieContainer}
               source={require('../../assets/Not-Found.json')}
@@ -250,6 +258,20 @@ const styles = StyleSheet.create({
     position: 'relative',
     alignItems: 'center',
   },
+  centerContainer: {
+    width: '100%',
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+  },
+  eventsLabel: {
+    paddingVertical: 6,
+  },
+  eventsLabelText: {
+    fontSize: 22,
+    fontWeight: 'bold',
+    color: '#000',
+  },
   meetHeading: {
     fontSize: 18,
     fontWeight: 'bold',
@@ -267,7 +289,6 @@ const styles = StyleSheet.create({
     elevation: 3,
   },
   searchBar: {
-    marginTop: 10,
     marginHorizontal: width * 0.03,
     paddingHorizontal: width * 0.03,
     height: 40,
@@ -345,7 +366,6 @@ const styles = StyleSheet.create({
     color: '#555',
   },
   lottieContainer: {
-    marginTop: 50,
     height: 200,
     width: 200,
   },

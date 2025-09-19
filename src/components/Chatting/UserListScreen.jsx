@@ -105,9 +105,17 @@ export default function UserListScreen() {
     }, []);
 
     const filteredUsers = users.filter(user =>
-        user.first_name.toLowerCase().includes(searchQuery.toLowerCase()) ||
-        user.last_name.toLowerCase().includes(searchQuery.toLowerCase())
+        [
+            user.first_name,
+            user.middle_name,
+            user.last_name,
+        ]
+            .filter(Boolean)
+            .join(' ')
+            .toLowerCase()
+            .includes(searchQuery.toLowerCase())
     );
+
 
     const handleQRCode = () => {
         navigation.navigate('QRCode');
@@ -172,7 +180,13 @@ export default function UserListScreen() {
                     />
                     <View style={styles.info}>
                         <View style={styles.nameRow}>
-                            <Text style={styles.name}>{`${item.first_name} ${item.last_name}`}</Text>
+                            <Text style={styles.name}>
+                                {[
+                                    item.first_name,
+                                    item.middle_name, // include middle name
+                                    item.last_name
+                                ].filter(Boolean).join(' ')}
+                            </Text>
                             {unreadCount > 0 && (
                                 <View style={styles.unreadBadge}>
                                     <Text style={styles.unreadText}>{unreadCount}</Text>

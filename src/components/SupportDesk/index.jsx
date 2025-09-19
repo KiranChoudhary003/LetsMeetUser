@@ -81,8 +81,6 @@ const SupportDesk = () => {
     const [loading, setLoading] = useState(true);
     const [saving, setSaving] = useState(false);
     const [isFirstLoad, setIsFirstLoad] = useState(true);
-    const [alertVisible, setAlertVisible] = useState(false);
-    const [alertMessage, setAlertMessage] = useState("");
 
 
     useEffect(() => {
@@ -193,7 +191,11 @@ const SupportDesk = () => {
             <StatusBar barStyle={useColorScheme() === 'dark' ? 'light-content' : 'dark-content'} />
             <SafeAreaView style={styles.container}>
                 <View style={styles.header}>
-                    <Text style={styles.desk}>Support Desk</Text>
+                    <View style={styles.centerContainer}>
+                        <View style={styles.eventsLabel}>
+                            <Text style={styles.eventsLabelText}>Support Desk</Text>
+                        </View>
+                    </View>
                 </View>
 
                 <View style={styles.ticketHeader}>
@@ -329,28 +331,27 @@ const styles = StyleSheet.create({
         position: 'relative',
         alignItems: 'center',
     },
-    desk: {
-        fontSize: 18,
-        fontWeight: 'bold',
-        color: '#fff',
-        paddingHorizontal: 16,
+    centerContainer: {
+        width: '100%',
+        flexDirection: 'row',
+        alignItems: 'center',
+        justifyContent: 'space-between',
+    },
+    eventsLabel: {
         paddingVertical: 6,
-        borderWidth: 1,
-        borderColor: '#888',
-        borderRadius: 20,
-        backgroundColor: '#34495e',
-        shadowColor: '#000',
-        shadowOffset: { width: 0, height: 2 },
-        shadowOpacity: 0.1,
-        shadowRadius: 4,
-        elevation: 3,
+    },
+    eventsLabelText: {
+        fontSize: 22,
+        fontWeight: 'bold',
+        color: '#000',
     },
     ticketHeader: {
         display: 'flex',
         flexDirection: 'row',
         justifyContent: 'space-between',
+        alignItems: 'center',
         marginVertical: 10,
-        marginHorizontal: 20,
+        paddingHorizontal: 16,
     },
     myTickets: {
         fontSize: 20,
@@ -369,7 +370,6 @@ const styles = StyleSheet.create({
         marginBottom: 4,
     },
     card: {
-        padding: 6,
         minHeight: 90,
         marginVertical: 3,
         borderBottomWidth: 0.5,
@@ -458,7 +458,7 @@ const styles = StyleSheet.create({
         flex: 1,
         justifyContent: 'flex-start',
         alignItems: 'flex-end',
-        top: 160,
+        top: 170,
     },
     filterOptions: {
         backgroundColor: '#34495E',

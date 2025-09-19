@@ -6,7 +6,7 @@ import BottomTab from '../BottomTab';
 import { createStackNavigator } from '@react-navigation/stack';
 import Home from '../Home/index.jsx';
 import MyEvents from '../MyEvents/index.jsx';
-import SupportDesk from '../Complain/index.jsx';
+import SupportDesk from '../SupportDesk/index.jsx';
 import Meetings from '../Meetings/index.jsx';
 
 const InnerStack = createStackNavigator();

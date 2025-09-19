@@ -53,7 +53,12 @@ export default function MeetingRecords() {
             time: new Date(meeting.created_at).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }),
             desc: meeting.notes || 'No notes available',
             eventName: `Event ID ${meeting.event_id}`,
-            userName: user.first_name + ' ' + (user.last_name || ''),
+            userName: [
+                user.first_name,
+                user.middle_name,
+                user.last_name
+            ].filter(Boolean).join(' '),
+
         }));
         setMeetings(formattedMeetings);
     }, []);

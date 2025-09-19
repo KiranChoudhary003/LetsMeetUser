@@ -1,18 +1,18 @@
-import { useNavigation, useFocusEffect } from '@react-navigation/native';
-import React, { useEffect, useState, useCallback } from 'react';
+import AsyncStorage from '@react-native-async-storage/async-storage';
+import { useFocusEffect, useNavigation } from '@react-navigation/native';
+import axios from 'axios';
+import React, { useCallback, useEffect, useState } from 'react';
 import {
   Image,
+  StatusBar,
   StyleSheet,
   TouchableOpacity,
+  useColorScheme,
   View,
-  Alert,
-  StatusBar, useColorScheme,
 } from 'react-native';
-import profile from '../../assets/profile.png';
 import Ionicons from 'react-native-vector-icons/Ionicons';
 import MaterialCommunityIcons from 'react-native-vector-icons/MaterialCommunityIcons';
-import AsyncStorage from '@react-native-async-storage/async-storage';
-import axios from 'axios';
+import profile from '../../assets/profile.png';
 
 const Header = () => {
   const navigation = useNavigation();
@@ -45,7 +45,6 @@ const Header = () => {
       setUserProfile(user);
       await AsyncStorage.setItem('userProfile', JSON.stringify(user));
     } catch (err) {
-      Alert.alert('Error', 'Failed to load profile.');
     }
   };
 

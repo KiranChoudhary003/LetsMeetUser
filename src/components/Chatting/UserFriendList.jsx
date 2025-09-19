@@ -106,7 +106,15 @@ export default function UserListScreen() {
     }, []);
 
     const filteredUsers = users.filter(user =>
-        (`${user.first_name} ${user.last_name}`).toLowerCase().includes(searchQuery.toLowerCase())
+        [
+            user.first_name,
+            user.middle_name,
+            user.last_name
+        ]
+            .filter(Boolean)
+            .join(' ')
+            .toLowerCase()
+            .includes(searchQuery.toLowerCase())
     );
 
     const renderItem = ({ item }) => (
@@ -129,7 +137,13 @@ export default function UserListScreen() {
                 />
                 <View style={styles.info}>
                     <View style={styles.nameRow}>
-                        <Text style={styles.name}>{`${item.first_name} ${item.last_name}`}</Text>
+                        <Text style={styles.name}>
+                            {[
+                                item.first_name,
+                                item.middle_name, // add middle name
+                                item.last_name
+                            ].filter(Boolean).join(' ')}
+                        </Text>
                     </View>
                     <Text style={styles.lastMessage} numberOfLines={1}>
                         {item.last_message}

@@ -4,7 +4,7 @@ import LottieView from 'lottie-react-native';
 import React, { useEffect, useRef, useState } from 'react';
 import {
   ActivityIndicator,
-  Alert, Animated,
+  Animated,
   Dimensions,
   FlatList,
   Image,
@@ -49,7 +49,8 @@ const highlightText = (text, highlight) => {
   );
 };
 
-const Connections = ({ navigation }) => {
+const Connections = ({ navigation, route }) => {
+  const { eventName, eventId } = route.params || {};
   const roleInputRef = useRef(null);
   const [selectedTab, setSelectedTab] = useState('Attendees');
   const [search, setSearch] = useState('');
@@ -58,7 +59,6 @@ const Connections = ({ navigation }) => {
   const [requests, setRequests] = useState([]);
   const [allUsers, setAllUsers] = useState([]);
   const [requestStatus, setRequestStatus] = useState({});
-  const [toast, setToast] = useState('');
   const [undoUser, setUndoUser] = useState(null);
   const [showUndo, setShowUndo] = useState(false);
   const [fadeAnim] = useState(new Animated.Value(0));
@@ -74,6 +74,8 @@ const Connections = ({ navigation }) => {
   const [loading, setLoading] = useState(true);
   const [isFirstLoad, setIsFirstLoad] = useState(true);
   const [undoCountdown, setUndoCountdown] = useState(5);
+  const [confirmVisible, setConfirmVisible] = useState(false);
+  const [selectedUser, setSelectedUser] = useState(null);
 
 
 
@@ -119,10 +121,18 @@ const Connections = ({ navigation }) => {
     scrollRef.current.scrollTo({ x: width * index, animated: true });
   };
 
-  const attendeesFiltered = allUsers.filter(user =>
-    user.name.toLowerCase().includes(search.toLowerCase()) &&
-    (!sentFilter || user.role === sentFilter)
-  );
+  const attendeesFiltered = allUsers
+    .filter(user =>
+      user.name.toLowerCase().includes(search.toLowerCase()) &&
+      (!sentFilter || user.role === sentFilter)
+    )
+    .map(user => ({
+      ...user,
+      requestStatus: requestStatus[user.id] || 'Request',
+    }));
+
+
+
 
   const inboxFiltered = requests.filter(user =>
     user.name.toLowerCase().includes(search.toLowerCase()) &&
@@ -145,7 +155,7 @@ const Connections = ({ navigation }) => {
   }, []);
 
   useEffect(() => {
-    if (toast || showUndo) {
+    if (showUndo) {
       Animated.timing(fadeAnim, {
         toValue: 1,
         duration: 300,
@@ -178,7 +188,6 @@ const Connections = ({ navigation }) => {
             })();
           }
 
-          setToast('');
           setShowUndo(false);
           setUndoUser(null);
         });
@@ -186,7 +195,7 @@ const Connections = ({ navigation }) => {
 
       return () => clearTimeout(timer);
     }
-  }, [toast, showUndo, acceptedUsers, fadeAnim, undoUser]);
+  }, [showUndo, acceptedUsers, fadeAnim, undoUser]);
 
 
 
@@ -199,7 +208,9 @@ const Connections = ({ navigation }) => {
       const data = await response.json();
       const formattedRequests = (data.pending_requests || []).map(user => ({
         id: user.id,
-        name: `${user.first_name || ''} ${user.last_name || ''}`.trim(),
+        name: [user.first_name, user.middle_name, user.last_name]
+          .filter(Boolean)
+          .join(' '),
         role: user.role,
         image: user.photo,
         email: user.email,
@@ -212,29 +223,37 @@ const Connections = ({ navigation }) => {
     }
   };
 
-  const fetchAllUsers = async () => {
+  const fetchAllUsers = async (id = null) => {
     const token = await getToken();
     try {
-      const response = await fetch(`${API_URL}/user-events/attended-users`, {
+      const query = id ? `?event_id=${id}` : '';
+      const response = await fetch(`${API_URL}/user-events/attended-users${query}`, {
         headers: { Authorization: `Bearer ${token}` },
       });
       const data = await response.json();
-
-      const formattedUsers = (data.attended_users || []).map(user => {
-
-        return {
-          id: user.id,
-          name: `${user.first_name} ${user.last_name}`,
-          email: user.email,
-          image: user.photo,
-          linkedin: user.linkedin_url,
-          role: user.role,
-          preference: user.preference,
-        };
-      });
-
+      const formattedUsers = (data.attended_users || []).map(user => ({
+        id: user.id,
+        name: [user.first_name, user.middle_name, user.last_name]
+          .filter(Boolean)
+          .join(' '),
+        email: user.email,
+        image: user.photo,
+        linkedin: user.linkedin_url,
+        role: user.role,
+        preference: user.preference,
+      }));
       setAllUsers(formattedUsers);
+      setRequestStatus(prev => {
+        const updated = { ...prev };
+        formattedUsers.forEach(u => {
+          if (!data.pending_requests?.some(r => r.id === u.id)) {
+            updated[u.id] = 'Request';
+          }
+        });
+        return updated;
+      });
     } catch (err) {
+      console.error(err);
     }
   };
 
@@ -243,7 +262,6 @@ const Connections = ({ navigation }) => {
     setAcceptedUsers(prev => ({ ...prev, [user.id]: true }));
     setUndoUser(user);
     setShowUndo(true);
-    setToast(`Accepted ${user.name}'s request`);
 
     const timer = setTimeout(async () => {
       if (!undoUser || undoUser.id !== user.id) {
@@ -267,34 +285,30 @@ const Connections = ({ navigation }) => {
     setPendingAccepts(prev => ({ ...prev, [user.id]: timer }));
   };
 
-  const handleCancel = async (user) => {
-    Alert.alert(
-      'Confirm Rejection',
-      `Are you sure you want to reject ${user.name}'s request?`,
-      [
-        { text: 'Cancel', style: 'cancel' },
-        {
-          text: 'Reject',
-          style: 'destructive',
-          onPress: async () => {
-            const token = await getToken();
-            try {
-              await fetch(`${API_URL}/user-connections/respond/${user.id}`, {
-                method: 'PUT',
-                headers: {
-                  'Content-Type': 'application/json',
-                  Authorization: `Bearer ${token}`,
-                },
-                body: JSON.stringify({ action: 'rejected' }),
-              });
-              setRequests(prev => prev.filter(u => u.id !== user.id));
-              setToast(`Rejected ${user.name}'s request`);
-            } catch (err) {
-            }
-          },
+  const handleCancel = (user) => {
+    setSelectedUser(user);
+    setConfirmVisible(true);
+  };
+
+  const confirmReject = async () => {
+    if (!selectedUser) { return; }
+    const token = await getToken();
+    try {
+      await fetch(`${API_URL}/user-connections/respond/${selectedUser.id}`, {
+        method: 'PUT',
+        headers: {
+          'Content-Type': 'application/json',
+          Authorization: `Bearer ${token}`,
         },
-      ]
-    );
+        body: JSON.stringify({ action: 'rejected' }),
+      });
+      setRequests(prev => prev.filter(u => u.id !== selectedUser.id));
+    } catch (err) {
+      console.error(err);
+    } finally {
+      setConfirmVisible(false);
+      setSelectedUser(null);
+    }
   };
 
   const handleRequestToggle = async (user) => {
@@ -302,7 +316,6 @@ const Connections = ({ navigation }) => {
     setRequestStatus(prev => ({ ...prev, [user.id]: 'Requested' }));
     setUndoRequestUser(user);
     setShowUndo(true);
-    setToast(`Request sent to ${user.name}`);
 
     const timer = setTimeout(async () => {
       const token = await getToken();
@@ -380,7 +393,6 @@ const Connections = ({ navigation }) => {
       setUndoUser(null);
       setUndoRequestUser(null);
       setShowUndo(false);
-      setToast('');
     })();
   }, [selectedTab]);
 
@@ -402,7 +414,6 @@ const Connections = ({ navigation }) => {
         return prev;
       });
 
-      setToast(`Undo accepted for ${undoUser.name}`);
       setUndoUser(null);
     }
 
@@ -423,7 +434,6 @@ const Connections = ({ navigation }) => {
         return updated;
       });
 
-      setToast(`Undo request to ${undoRequestUser.name}`);
       setUndoRequestUser(null);
     }
 
@@ -525,10 +535,10 @@ const Connections = ({ navigation }) => {
 
           {selectedTab === 'Inbox' && !acceptedUsers[item.id] && (
             <TouchableOpacity
-              style={styles.cancelButton}
+              style={styles.cancelRequestButton}
               onPress={() => handleCancel(item)}
             >
-              <Text style={styles.cancelButtonText}>X</Text>
+              <Text style={styles.cancelRequestButtonText}>X</Text>
             </TouchableOpacity>
           )}
         </View>
@@ -542,11 +552,21 @@ const Connections = ({ navigation }) => {
       <StatusBar barStyle={useColorScheme() === 'dark' ? 'light-content' : 'dark-content'} />
       <SafeAreaView style={{ flex: 1, backgroundColor: '#e8effc', }}>
         <View style={styles.header}>
-          <TouchableOpacity onPress={() => navigation.goBack()} style={styles.iconButton}>
-            <Ionicons name="arrow-back-outline" size={24} color="white" />
-          </TouchableOpacity>
-          <View style={styles.headerTitleContainer}>
-            <Text style={styles.headerTitle}>Connections</Text>
+          {/* Top row */}
+          <View style={styles.headerTopRow}>
+            <TouchableOpacity onPress={() => navigation.goBack()} style={styles.iconButton}>
+              <Ionicons name="arrow-back-outline" size={24} color="white" />
+            </TouchableOpacity>
+
+            <Text style={styles.headerTitle}>Attendees</Text>
+
+            <TouchableOpacity onPress={() => setShowFilters(true)} style={styles.iconButton}>
+              <Ionicons name="filter" size={24} color="white" />
+            </TouchableOpacity>
+          </View>
+
+          {/* Bottom row */}
+          <View style={styles.headerBottomRow}>
             <TouchableOpacity
               onPress={() => {
                 if (currentFilter) {
@@ -554,17 +574,22 @@ const Connections = ({ navigation }) => {
                 }
               }}
             >
-              <Text style={styles.headerSubtitle} numberOfLines={1} ellipsizeMode="tail">
-                {currentFilter || 'Global'}
-                {currentFilter ? ' ×' : ''}
-              </Text>
+              {currentFilter ? (
+                <View style={styles.filterBadge}>
+                  <Text style={styles.filterBadgeText} numberOfLines={1} ellipsizeMode="tail">
+                    {currentFilter}
+                  </Text>
+                  <Ionicons name="close-circle" size={18} color="#e8effc" style={styles.closeIcon} />
+                </View>
+              ) : (
+                <Text style={styles.headerSubtitle} numberOfLines={1} ellipsizeMode="tail">
+                  {eventName}
+                </Text>
+              )}
             </TouchableOpacity>
           </View>
-
-          <TouchableOpacity onPress={() => setShowFilters(true)} style={styles.iconButton}>
-            <Ionicons name="filter" size={24} color="white" />
-          </TouchableOpacity>
         </View>
+
 
         <View style={styles.searchBar}>
           <Entypo name="magnifying-glass" size={24} color="black" />
@@ -602,10 +627,7 @@ const Connections = ({ navigation }) => {
           horizontal
           pagingEnabled
           showsHorizontalScrollIndicator={false}
-          onMomentumScrollEnd={(event) => {
-            const index = Math.round(event.nativeEvent.contentOffset.x / width);
-            setSelectedTab(index === 0 ? 'Attendees' : 'Inbox'); // update after scroll ends
-          }}
+          onMomentumScrollEnd={handleScroll}
           scrollEventThrottle={16}
           refreshControl={
             <RefreshControl
@@ -617,72 +639,80 @@ const Connections = ({ navigation }) => {
           }
         >
 
-
+          {/* Attendees Tab */}
           <View style={{ width }}>
-            {loading ? (
-              <View style={{ alignItems: 'center', marginTop: 40 }}>
-                <ActivityIndicator size="large" color="#34495e" />
-                <Text style={{ marginTop: 10, fontSize: 16, color: '#333' }}>
-                  Fetching connections...
-                </Text>
-              </View>
-            ) : (attendeesFiltered.length === 0 ? (
-              <View style={styles.filterResultContainer}>
-                <Text style={styles.filterResultText}>
-                  No connections found!
-                </Text>
-                <LottieView
-                  style={styles.lottieContainer}
-                  source={require('../../assets/Not-Found.json')}
-                  autoPlay
-                  loop
-                  resizeMode="cover"
+            {selectedTab === 'Attendees' && (
+              loading ? (
+                <View style={{ alignItems: 'center', marginTop: 40 }}>
+                  <ActivityIndicator size="large" color="#34495e" />
+                  <Text style={{ marginTop: 10, fontSize: 16, color: '#333' }}>
+                    Fetching connections...
+                  </Text>
+                </View>
+              ) : attendeesFiltered.length === 0 ? (
+                <View style={styles.filterResultContainer}>
+                  <Text style={styles.filterResultText}>No connections found!</Text>
+                  <LottieView
+                    style={styles.lottieContainer}
+                    source={require('../../assets/Not-Found.json')}
+                    autoPlay
+                    loop
+                    resizeMode="cover"
+                  />
+                </View>
+              ) : (
+                <FlatList
+                  data={attendeesFiltered}
+                  keyExtractor={(item) => item.id.toString()}
+                  renderItem={renderItem}
+                  contentContainerStyle={styles.list}
+                  keyboardShouldPersistTaps="handled"
+                  initialNumToRender={20}
+                  windowSize={5}
+                  removeClippedSubviews={true}
                 />
-              </View>
-            ) : (
-              <FlatList
-                data={attendeesFiltered}
-                keyExtractor={(item) => item.id.toString()}
-                renderItem={renderItem}
-                contentContainerStyle={styles.list}
-                keyboardShouldPersistTaps="handled"
-              />
-            ))}
+              )
+            )}
           </View>
 
+          {/* Inbox Tab */}
           <View style={{ width }}>
-            {loading ? (
-              <View style={{ alignItems: 'center', marginTop: 40 }}>
-                <ActivityIndicator size="large" color="#34495e" />
-                <Text style={{ marginTop: 10, fontSize: 16, color: '#333' }}>
-                  Fetching connections...
-                </Text>
-              </View>
-            ) : (inboxFiltered.length === 0 ? (
-              <View style={styles.filterResultContainer}>
-                <Text style={styles.filterResultText}>
-                  No pending requests found!
-                </Text>
-                <LottieView
-                  style={styles.lottieContainer}
-                  source={require('../../assets/Not-Found.json')}
-                  autoPlay
-                  loop
-                  resizeMode="cover"
+            {selectedTab === 'Inbox' && (
+              loading ? (
+                <View style={{ alignItems: 'center', marginTop: 40 }}>
+                  <ActivityIndicator size="large" color="#34495e" />
+                  <Text style={{ marginTop: 10, fontSize: 16, color: '#333' }}>
+                    Fetching connections...
+                  </Text>
+                </View>
+              ) : inboxFiltered.length === 0 ? (
+                <View style={styles.filterResultContainer}>
+                  <Text style={styles.filterResultText}>No pending requests found!</Text>
+                  <LottieView
+                    style={styles.lottieContainer}
+                    source={require('../../assets/Not-Found.json')}
+                    autoPlay
+                    loop
+                    resizeMode="cover"
+                  />
+                </View>
+              ) : (
+                <FlatList
+                  data={inboxFiltered}
+                  keyExtractor={(item) => item.id.toString()}
+                  renderItem={renderItem}
+                  contentContainerStyle={styles.list}
+                  keyboardShouldPersistTaps="handled"
+                  initialNumToRender={20}
+                  windowSize={5}
+                  removeClippedSubviews={true}
                 />
-              </View>
-            ) : (
-              <FlatList
-                data={inboxFiltered}
-                keyExtractor={(item) => item.id.toString()}
-                renderItem={renderItem}
-                contentContainerStyle={styles.list}
-                keyboardShouldPersistTaps="handled"
-              />
-            ))}
+              )
+            )}
           </View>
 
         </ScrollView>
+
 
 
         {showUndo && (undoUser || undoRequestUser) && (
@@ -701,7 +731,7 @@ const Connections = ({ navigation }) => {
               <View style={styles.countdownCircle}>
                 <Text style={styles.countdownText}>{undoCountdown}</Text>
               </View>
-              <TouchableOpacity onPress={handleUndo}>
+              <TouchableOpacity onPress={handleUndo} style={styles.undoButtonContainer}>
                 <Text style={styles.undoButton}>Undo</Text>
               </TouchableOpacity>
             </View>
@@ -818,17 +848,40 @@ const Connections = ({ navigation }) => {
           </TouchableOpacity>
         </Modal>
 
-        {toast !== '' && (
-          <Animated.View style={[styles.toastContainer, { opacity: fadeAnim }]}>
-            <Text
-              style={styles.toastText}
-              numberOfLines={2}
-              ellipsizeMode="tail"
-            >
-              {toast}
-            </Text>
-          </Animated.View>
-        )}
+        <Modal
+          visible={confirmVisible}
+          transparent
+          animationType="fade"
+          onRequestClose={() => setConfirmVisible(false)}
+        >
+          <View style={styles.overlay}>
+            <View style={styles.modalContainer}>
+              <Text style={styles.title}>Confirm Action</Text>
+              {selectedUser && (
+                <Text style={styles.message}>
+                  Are you sure you want to delete{" "}
+                  <Text style={{ fontWeight: '700' }}>{selectedUser.name}</Text>'s request?
+                </Text>
+              )}
+
+              <View style={styles.actions}>
+                <TouchableOpacity
+                  style={[styles.button, styles.cancelButton]}
+                  onPress={() => setConfirmVisible(false)}
+                >
+                  <Text style={[styles.buttonText, styles.cancelText]}>Cancel</Text>
+                </TouchableOpacity>
+
+                <TouchableOpacity
+                  style={[styles.button, styles.rejectButton]}
+                  onPress={confirmReject}
+                >
+                  <Text style={styles.buttonText}>Delete</Text>
+                </TouchableOpacity>
+              </View>
+            </View>
+          </View>
+        </Modal>
       </SafeAreaView>
     </>
   );
@@ -839,36 +892,60 @@ export default Connections;
 
 const styles = StyleSheet.create({
   header: {
+    paddingHorizontal: 12,
+    backgroundColor: '#34495E',
+    height: 70,
+    justifyContent: 'center',
+  },
+
+  headerTopRow: {
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'space-between',
-    backgroundColor: '#34495E',
-    paddingHorizontal: 12,
-    paddingVertical: 12,
-    height: 70,
   },
-
-  headerTitleContainer: {
-    flex: 1,
-    alignItems: 'center',
-  },
-
   headerTitle: {
     fontSize: 20,
     fontWeight: 'bold',
     color: '#ffffff',
   },
-
+  headerBottomRow: {
+    position: 'absolute',
+    bottom: 4,
+    left: 0,
+    right: 0,
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
   headerSubtitle: {
     fontSize: 13,
     color: '#ffffff',
-    marginTop: 2,
-    borderBottomWidth: 1.5,
-    borderBottomColor: '#ffffff',
+    lineHeight: 18,
+    textAlign: 'center',
+    maxWidth: 200,
+  },
+  filterBadge: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+    height: 20,
+  },
+  filterBadgeText: {
+    fontSize: 14,
+    fontWeight: '500',
+    color: '#34495e',
+    backgroundColor: '#e8effc',
+    paddingHorizontal: 10,
+    borderRadius: 12,
+    lineHeight: 18,
+  },
+
+  closeIcon: {
+    marginLeft: 4,
   },
 
   iconButton: {
-    padding: 8,
+    paddingLeft: 8,
+    paddingRight: 8,
     justifyContent: 'center',
     alignItems: 'center',
   },
@@ -996,7 +1073,7 @@ const styles = StyleSheet.create({
     backgroundColor: '#d1d5db',
   },
 
-  cancelButton: {
+  cancelRequestButton: {
     width: 28,
     height: 28,
     borderRadius: 14,
@@ -1007,7 +1084,7 @@ const styles = StyleSheet.create({
     marginRight: 8,
   },
 
-  cancelButtonText: {
+  cancelRequestButtonText: {
     color: '#ff3b30',
     fontSize: 14,
     fontWeight: '700',
@@ -1096,7 +1173,7 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     justifyContent: 'space-between',
     alignItems: 'center',
-    backgroundColor: '#ffffffee',
+    backgroundColor: '#fff',
     borderTopLeftRadius: 16,
     borderTopRightRadius: 16,
     paddingHorizontal: 20,
@@ -1119,8 +1196,17 @@ const styles = StyleSheet.create({
     maxWidth: 280,
   },
 
+  undoButtonContainer: {
+    backgroundColor: '#34495e',
+    paddingVertical: 6,
+    paddingHorizontal: 14,
+    borderRadius: 8,
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+
   undoButton: {
-    color: '#007BFF',
+    color: '#fff',
     fontWeight: '600',
     fontSize: 14,
   },
@@ -1136,39 +1222,15 @@ const styles = StyleSheet.create({
     height: 30,
     borderRadius: 15,
     borderWidth: 2,
-    borderColor: '#007BFF',
+    borderColor: '#34495e',
     justifyContent: 'center',
     alignItems: 'center',
   },
 
   countdownText: {
-    color: '#007BFF',
+    color: '#34495e',
     fontWeight: 'bold',
     fontSize: 14,
-  },
-
-  toastContainer: {
-    position: 'absolute',
-    bottom: 80,
-    left: 20,
-    right: 20,
-    backgroundColor: '#1e293b',
-    paddingVertical: 14,
-    paddingHorizontal: 18,
-    borderRadius: 14,
-    alignItems: 'center',
-    shadowColor: '#000',
-    shadowOpacity: 0.25,
-    shadowOffset: { width: 0, height: 6 },
-    shadowRadius: 12,
-    elevation: 12,
-  },
-
-  toastText: {
-    color: '#f8fafc',
-    fontSize: 14,
-    fontWeight: '500',
-    textAlign: 'center',
   },
 
   blur: {
@@ -1236,5 +1298,53 @@ const styles = StyleSheet.create({
   filterResultText: {
     fontSize: 16,
     color: '#555',
+  },
+  overlay: {
+    flex: 1,
+    backgroundColor: 'rgba(0,0,0,0.4)',
+    justifyContent: 'center',
+    alignItems: 'center',
+  },
+  modalContainer: {
+    width: '80%',
+    backgroundColor: '#fff',
+    borderRadius: 16,
+    padding: 20,
+    elevation: 8,
+  },
+  title: {
+    fontSize: 18,
+    fontWeight: '700',
+    marginBottom: 10,
+    color: '#34495e',
+  },
+  message: {
+    fontSize: 15,
+    color: '#555',
+    marginBottom: 20,
+  },
+  actions: {
+    flexDirection: 'row',
+    justifyContent: 'flex-end',
+  },
+  button: {
+    paddingVertical: 10,
+    paddingHorizontal: 16,
+    borderRadius: 10,
+    marginLeft: 10,
+  },
+  cancelButton: {
+    backgroundColor: '#f0f0f0',
+  },
+  rejectButton: {
+    backgroundColor: '#e74c3c',
+  },
+  buttonText: {
+    fontWeight: '600',
+    fontSize: 14,
+    color: '#fff',
+  },
+  cancelText: {
+    color: '#34495e',
   },
 });

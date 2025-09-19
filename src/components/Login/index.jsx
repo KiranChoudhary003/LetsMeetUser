@@ -315,7 +315,7 @@ const Login = ({ navigation, route }) => {
                             style={styles.contactLink}
                             onPress={() =>
                                 Linking.openURL(
-                                    'mailto:kiranchoudhary9180@gmail.com?subject=Login Issue'
+                                    'mailto:support@zordial.com?subject=Login Issue'
                                 )
                             }
                         >

@@ -8,16 +8,21 @@ import timezone from 'dayjs/plugin/timezone';
 import utc from 'dayjs/plugin/utc';
 import React, { useCallback, useContext, useEffect, useMemo, useRef, useState } from 'react';
 import {
-    ActivityIndicator, Alert, Animated, Modal, Pressable, SafeAreaView, ScrollView, StatusBar, StyleSheet,
-    Text, TouchableOpacity, TouchableWithoutFeedback, useColorScheme, View, RefreshControl,
+    ActivityIndicator, Alert, Animated, Modal, Pressable,
+    RefreshControl,
+    SafeAreaView, ScrollView, StatusBar, StyleSheet,
+    Text, TouchableOpacity, TouchableWithoutFeedback, useColorScheme, View,
 } from 'react-native';
+import { useNavigation } from '@react-navigation/native';
 import { Calendar } from 'react-native-calendars';
+import Fontisto from 'react-native-vector-icons/Fontisto';
 import Ionicons from 'react-native-vector-icons/Ionicons';
 import { LocationContext } from '../LocationContext/LocationContext';
 dayjs.extend(utc);
 dayjs.extend(timezone);
 
 const EventCard = ({
+    id,
     name,
     organizer,
     date,
@@ -28,6 +33,7 @@ const EventCard = ({
     onRegister,
     onCheckIn,
 }) => {
+    const navigation = useNavigation();
     const scale = useRef(new Animated.Value(1)).current;
 
     const handlePressIn = () => {
@@ -54,8 +60,18 @@ const EventCard = ({
                 >
                     <View style={{ flex: 1 }}>
                         <Text style={styles.eventName}>{name}</Text>
-                        <Text style={styles.eventOrganizer}>{organizer}</Text>
-                        <Text style={styles.eventDate}>{formatDate(date)}</Text>
+
+                        {/* Organizer with location icon */}
+                        <View style={{ flexDirection: 'row', alignItems: 'center' }}>
+                            <Ionicons name="location-sharp" size={14} color="#34495e" style={{ marginRight: 4 }} />
+                            <Text style={styles.eventOrganizer}>{organizer}</Text>
+                        </View>
+
+                        {/* Date with calendar icon */}
+                        <View style={{ flexDirection: 'row', alignItems: 'center' }}>
+                            <Fontisto name="date" size={14} color="#34495e" style={{ marginRight: 4 }} />
+                            <Text style={styles.eventDate}>{formatDate(date)}</Text>
+                        </View>
                     </View>
 
                     <View>
@@ -78,20 +94,47 @@ const EventCard = ({
                                 </Text>
                             </TouchableOpacity>
                         ) : already_checked_in ? (
-                            <View
-                                style={{
-                                    backgroundColor: '#4CAF50',
-                                    opacity: 0.6,
-                                    paddingHorizontal: 12,
-                                    paddingVertical: 4,
-                                    borderRadius: 20,
-                                    alignItems: 'center',
-                                    justifyContent: 'center',
-                                }}
-                            >
-                                <Text disabled={true} style={{ color: '#fff', fontWeight: 'bold', fontSize: 12 }}>
-                                    Checked-In
-                                </Text>
+                            <View>
+                                <View
+                                    style={{
+                                        backgroundColor: '#4CAF50',
+                                        opacity: 0.6,
+                                        paddingHorizontal: 8,
+                                        paddingVertical: 4,
+                                        borderRadius: 20,
+                                        alignItems: 'center',
+                                        justifyContent: 'center',
+                                    }}
+                                >
+                                    <Text disabled={true} style={{ color: '#fff', fontWeight: 'bold', fontSize: 12 }}>
+                                        Checked-In
+                                    </Text>
+                                </View>
+                                <View
+                                    style={{
+                                        backgroundColor: '#34495e',
+                                        marginTop: 4,
+                                        paddingVertical: 4,
+                                        paddingHorizontal: 8,
+                                        borderRadius: 20,
+                                        alignItems: 'center',
+                                        justifyContent: 'center',
+                                    }}
+                                >
+                                    <TouchableOpacity
+                                        onPress={() => navigation.navigate('Connection', { eventName: name, eventId: id })}
+                                        style={{ flexDirection: 'row', alignItems: 'center', gap: 4 }}
+                                    >
+                                        <Ionicons
+                                            name="people-outline"
+                                            size={14}
+                                            color="#f9efef"
+                                        />
+                                        <Text style={{ color: '#fff', fontWeight: 'bold', fontSize: 12 }}>
+                                            Attendees
+                                        </Text>
+                                    </TouchableOpacity>
+                                </View>
                             </View>
                         ) : checkInAvailable ? (
                             <TouchableOpacity
@@ -176,16 +219,16 @@ const groupEventsByMonth = (events) => {
 
 
 const formatDate = (date) => {
-  if (!date) {return '';}
-  const parsedDate = dayjs(date).utc();
-  return parsedDate.isValid() ? parsedDate.local().format('MM-DD-YYYY') : '';
+    if (!date) { return ''; }
+    const parsedDate = dayjs(date).utc();
+    return parsedDate.isValid() ? parsedDate.local().format('MM-DD-YYYY') : '';
 };
 
 
 
 const Home = ({ navigation }) => {
     const [eventData, setEventData] = useState([]);
-    const [selectedFilter, setSelectedFilter] = useState('Global');
+    const [selectedFilter, setSelectedFilter] = useState('All');
     const [customDate, setCustomDate] = useState(null);
     const [showFilters, setShowFilters] = useState(false);
     const [previousFilter, setPreviousFilter] = useState(selectedFilter);
@@ -215,9 +258,9 @@ const Home = ({ navigation }) => {
 
     useEffect(() => {
         if (eventData.length > 0) {
-            setFilteredEvents(filterEvents(eventData, selectedFilter, customDate, location, global));
+            setFilteredEvents(filterEvents(eventData, selectedFilter, customDate, location));
         }
-    }, [eventData, selectedFilter, customDate, location, global]);
+    }, [eventData, selectedFilter, customDate, location]);
 
 
 
@@ -228,7 +271,7 @@ const Home = ({ navigation }) => {
         tomorrow.setDate(tomorrow.getDate() + 1);
 
         switch (filterType) {
-            case 'Global':
+            case 'All':
                 return events;
 
             case 'Today':
@@ -450,24 +493,27 @@ const Home = ({ navigation }) => {
                         </TouchableOpacity>
                     </View>
                     <View style={styles.selectedFilterContainer}>
-                        {selectedFilter !== 'Global' ? (
+                        {selectedFilter !== 'All' ? (
                             <TouchableOpacity
                                 onPress={() => {
-                                    setSelectedFilter('Global');
+                                    setSelectedFilter('All');
                                     setCustomDate(new Date());
-                                    const filtered = filterEvents(eventData, 'Global', null, location);
+                                    const filtered = filterEvents(eventData, 'All', null, location);
                                     setFilteredEvents(filtered);
                                 }}
                                 style={styles.clearFilterButton}
                             >
-                                <Text style={styles.selectedFilter}>
-                                    {customDate && selectedFilter === 'Choose from Calendar'
-                                        ? `${formatDate(customDate)} ×`
-                                        : `${selectedFilter} ×`}
-                                </Text>
+                                <View style={styles.filterContent}>
+                                    <Text style={styles.selectedFilter}>
+                                        {customDate && selectedFilter === 'Choose from Calendar'
+                                            ? formatDate(customDate)
+                                            : selectedFilter}
+                                    </Text>
+                                    <Ionicons name="close-circle" size={18} color="#34495e" style={styles.closeIcon} />
+                                </View>
                             </TouchableOpacity>
                         ) : (
-                            <Text style={styles.selectedFilter}>Global</Text>
+                            <View style={{ height: 23 }} />
                         )}
                     </View>
                 </View>
@@ -494,7 +540,7 @@ const Home = ({ navigation }) => {
                             >
                                 <TouchableWithoutFeedback>
                                     <View style={styles.filterOptions}>
-                                        {['Global', 'Today', 'Tomorrow', 'Choose from Calendar', 'Near Me'].map((option) => (
+                                        {['All', 'Today', 'Tomorrow', 'Choose from Calendar', 'Near Me'].map((option) => (
                                             <TouchableOpacity
                                                 key={option}
                                                 style={[styles.filterOption, selectedFilter === option && styles.filterActive]}
@@ -584,9 +630,11 @@ const Home = ({ navigation }) => {
                     ) : (
                         <>
                             {Object.keys(events).length === 0 && (
-                                <Text style={{ textAlign: 'center', marginTop: 20, color: '#555' }}>
-                                    No events found for this filter.
-                                </Text>
+                                <View style={{ flex: 1, justifyContent: 'center', alignItems: 'center', height: 400 }}>
+                                    <Text style={{ color: '#555', fontSize: 16, textAlign: 'center' }}>
+                                        No Events Available.
+                                    </Text>
+                                </View>
                             )}
                             {Object.entries(events).map(([month, data]) => (
                                 <View key={month} style={styles.monthSection}>
@@ -662,37 +710,27 @@ const styles = StyleSheet.create({
     },
     scrollView: {
         padding: 16,
+        paddingTop: 0,
     },
     header: {
         paddingTop: 16,
-        paddingBottom: 8,
         paddingHorizontal: 16,
         position: 'relative',
         alignItems: 'center',
     },
     centerContainer: {
         width: '100%',
+        flexDirection: 'row',
         alignItems: 'center',
-        justifyContent: 'center',
+        justifyContent: 'space-between',
     },
     eventsLabel: {
-        paddingHorizontal: 16,
         paddingVertical: 6,
-        borderWidth: 1,
-        borderColor: '#888',
-        borderRadius: 20,
-        backgroundColor: '#34495e',
-        shadowColor: '#000',
-        shadowOffset: { width: 0, height: 2 },
-        shadowOpacity: 0.1,
-        shadowRadius: 4,
-        elevation: 3,
     },
     eventsLabelText: {
-        fontSize: 18,
+        fontSize: 22,
         fontWeight: 'bold',
-        color: '#fff',
-        textAlign: 'center',
+        color: '#000',
     },
     filterContainer: {
         position: 'absolute',
@@ -710,22 +748,32 @@ const styles = StyleSheet.create({
         marginLeft: 6,
     },
     selectedFilterContainer: {
-        alignItems: 'center',
-        justifyContent: 'center',
+        alignItems: 'flex-start',
+        justifyContent: 'flex-start',
+        width: '100%',
     },
     selectedFilter: {
         fontSize: 14,
         fontWeight: '500',
-        color: '#34495e',
-        backgroundColor: '#e8effc',
+        color: '#fff',
+        backgroundColor: '#34495e',
         paddingHorizontal: 10,
         borderRadius: 12,
-        borderBottomWidth: 1.5,
+        borderWidth: 1.5,
     },
     clearFilterButton: {
         borderRadius: 12,
         borderWidth: 0.5,
         borderColor: '#e8effc',
+        backgroundColor: '#e8effc',
+        paddingHorizontal: 8,
+    },
+    filterContent: {
+        flexDirection: 'row',
+        alignItems: 'center',
+    },
+    closeIcon: {
+        marginLeft: 4,
     },
     filterOptionsContainer: {
         flex: 1,
@@ -812,7 +860,6 @@ const styles = StyleSheet.create({
         fontSize: 12,
         color: '#555',
         alignSelf: 'flex-start',
-        marginTop: 3,
     },
 });
 

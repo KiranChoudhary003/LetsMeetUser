@@ -38,6 +38,7 @@ import Welcome from './src/components/Welcome';
 import { connectSocket, getSocket } from './src/socket';
 import UserMeetings from './src/components/UserMeetings';
 import MeetingRecords from './src/components/MeetingRecords';
+import { NetworkProvider } from './src/components/NetworkContext/NetworkContext';
 
 enableScreens();
 const Stack = createStackNavigator();
@@ -170,97 +171,99 @@ const App = () => {
   };
 
   return (
-    <KeyboardProvider>
-      <SafeAreaProvider>
-        <LocationProvider>
-          <NavigationContainer ref={navigationRef}>
-            <StatusBar barStyle="dark-content" backgroundColor="#fff" />
-            <Stack.Navigator initialRouteName="Welcome" screenOptions={{ headerShown: false }}>
-              <Stack.Screen name="Welcome" component={Welcome} />
-              <Stack.Screen name="Login" component={Login} />
-              <Stack.Screen name="SignUp" component={SignUp} />
-              <Stack.Screen name="Layout" component={Layout} />
-              <Stack.Screen name="Edit" component={Edit} />
-              <Stack.Screen name="UserListScreen" component={UserListScreen} />
-              <Stack.Screen name="UserFriendList" component={UserFriendList} />
-              <Stack.Screen name="ChatPage" component={ChatPage} />
-              <Stack.Screen name="Scanner" component={Scanner} />
-              <Stack.Screen name="QRCode" component={QRCodeScreen} />
-              <Stack.Screen name="Description" component={Description} />
-              <Stack.Screen name="Connection" component={Connection} />
-              <Stack.Screen name="UserProfile" component={UserProfile} />
-              <Stack.Screen name="MyEventsDescription" component={MyEventsDesciption} />
-              <Stack.Screen name="UserEvents" component={UserEvents} />
-              <Stack.Screen name="MeetingScreen" component={MeetingScreen} />
-              <Stack.Screen name="MeetingNoteScreen" component={MeetingNoteScreen} />
-              <Stack.Screen name="UserMeetings" component={UserMeetings} />
-              <Stack.Screen name="MeetingRecord" component={MeetingRecords} />
-            </Stack.Navigator>
+    <NetworkProvider>
+      <KeyboardProvider>
+        <SafeAreaProvider>
+          <LocationProvider>
+            <NavigationContainer ref={navigationRef}>
+              <StatusBar barStyle="dark-content" backgroundColor="#fff" />
+              <Stack.Navigator initialRouteName="Welcome" screenOptions={{ headerShown: false }}>
+                <Stack.Screen name="Welcome" component={Welcome} />
+                <Stack.Screen name="Login" component={Login} />
+                <Stack.Screen name="SignUp" component={SignUp} />
+                <Stack.Screen name="Layout" component={Layout} />
+                <Stack.Screen name="Edit" component={Edit} />
+                <Stack.Screen name="UserListScreen" component={UserListScreen} />
+                <Stack.Screen name="UserFriendList" component={UserFriendList} />
+                <Stack.Screen name="ChatPage" component={ChatPage} />
+                <Stack.Screen name="Scanner" component={Scanner} />
+                <Stack.Screen name="QRCode" component={QRCodeScreen} />
+                <Stack.Screen name="Description" component={Description} />
+                <Stack.Screen name="Connection" component={Connection} />
+                <Stack.Screen name="UserProfile" component={UserProfile} />
+                <Stack.Screen name="MyEventsDescription" component={MyEventsDesciption} />
+                <Stack.Screen name="UserEvents" component={UserEvents} />
+                <Stack.Screen name="MeetingScreen" component={MeetingScreen} />
+                <Stack.Screen name="MeetingNoteScreen" component={MeetingNoteScreen} />
+                <Stack.Screen name="UserMeetings" component={UserMeetings} />
+                <Stack.Screen name="MeetingRecord" component={MeetingRecords} />
+              </Stack.Navigator>
 
-            {/* Modal for Meeting Request */}
-            <Modal visible={meetingModalVisible} transparent animationType="fade">
-              <View style={styles.modalOverlay}>
-                <BlurView intensity={40} tint="light" style={StyleSheet.absoluteFill} />
-                <View style={styles.modalWrapper}>
-                  <View style={styles.modalContainer}>
-                    <Text style={styles.modalTitle}>Meeting Request</Text>
-                    <Text style={styles.modalMessage}>
-                      {meetingExpired
-                        ? 'Request expired. You did not respond in time.'
-                        : meetingData?.fromUserName
-                          ? `${meetingData.fromUserName} has requested a meeting.\nAccept it?`
-                          : 'You have a new meeting request. Accept it?'}
-                    </Text>
+              {/* Modal for Meeting Request */}
+              <Modal visible={meetingModalVisible} transparent animationType="fade">
+                <View style={styles.modalOverlay}>
+                  <BlurView intensity={40} tint="light" style={StyleSheet.absoluteFill} />
+                  <View style={styles.modalWrapper}>
+                    <View style={styles.modalContainer}>
+                      <Text style={styles.modalTitle}>Meeting Request</Text>
+                      <Text style={styles.modalMessage}>
+                        {meetingExpired
+                          ? 'Request expired. You did not respond in time.'
+                          : meetingData?.fromUserName
+                            ? `${meetingData.fromUserName} has requested a meeting.\nAccept it?`
+                            : 'You have a new meeting request. Accept it?'}
+                      </Text>
 
-                    {!meetingExpired && (
-                      <View style={styles.progressBarContainer}>
-                        <Animated.View
-                          style={[
-                            styles.progressBarFill,
-                            {
-                              width: progressAnim.interpolate({
-                                inputRange: [0, 1],
-                                outputRange: ['0%', '100%'],
-                              }),
-                            },
-                          ]}
-                        />
-                      </View>
-                    )}
+                      {!meetingExpired && (
+                        <View style={styles.progressBarContainer}>
+                          <Animated.View
+                            style={[
+                              styles.progressBarFill,
+                              {
+                                width: progressAnim.interpolate({
+                                  inputRange: [0, 1],
+                                  outputRange: ['0%', '100%'],
+                                }),
+                              },
+                            ]}
+                          />
+                        </View>
+                      )}
 
-                    <View style={styles.modalButtons}>
-                      {meetingExpired ? (
-                        <TouchableOpacity
-                          style={[styles.modalButton, styles.acceptBtn]}
-                          onPress={handleExpiredOk}
-                        >
-                          <Text style={styles.modalButtonText}>OK</Text>
-                        </TouchableOpacity>
-                      ) : (
-                        <>
+                      <View style={styles.modalButtons}>
+                        {meetingExpired ? (
                           <TouchableOpacity
                             style={[styles.modalButton, styles.acceptBtn]}
-                            onPress={handleAccept}
+                            onPress={handleExpiredOk}
                           >
-                            <Text style={styles.modalButtonText}>Accept</Text>
+                            <Text style={styles.modalButtonText}>OK</Text>
                           </TouchableOpacity>
-                          <TouchableOpacity
-                            style={[styles.modalButton, styles.declineBtn]}
-                            onPress={handleDecline}
-                          >
-                            <Text style={styles.modalButtonText}>Decline</Text>
-                          </TouchableOpacity>
-                        </>
-                      )}
+                        ) : (
+                          <>
+                            <TouchableOpacity
+                              style={[styles.modalButton, styles.acceptBtn]}
+                              onPress={handleAccept}
+                            >
+                              <Text style={styles.modalButtonText}>Accept</Text>
+                            </TouchableOpacity>
+                            <TouchableOpacity
+                              style={[styles.modalButton, styles.declineBtn]}
+                              onPress={handleDecline}
+                            >
+                              <Text style={styles.modalButtonText}>Decline</Text>
+                            </TouchableOpacity>
+                          </>
+                        )}
+                      </View>
                     </View>
                   </View>
                 </View>
-              </View>
-            </Modal>
-          </NavigationContainer>
-        </LocationProvider>
-      </SafeAreaProvider>
-    </KeyboardProvider>
+              </Modal>
+            </NavigationContainer>
+          </LocationProvider>
+        </SafeAreaProvider>
+      </KeyboardProvider>
+    </NetworkProvider>
   );
 };
 

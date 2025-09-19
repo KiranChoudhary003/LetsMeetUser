@@ -335,7 +335,7 @@ const ChatPage = ({ route }) => {
     };
 
     const loadOlderMessages = () => {
-        if (loadingOlder) {return;}
+        if (loadingOlder) { return; }
         setLoadingOlder(true);
 
         setTimeout(() => {
@@ -385,7 +385,11 @@ const ChatPage = ({ route }) => {
                                     />
                                 </TouchableOpacity>
                                 <Text style={styles.headerName}>
-                                    {`${peer.first_name} ${peer.last_name}`}
+                                    {[
+                                        peer.first_name,
+                                        peer.middle_name,
+                                        peer.last_name
+                                    ].filter(Boolean).join(' ')}
                                 </Text>
                             </View>
 
@@ -490,7 +494,7 @@ const styles = StyleSheet.create({
         backgroundColor: '#34495e',
         borderBottomWidth: 1,
         borderColor: '#e6e6e6',
-        height : 70,
+        height: 70,
     },
     backButton: {
         marginRight: 10,

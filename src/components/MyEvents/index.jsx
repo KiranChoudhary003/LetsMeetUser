@@ -8,6 +8,13 @@ import {
   Pressable, SafeAreaView, ScrollView, StatusBar, useColorScheme, StyleSheet, Text, TouchableOpacity, View, RefreshControl,
 } from 'react-native';
 import { LocationContext } from '../LocationContext/LocationContext';
+import Ionicons from 'react-native-vector-icons/Ionicons';
+import Fontisto from 'react-native-vector-icons/Fontisto';
+import dayjs from 'dayjs';
+import timezone from 'dayjs/plugin/timezone';
+import utc from 'dayjs/plugin/utc';
+dayjs.extend(utc);
+dayjs.extend(timezone);
 
 
 const EventCard = ({
@@ -78,6 +85,13 @@ const EventCard = ({
   };
 
 
+  const formatDate = (date) => {
+    if (!date) { return ''; }
+    const parsedDate = dayjs(date).utc();
+    return parsedDate.isValid() ? parsedDate.local().format('MM-DD-YYYY') : '';
+  };
+
+
 
   useEffect(() => {
     checkProximityAndDate();
@@ -99,8 +113,18 @@ const EventCard = ({
       >
         <View style={{ flex: 1 }}>
           <Text style={styles.eventName}>{name}</Text>
-          <Text style={styles.eventOrganizer}>{organizer}</Text>
-          <Text style={styles.eventDate}>{new Date(start_date).toLocaleDateString()}</Text>
+
+          {/* Organizer with location icon */}
+          <View style={{ flexDirection: 'row', alignItems: 'center' }}>
+            <Ionicons name="location-sharp" size={14} color="#34495e" style={{ marginRight: 4 }} />
+            <Text style={styles.eventOrganizer}>{organizer}</Text>
+          </View>
+
+          {/* Date with calendar icon */}
+          <View style={{ flexDirection: 'row', alignItems: 'center' }}>
+            <Fontisto name="date" size={14} color="#34495e" style={{ marginRight: 4 }} />
+            <Text style={styles.eventDate}>{formatDate(start_date)}</Text>
+          </View>
         </View>
 
         <View>
@@ -324,9 +348,10 @@ const EventsScreen = ({ navigation }) => {
           }
         />
         <View style={styles.header}>
-          {/* Centered Title */}
-          <View style={styles.eventsLabel}>
-            <Text style={styles.eventsLabelText}>My Events</Text>
+          <View style={styles.centerContainer}>
+            <View style={styles.eventsLabel}>
+              <Text style={styles.eventsLabelText}>My Events</Text>
+            </View>
           </View>
         </View>
 
@@ -353,9 +378,7 @@ const EventsScreen = ({ navigation }) => {
               <ActivityIndicator size="large" color="#34495e" />
             </View>
           ) : eventData.length === 0 ? (
-            <View
-              style={{ alignItems: "center", marginTop: 60, paddingHorizontal: 24 }}
-            >
+            <View style={{ flex: 1, justifyContent: 'center', alignItems: 'center', height: 400 }}>
               <Text
                 style={{
                   fontSize: 18,
@@ -445,94 +468,34 @@ const styles = StyleSheet.create({
   },
   scrollView: {
     padding: 16,
-  },
-  customHeader: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    alignItems: 'center',
-    backgroundColor: '#34495e',
-    paddingHorizontal: 16,
-    paddingVertical: 8,
-  },
-  profile: {
-    width: 35,
-    height: 35,
-  },
-  headerstyle: {
-    width: 45,
-    height: 45,
-  },
-  headerRight: {
-    flexDirection: 'row',
-    gap: 20,
-  },
-  headerItem: {
-    color: 'white',
-    fontSize: 18,
-    fontWeight: 'bold',
-    paddingHorizontal: 12,
-    paddingVertical: 6,
-    borderRadius: 8,
-    backgroundColor: '#889999',
-  },
-  eventsLabel: {
-    paddingHorizontal: 16,
-    paddingVertical: 6,
-    borderWidth: 1,
-    borderColor: '#888',
-    borderRadius: 20,
-    backgroundColor: '#34495e',
-    shadowColor: '#000',
-    shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.1,
-    shadowRadius: 4,
-    elevation: 3,
-  },
-  eventsLabelText: {
-    fontSize: 18,
-    fontWeight: 'bold',
-    color: '#fff',
+    paddingTop: 16,
   },
   header: {
-    width: '100%',
-    alignItems: 'center',
-    justifyContent: 'center',
     paddingTop: 16,
     paddingBottom: 8,
     paddingHorizontal: 16,
-    flexDirection: 'row',
     position: 'relative',
+    alignItems: 'center',
   },
-
-  iconWrapper: {
-    position: 'absolute',
-    right: 8,
-    top: '50%',
-    padding: 4,
+  centerContainer: {
+    width: '100%',
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
   },
-
-  button: {
-    paddingHorizontal: 12,
+  eventsLabel: {
     paddingVertical: 6,
-    borderRadius: 20,
+  },
+  eventsLabelText: {
+    fontSize: 22,
+    fontWeight: 'bold',
+    color: '#000',
   },
   monthTitle: {
     fontSize: 25,
     fontWeight: 'bold',
     color: '#333',
     marginBottom: 8,
-  },
-  ghostButton: {
-    backgroundColor: 'transparent',
-  },
-  buttonText: {
-    fontSize: 14,
-  },
-  filledText: {
-    color: '#fff',
-  },
-  ghostText: {
-    color: '#000',
   },
   monthSection: {
     marginBottom: 24,
@@ -558,52 +521,6 @@ const styles = StyleSheet.create({
     fontSize: 12,
     color: '#555',
     alignSelf: 'flex-start',
-    marginTop: 3,
-  },
-  bottomBarContainer: {
-    position: 'absolute',
-    bottom: 0,
-    left: 0,
-    right: 0,
-    height: 80,
-    backgroundColor: '#34495e',
-    flexDirection: 'row',
-    justifyContent: 'space-around',
-    alignItems: 'center',
-    paddingHorizontal: 20,
-    overflow: 'visible',
-  },
-  centerCircle: {
-    position: 'absolute',
-    top: -25,
-    left: '50%',
-    right: '100%',
-    marginLeft: -3,
-    width: 60,
-    height: 60,
-    borderRadius: 30,
-    backgroundColor: '#465E5D',
-    alignItems: 'center',
-    justifyContent: 'center',
-    elevation: 8,
-    shadowColor: '#000',
-    shadowOffset: { width: 0, height: 4 },
-    shadowOpacity: 0.3,
-    shadowRadius: 6,
-  },
-  bottomIcon: {
-    fontSize: 24,
-    color: 'white',
-  },
-  bottomIconleft: {
-    fontSize: 24,
-    left: -20,
-    color: 'white',
-  },
-  bottomIconright: {
-    fontSize: 24,
-    right: -25,
-    color: 'white',
   },
 });
 

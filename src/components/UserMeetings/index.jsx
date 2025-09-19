@@ -56,7 +56,11 @@ const UserMeetings = ({ route, navigation }) => {
                     const user = entry.user || {};
                     return {
                         id: user.id,
-                        name: `${user.first_name} ${user.last_name}`.trim(),
+                        name: [
+                            user.first_name,
+                            user.middle_name,
+                            user.last_name
+                        ].filter(Boolean).join(' '),
                         role: user.role || 'N/A',
                         image: user.photo || '',
                         email: user.email || '',
