@@ -50,7 +50,8 @@ const highlightText = (text, highlight) => {
 };
 
 const Connections = ({ navigation, route }) => {
-  const { eventName, eventId } = route.params || {};
+  const { eventId } = route.params || {};
+  const [eventName, setEventName] = useState('');
   const roleInputRef = useRef(null);
   const [selectedTab, setSelectedTab] = useState('Attendees');
   const [search, setSearch] = useState('');
@@ -76,6 +77,7 @@ const Connections = ({ navigation, route }) => {
   const [undoCountdown, setUndoCountdown] = useState(5);
   const [confirmVisible, setConfirmVisible] = useState(false);
   const [selectedUser, setSelectedUser] = useState(null);
+  const [permission, setPermission] = useState(true);
 
 
 
@@ -140,19 +142,21 @@ const Connections = ({ navigation, route }) => {
   );
 
 
-  const fetchData = async () => {
-    setLoading(true);
-    await Promise.all([
-      fetchPendingRequests(),
-      fetchAllUsers(eventId),
-    ]);
-    setLoading(false);
-    if (isFirstLoad) setIsFirstLoad(false);
-  };
-
   useEffect(() => {
+    const fetchData = async () => {
+      setLoading(true);
+      await Promise.all([
+        fetchPendingRequests(),
+        fetchAllUsers(eventId),
+      ]);
+      setLoading(false);
+      if (isFirstLoad) { setIsFirstLoad(false); }
+    };
+
     fetchData();
-  }, []);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [eventId]);
+
 
   useEffect(() => {
     if (showUndo) {
@@ -243,6 +247,8 @@ const Connections = ({ navigation, route }) => {
         preference: user.preference,
       }));
       setAllUsers(formattedUsers);
+      setPermission(data.permission);
+      setEventName(data.event.name);
       setRequestStatus(prev => {
         const updated = { ...prev };
         formattedUsers.forEach(u => {
@@ -513,25 +519,33 @@ const Connections = ({ navigation, route }) => {
         </View>
 
         <View style={styles.buttonGroup}>
-          <TouchableOpacity
-            style={[
-              styles.actionButton,
-              requestStatus[item.id] === 'Requested' && styles.disabledButton,
-            ]}
-            onPress={() =>
-              selectedTab === 'Inbox' ? handleAccept(item) : handleRequestToggle(item)
-            }
-          >
-            <Text style={styles.actionButtonText}>
-              {selectedTab === 'Inbox'
-                ? acceptedUsers[item.id]
-                  ? 'Accepted'
-                  : 'Accept'
-                : requestStatus[item.id] === 'Requested'
-                  ? 'Requested'
-                  : 'Request'}
-            </Text>
-          </TouchableOpacity>
+          {selectedTab === 'Inbox' && (
+            <TouchableOpacity
+              style={[
+                styles.actionButton,
+                acceptedUsers[item.id] && styles.disabledButton,
+              ]}
+              onPress={() => handleAccept(item)}
+            >
+              <Text style={styles.actionButtonText}>
+                {acceptedUsers[item.id] ? 'Accepted' : 'Accept'}
+              </Text>
+            </TouchableOpacity>
+          )}
+
+          {selectedTab !== 'Inbox' && permission && (
+            <TouchableOpacity
+              style={[
+                styles.actionButton,
+                requestStatus[item.id] === 'Requested' && styles.disabledButton,
+              ]}
+              onPress={() => handleRequestToggle(item)}
+            >
+              <Text style={styles.actionButtonText}>
+                {requestStatus[item.id] === 'Requested' ? 'Requested' : 'Request'}
+              </Text>
+            </TouchableOpacity>
+          )}
 
           {selectedTab === 'Inbox' && !acceptedUsers[item.id] && (
             <TouchableOpacity

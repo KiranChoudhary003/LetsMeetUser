@@ -123,7 +123,7 @@ const EventCard = ({
                                     }}
                                 >
                                     <TouchableOpacity
-                                        onPress={() => navigation.navigate('Connection', { eventName: name, eventId: id })}
+                                        onPress={() => navigation.navigate('Connection', { eventId: id })}
                                         style={{ flexDirection: 'row', alignItems: 'center', gap: 4 }}
                                     >
                                         <Ionicons
