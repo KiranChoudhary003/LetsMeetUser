@@ -1,18 +1,24 @@
 /* eslint-disable react-native/no-inline-styles */
 /* eslint-disable react-hooks/exhaustive-deps */
+import { BASE_URL } from '@env';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import axios from 'axios';
-import React, { useContext, useEffect, useRef, useState } from 'react';
-import {
-  ActivityIndicator, Alert, Animated,
-  Pressable, SafeAreaView, ScrollView, StatusBar, useColorScheme, StyleSheet, Text, TouchableOpacity, View, RefreshControl,
-} from 'react-native';
-import { LocationContext } from '../LocationContext/LocationContext';
-import Ionicons from 'react-native-vector-icons/Ionicons';
-import Fontisto from 'react-native-vector-icons/Fontisto';
 import dayjs from 'dayjs';
 import timezone from 'dayjs/plugin/timezone';
 import utc from 'dayjs/plugin/utc';
+import React, { useContext, useEffect, useRef, useState } from 'react';
+import {
+  ActivityIndicator, Alert, Animated,
+  Pressable,
+  RefreshControl,
+  SafeAreaView, ScrollView, StatusBar,
+  StyleSheet, Text, TouchableOpacity,
+  useColorScheme,
+  View,
+} from 'react-native';
+import Fontisto from 'react-native-vector-icons/Fontisto';
+import Ionicons from 'react-native-vector-icons/Ionicons';
+import { LocationContext } from '../LocationContext/LocationContext';
 dayjs.extend(utc);
 dayjs.extend(timezone);
 
@@ -238,7 +244,7 @@ const EventsScreen = ({ navigation }) => {
     try {
       const token = await AsyncStorage.getItem('token');
       await axios.post(
-        'https://letsmeet-backend-47lv.onrender.com/api/user-events/check-in',
+        `${BASE_URL}/api/user-events/check-in`,
         { event_id: eventId },
         {
           headers: {
@@ -267,7 +273,7 @@ const EventsScreen = ({ navigation }) => {
     try {
       const token = await AsyncStorage.getItem('token');
       const response = await axios.post(
-        'https://letsmeet-backend-47lv.onrender.com/api/user-events/registered-events',
+        `${BASE_URL}/api/user-events/registered-events`,
         {
           latitude: location.latitude,
           longitude: location.longitude,

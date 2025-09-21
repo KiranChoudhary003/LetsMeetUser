@@ -1,24 +1,24 @@
-import React, { useState, useRef, useEffect, useContext } from 'react';
+import React, { useContext, useEffect, useRef, useState } from 'react';
 import {
-  View,
-  Text,
-  StyleSheet,
-  Image,
-  Modal,
-  TouchableOpacity,
-  Vibration,
   ActivityIndicator,
-  SafeAreaView,
   Animated,
   Easing,
+  Image,
+  Modal,
+  SafeAreaView,
   StatusBar,
+  StyleSheet,
+  Text,
+  TouchableOpacity,
   useColorScheme,
+  Vibration,
+  View,
 } from 'react-native';
+import { runOnJS } from 'react-native-reanimated';
 import MaterialIcons from 'react-native-vector-icons/MaterialIcons';
 import { Camera, useCameraDevices, useCodeScanner } from 'react-native-vision-camera';
-import { runOnJS } from 'react-native-reanimated';
-import { LocationContext } from '../LocationContext/LocationContext';
 import { getSocket } from '../../socket';
+import { LocationContext } from '../LocationContext/LocationContext';
 
 const Scanner = ({ navigation }) => {
   const [scannedData, setScannedData] = useState(null);
@@ -109,7 +109,7 @@ const Scanner = ({ navigation }) => {
             setScanCompleted(false);
           }, 3000);
         });
-      } catch (err) {}
+      } catch (err) { }
     };
 
     setupSocket();
@@ -121,7 +121,7 @@ const Scanner = ({ navigation }) => {
           activeSocket.off('meeting_error');
           activeSocket.off('meeting_declined');
         }
-      } catch (err) {}
+      } catch (err) { }
     };
   }, [navigation]);
 
@@ -305,8 +305,8 @@ const Scanner = ({ navigation }) => {
                         connectionStatus === 'success'
                           ? '#2ecc71'
                           : connectionStatus === 'invalid'
-                          ? 'red'
-                          : '#000',
+                            ? 'red'
+                            : '#000',
                     },
                   ]}
                 >

@@ -1,3 +1,4 @@
+import { BASE_URL } from '@env';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { useNavigation, useRoute } from '@react-navigation/native';
 import axios from 'axios';
@@ -9,16 +10,16 @@ import {
     KeyboardAvoidingView,
     Modal,
     Platform,
+    SafeAreaView,
     ScrollView,
-    StyleSheet,
     StatusBar,
-    useColorScheme,
+    StyleSheet,
     Text,
     TextInput,
     TouchableOpacity,
     TouchableWithoutFeedback,
+    useColorScheme,
     View,
-    SafeAreaView,
 } from 'react-native';
 import Feather from 'react-native-vector-icons/Feather';
 import Icon from 'react-native-vector-icons/MaterialIcons';
@@ -78,7 +79,7 @@ export default function MeetingRecords() {
             const trimmedText = editedText.trim();
 
             await axios.put(
-                `https://letsmeet-backend-47lv.onrender.com/api/user-connections/meetings/${selectedMeeting.meeting_id}/notes`,
+                `${BASE_URL}/api/user-connections/meetings/${selectedMeeting.meeting_id}/notes`,
                 { notes: trimmedText },
                 {
                     headers: {

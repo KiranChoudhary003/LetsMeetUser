@@ -1,3 +1,4 @@
+import { BASE_URL } from '@env';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { useFocusEffect, useNavigation } from '@react-navigation/native';
 import axios from 'axios';
@@ -32,7 +33,7 @@ const Header = () => {
       if (!token) { return; }
 
       const response = await axios.get(
-        'https://letsmeet-backend-47lv.onrender.com/api/user-profile',
+        `${BASE_URL}/api/user-profile`,
         {
           headers: {
             'Content-Type': 'application/json',

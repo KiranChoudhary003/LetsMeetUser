@@ -1,22 +1,22 @@
+import { BASE_URL } from '@env';
+import AsyncStorage from '@react-native-async-storage/async-storage';
+import axios from 'axios';
 import React, { useState } from 'react';
 import {
-    View,
-    Text,
-    StyleSheet,
-    Image,
-    TouchableOpacity,
-    ScrollView,
-    SafeAreaView,
-    useColorScheme,
-    Platform,
-    StatusBar,
     ActivityIndicator,
+    Alert,
+    Image,
+    SafeAreaView,
+    ScrollView,
+    StatusBar,
+    StyleSheet,
+    Text,
+    TouchableOpacity,
+    useColorScheme,
+    View
 } from 'react-native';
 import Ionicons from 'react-native-vector-icons/Ionicons';
 import MaterialCommunityIcons from 'react-native-vector-icons/MaterialCommunityIcons';
-import axios from 'axios';
-import AsyncStorage from '@react-native-async-storage/async-storage';
-import { Alert } from 'react-native';
 
 
 const MyEventsDesciption = ({ navigation, route }) => {
@@ -60,7 +60,7 @@ const MyEventsDesciption = ({ navigation, route }) => {
 
 
     const handlePress = async () => {
-        if (isLoading) {return;}
+        if (isLoading) { return; }
 
         if (buttonState === 'register') {
             if (!id) {
@@ -95,7 +95,7 @@ const MyEventsDesciption = ({ navigation, route }) => {
         try {
             const token = await AsyncStorage.getItem('token');
             await axios.post(
-                'https://letsmeet-backend-47lv.onrender.com/api/user-events/check-in',
+                `${BASE_URL}/api/user-events/check-in`,
                 { event_id: eventId },
                 {
                     headers: {

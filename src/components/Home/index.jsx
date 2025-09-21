@@ -1,7 +1,8 @@
 /* eslint-disable react-hooks/exhaustive-deps */
 /* eslint-disable react-native/no-inline-styles */
+import { BASE_URL } from '@env';
 import AsyncStorage from '@react-native-async-storage/async-storage';
-import { useFocusEffect } from '@react-navigation/native';
+import { useFocusEffect, useNavigation } from '@react-navigation/native';
 import axios from 'axios';
 import dayjs from 'dayjs';
 import timezone from 'dayjs/plugin/timezone';
@@ -13,13 +14,13 @@ import {
     SafeAreaView, ScrollView, StatusBar, StyleSheet,
     Text, TouchableOpacity, TouchableWithoutFeedback, useColorScheme, View,
 } from 'react-native';
-import { useNavigation } from '@react-navigation/native';
 import { Calendar } from 'react-native-calendars';
 import Fontisto from 'react-native-vector-icons/Fontisto';
 import Ionicons from 'react-native-vector-icons/Ionicons';
 import { LocationContext } from '../LocationContext/LocationContext';
 dayjs.extend(utc);
 dayjs.extend(timezone);
+
 
 const EventCard = ({
     id,
@@ -263,7 +264,6 @@ const Home = ({ navigation }) => {
     }, [eventData, selectedFilter, customDate, location]);
 
 
-
     const filterEvents = (events, filterType, filterDate, location) => {
         const now = new Date();
         const today = new Date(now.setHours(0, 0, 0, 0));
@@ -334,7 +334,7 @@ const Home = ({ navigation }) => {
             }
 
             await axios.post(
-                'https://letsmeet-backend-47lv.onrender.com/api/user-events/register-event',
+                `${BASE_URL}/api/user-events/register-event`,
                 { event_id: eventId },
                 {
                     headers: {
@@ -363,7 +363,7 @@ const Home = ({ navigation }) => {
         try {
             const token = await AsyncStorage.getItem('token');
             await axios.post(
-                'https://letsmeet-backend-47lv.onrender.com/api/user-events/check-in',
+                `${BASE_URL}/api/user-events/check-in`,
                 { event_id: eventId },
                 {
                     headers: {
@@ -393,7 +393,7 @@ const Home = ({ navigation }) => {
             const token = await AsyncStorage.getItem('token');
 
             const response = await axios.post(
-                'https://letsmeet-backend-47lv.onrender.com/api/user-events/upcoming-events',
+                `${BASE_URL}/api/user-events/upcoming-events`,
                 {
                     latitude: location.latitude,
                     longitude: location.longitude,

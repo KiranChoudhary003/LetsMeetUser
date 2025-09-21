@@ -1,25 +1,26 @@
+import { BASE_URL } from '@env';
+import AsyncStorage from '@react-native-async-storage/async-storage';
+import { BlurView } from '@react-native-community/blur';
+import axios from 'axios';
+import LottieView from 'lottie-react-native';
 import React, { useEffect, useState } from 'react';
 import {
+  ActivityIndicator,
+  Dimensions,
   FlatList,
   Image,
+  Modal,
+  Platform,
   SafeAreaView,
   StatusBar,
-  useColorScheme,
   StyleSheet,
   Text,
   TextInput,
   TouchableOpacity,
-  View,
-  ActivityIndicator,
-  Modal,
-  Platform
+  useColorScheme,
+  View
 } from 'react-native';
 import Entypo from 'react-native-vector-icons/Entypo';
-import { Dimensions } from 'react-native';
-import LottieView from 'lottie-react-native';
-import { BlurView } from '@react-native-community/blur';
-import AsyncStorage from '@react-native-async-storage/async-storage';
-import axios from 'axios';
 
 const { width } = Dimensions.get('window');
 
@@ -36,7 +37,7 @@ const Meeting = ({ navigation }) => {
       try {
         const token = await AsyncStorage.getItem('token');
         const response = await axios.get(
-          'https://letsmeet-backend-47lv.onrender.com/api/user-events/meetings',
+          `${BASE_URL}/api/user-events/meetings`,
           {
             headers: {
               Authorization: `Bearer ${token}`,

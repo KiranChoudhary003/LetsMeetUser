@@ -1,9 +1,16 @@
+import { BASE_URL } from '@env';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import axios from 'axios';
 import React, { useEffect, useState } from 'react';
 import {
-    ActivityIndicator, Alert, Modal, SafeAreaView, ScrollView,
-    StyleSheet, StatusBar, useColorScheme, Text, TouchableOpacity, TouchableWithoutFeedback, View, RefreshControl,
+    ActivityIndicator, Alert, Modal,
+    RefreshControl,
+    SafeAreaView, ScrollView,
+    StatusBar,
+    StyleSheet,
+    Text, TouchableOpacity, TouchableWithoutFeedback,
+    useColorScheme,
+    View,
 } from 'react-native';
 import { TextInput } from 'react-native-gesture-handler';
 import Ionicons from 'react-native-vector-icons/Ionicons';
@@ -103,7 +110,7 @@ const SupportDesk = () => {
         try {
             const token = await AsyncStorage.getItem('token');
             const response = await axios.get(
-                'https://letsmeet-backend-47lv.onrender.com/api/user-profile/reports',
+                `${BASE_URL}/api/user-profile/reports`,
                 {
                     headers: {
                         Authorization: `Bearer ${token}`,
@@ -135,7 +142,7 @@ const SupportDesk = () => {
             const token = await AsyncStorage.getItem('token');
 
             await axios.post(
-                'https://letsmeet-backend-47lv.onrender.com/api/user-profile/submit-report',
+                `${BASE_URL}/api/user-profile/submit-report`,
                 { Description: newTicket },
                 {
                     headers: {

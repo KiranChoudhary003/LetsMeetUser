@@ -1,18 +1,19 @@
+import { BASE_URL } from '@env';
 import AsyncStorage from '@react-native-async-storage/async-storage';
-import axios, { request } from 'axios';
+import axios from 'axios';
 import React, { useState } from 'react';
 import {
-    View,
-    Text,
-    StyleSheet,
-    Image,
-    TouchableOpacity,
-    ScrollView,
-    SafeAreaView,
-    useColorScheme,
     ActivityIndicator,
-    StatusBar,
     Alert,
+    Image,
+    SafeAreaView,
+    ScrollView,
+    StatusBar,
+    StyleSheet,
+    Text,
+    TouchableOpacity,
+    useColorScheme,
+    View,
 } from 'react-native';
 import Ionicons from 'react-native-vector-icons/Ionicons';
 
@@ -82,7 +83,7 @@ const Description = ({ navigation, route }) => {
             if (!eventId) return;
 
             const res = await axios.post(
-                'https://letsmeet-backend-47lv.onrender.com/api/user-events/register-event',
+                `${BASE_URL}/api/user-events/register-event`,
                 { event_id: eventId, latitude: lat, longitude: lon },
                 {
                     headers: {
@@ -117,7 +118,7 @@ const Description = ({ navigation, route }) => {
         try {
             const token = await AsyncStorage.getItem('token');
             await axios.post(
-                'https://letsmeet-backend-47lv.onrender.com/api/user-events/check-in',
+                `${BASE_URL}/api/user-events/check-in`,
                 { event_id: eventId },
                 {
                     headers: {

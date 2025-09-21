@@ -1,20 +1,20 @@
-import React from 'react';
-import { View, StyleSheet, StatusBar, useColorScheme } from 'react-native';
-import { SafeAreaView } from 'react-native-safe-area-context';
-import Header from '../Header';
-import BottomTab from '../BottomTab';
 import { createStackNavigator } from '@react-navigation/stack';
+import React from 'react';
+import { StatusBar, StyleSheet, useColorScheme, View } from 'react-native';
+import { SafeAreaView } from 'react-native-safe-area-context';
+import BottomTab from '../BottomTab';
+import Header from '../Header';
 import Home from '../Home/index.jsx';
+import Meetings from '../Meetings/index.jsx';
 import MyEvents from '../MyEvents/index.jsx';
 import SupportDesk from '../SupportDesk/index.jsx';
-import Meetings from '../Meetings/index.jsx';
 
 const InnerStack = createStackNavigator();
 
 const Layout = () => {
   return (
     <SafeAreaView style={styles.safeArea} edges={['top', 'bottom']}>
-       <StatusBar barStyle={useColorScheme() === 'dark' ? 'light-content' : 'dark-content'} />
+      <StatusBar barStyle={useColorScheme() === 'dark' ? 'light-content' : 'dark-content'} />
       <View style={styles.container}>
         <View style={styles.header}>
           <Header />

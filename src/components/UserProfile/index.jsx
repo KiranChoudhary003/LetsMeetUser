@@ -1,19 +1,31 @@
+import { BASE_URL } from '@env';
+import AsyncStorage from '@react-native-async-storage/async-storage';
+import { BlurView } from '@react-native-community/blur';
+import messaging from '@react-native-firebase/messaging';
+import { CommonActions, useFocusEffect } from '@react-navigation/native';
+import axios from 'axios';
 import React, { useCallback, useEffect, useState } from 'react';
 import {
-    Image, Modal, StyleSheet, Text, TouchableOpacity, View, Alert, Linking,
-    Platform, PermissionsAndroid, ScrollView, SafeAreaView, Dimensions,
-    ActivityIndicator, StatusBar, useColorScheme,
+    ActivityIndicator,
+    Alert,
+    Dimensions,
+    Image,
+    Linking,
+    Modal,
+    PermissionsAndroid,
+    Platform,
+    SafeAreaView,
+    ScrollView,
+    StatusBar,
+    StyleSheet, Text, TouchableOpacity,
+    useColorScheme,
+    View,
 } from 'react-native';
-import AsyncStorage from '@react-native-async-storage/async-storage';
-import MaterialIcons from 'react-native-vector-icons/MaterialIcons';
-import profile from '../../assets/profile.png';
-import axios from 'axios';
-import { BlurView } from '@react-native-community/blur';
-import { CommonActions, useFocusEffect } from '@react-navigation/native';
+import ImagePicker from 'react-native-image-crop-picker';
 import FontAwesome from 'react-native-vector-icons/FontAwesome';
 import MaterialCommunityIcons from 'react-native-vector-icons/MaterialCommunityIcons';
-import messaging from '@react-native-firebase/messaging';
-import ImagePicker from 'react-native-image-crop-picker';
+import MaterialIcons from 'react-native-vector-icons/MaterialIcons';
+import profile from '../../assets/profile.png';
 const { width } = Dimensions.get('window');
 
 const UserProfile = ({ navigation, route }) => {
@@ -32,7 +44,7 @@ const UserProfile = ({ navigation, route }) => {
         try {
             setloading(true);
             const token = await AsyncStorage.getItem('token');
-            const response = await axios.get('https://letsmeet-backend-47lv.onrender.com/api/user-profile', {
+            const response = await axios.get(`${BASE_URL}/api/user-profile`, {
                 headers: {
                     'Content-Type': 'application/json',
                     Authorization: `Bearer ${token}`,
@@ -144,7 +156,7 @@ const UserProfile = ({ navigation, route }) => {
 
             const token = await AsyncStorage.getItem('token');
             await axios.put(
-                'https://letsmeet-backend-47lv.onrender.com/api/user-profile/edit',
+                `${BASE_URL}/api/user-profile/edit`,
                 formData,
                 {
                     headers: {
@@ -175,7 +187,7 @@ const UserProfile = ({ navigation, route }) => {
             const token = await AsyncStorage.getItem('token');
 
             await axios.put(
-                'https://letsmeet-backend-47lv.onrender.com/api/user-profile/logout',
+                `${BASE_URL}/api/user-profile/logout`,
                 {},
                 {
                     headers: token ? { Authorization: `Bearer ${token}` } : {},

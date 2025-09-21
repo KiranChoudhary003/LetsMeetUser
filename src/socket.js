@@ -1,6 +1,7 @@
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import jwtDecode from 'jwt-decode';
 import { io } from 'socket.io-client';
+import { BASE_URL } from '@env';
 
 let socket = null;
 let initialized = false;
@@ -33,7 +34,7 @@ export const connectSocket = async (passedToken = null) => {
       socket.disconnect();
     }
 
-    socket = io('https://letsmeet-backend-47lv.onrender.com', {
+    socket = io(BASE_URL, {
       auth: { token },
       transports: ['websocket'],
       reconnection: true,

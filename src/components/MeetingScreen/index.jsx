@@ -1,27 +1,28 @@
+import { BASE_URL } from '@env';
+import AsyncStorage from '@react-native-async-storage/async-storage';
+import { useNavigation, useRoute } from '@react-navigation/native';
+import axios from 'axios';
 import React, { useState } from 'react';
 import {
-  View,
-  Text,
-  FlatList,
-  TouchableOpacity,
-  StyleSheet,
-  Modal,
-  ScrollView,
-  TouchableWithoutFeedback,
-  StatusBar,
-  useColorScheme,
-  TextInput,
-  KeyboardAvoidingView,
-  Platform,
-  Keyboard,
   ActivityIndicator,
+  FlatList,
+  Keyboard,
+  KeyboardAvoidingView,
+  Modal,
+  Platform,
+  ScrollView,
+  StatusBar,
+  StyleSheet,
+  Text,
+  TextInput,
+  TouchableOpacity,
+  TouchableWithoutFeedback,
+  useColorScheme,
+  View,
 } from 'react-native';
-import { useNavigation, useRoute } from '@react-navigation/native';
+import { SafeAreaView } from 'react-native-safe-area-context';
 import Feather from 'react-native-vector-icons/Feather';
 import Icon from 'react-native-vector-icons/MaterialIcons';
-import AsyncStorage from '@react-native-async-storage/async-storage';
-import axios from 'axios';
-import { SafeAreaView } from 'react-native-safe-area-context';
 
 export default function MeetingScreen() {
   const navigation = useNavigation();
@@ -58,7 +59,7 @@ export default function MeetingScreen() {
       const trimmedText = editedText.trim();
 
       await axios.put(
-        `https://letsmeet-backend-47lv.onrender.com/api/user-connections/meetings/${selectedMeeting.id}/notes`,
+        `${BASE_URL}/api/user-connections/meetings/${selectedMeeting.id}/notes`,
         { notes: trimmedText },
         {
           headers: {
@@ -99,8 +100,8 @@ export default function MeetingScreen() {
 
   return (
     <>
-    <StatusBar barStyle={useColorScheme() === 'dark' ? 'light-content' : 'dark-content'} />
-      <SafeAreaView style={{ flex: 1 , backgroundColor: '#e8effc'}}>
+      <StatusBar barStyle={useColorScheme() === 'dark' ? 'light-content' : 'dark-content'} />
+      <SafeAreaView style={{ flex: 1, backgroundColor: '#e8effc' }}>
         <View style={styles.topBar}>
           <TouchableOpacity style={styles.backButton} onPress={() => navigation.goBack()}>
             <Icon name="arrow-back" size={24} color="#fff" />
@@ -209,7 +210,7 @@ export default function MeetingScreen() {
           </Modal>
         )}
       </SafeAreaView>
-      </>
+    </>
   );
 }
 

@@ -1,10 +1,11 @@
-import React, { useEffect, useRef, useState } from 'react';
-import { View, Text, StyleSheet, TouchableOpacity, ActivityIndicator, StatusBar, useColorScheme } from 'react-native';
-import QRCode from 'react-native-qrcode-svg';
-import axios from 'axios';
+import { BASE_URL } from '@env';
 import AsyncStorage from '@react-native-async-storage/async-storage';
-import MaterialIcons from 'react-native-vector-icons/MaterialIcons';
+import axios from 'axios';
+import React, { useEffect, useRef, useState } from 'react';
+import { ActivityIndicator, StatusBar, StyleSheet, Text, TouchableOpacity, useColorScheme, View } from 'react-native';
+import QRCode from 'react-native-qrcode-svg';
 import { SafeAreaView } from 'react-native-safe-area-context';
+import MaterialIcons from 'react-native-vector-icons/MaterialIcons';
 
 const QRCodeScreen = ({ navigation }) => {
   const [userData, setUserData] = useState({});
@@ -15,7 +16,7 @@ const QRCodeScreen = ({ navigation }) => {
     const fetchUserData = async () => {
       try {
         const token = await AsyncStorage.getItem('token');
-        const response = await axios.get('https://letsmeet-backend-47lv.onrender.com/api/user-profile', {
+        const response = await axios.get(`${BASE_URL}/api/user-profile`, {
           headers: {
             'Content-Type': 'application/json',
             'Authorization': `Bearer ${token}`,

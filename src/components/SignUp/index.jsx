@@ -1,12 +1,13 @@
 /* eslint-disable react-hooks/exhaustive-deps */
-import React, { useEffect, useRef, useState } from 'react';
-import { StyleSheet, Text, TextInput, TouchableOpacity, View, KeyboardAvoidingView, StatusBar, useColorScheme, Platform, Modal as RNModal } from 'react-native';
-import { ActivityIndicator, Checkbox, Menu, Modal, Provider } from 'react-native-paper';
-import MaterialIcons from 'react-native-vector-icons/MaterialIcons';
-import { ScrollView } from 'react-native-gesture-handler';
-import validator from 'validator';
+import { BASE_URL } from '@env';
 import axios from 'axios';
+import React, { useEffect, useRef, useState } from 'react';
+import { KeyboardAvoidingView, Platform, Modal as RNModal, StatusBar, StyleSheet, Text, TextInput, TouchableOpacity, useColorScheme, View } from 'react-native';
+import { ScrollView } from 'react-native-gesture-handler';
+import { ActivityIndicator, Checkbox, Menu, Modal, Provider } from 'react-native-paper';
 import { SafeAreaView } from 'react-native-safe-area-context';
+import MaterialIcons from 'react-native-vector-icons/MaterialIcons';
+import validator from 'validator';
 
 const SignUp = ({ navigation, route }) => {
     const { deviceToken } = route.params || {};
@@ -93,11 +94,11 @@ const SignUp = ({ navigation, route }) => {
     const passwordValid = rules.every(checkRule);
 
     const emailRules = [
-    { check: (email) => !/[^a-zA-Z0-9@._-]/.test(email), message: "No invalid characters" },
-    { check: (email) => !email.includes(".."), message: "No consecutive dots" },
-    { check: (email) => !/\s/.test(email), message: "No spaces allowed" },
-    { check: (email) => validator.isEmail(email), message: "Must be a valid email" },
-];
+        { check: (email) => !/[^a-zA-Z0-9@._-]/.test(email), message: "No invalid characters" },
+        { check: (email) => !email.includes(".."), message: "No consecutive dots" },
+        { check: (email) => !/\s/.test(email), message: "No spaces allowed" },
+        { check: (email) => validator.isEmail(email), message: "Must be a valid email" },
+    ];
 
 
     const checkEmailRule = (rule) => rule.check(email);
@@ -230,7 +231,7 @@ const SignUp = ({ navigation, route }) => {
                 attendees_role: typeof jobRole === 'object' ? jobRole.label : jobRole,
                 preference: selectedRoles,
             };
-            const response = await fetch('https://letsmeet-backend-47lv.onrender.com/api/user-profile/register', {
+            const response = await fetch(`${BASE_URL}/api/user-profile/register`, {
                 method: 'POST',
                 headers: {
                     'Content-Type': 'application/json',
@@ -260,7 +261,7 @@ const SignUp = ({ navigation, route }) => {
         const fetchRoles = async () => {
             loadingRoles;
             try {
-                const response = await axios.get('https://letsmeet-backend-47lv.onrender.com/api/user-profile/roles', {
+                const response = await axios.get(`${BASE_URL}/api/user-profile/roles`, {
                     headers: {
                         'Content-Type': 'application/json',
                     },
@@ -281,7 +282,7 @@ const SignUp = ({ navigation, route }) => {
     useEffect(() => {
         const fetchPrivacyPolicy = async () => {
             try {
-                const response = await axios.get('https://letsmeet-backend-47lv.onrender.com/api/user-profile/privacy-policy', {
+                const response = await axios.get(`${BASE_URL}/api/user-profile/privacy-policy`, {
                     headers: {
                         'Content-Type': 'application/json',
                     },

@@ -1,22 +1,22 @@
+import { useNavigation } from '@react-navigation/native';
 import React, { useState } from 'react';
 import {
-  View,
-  Text,
-  ScrollView,
-  StyleSheet,
-  SafeAreaView,
-  StatusBar,
-  useColorScheme,
   Animated,
-  Pressable,
-  TouchableOpacity,
-  TextInput,
   Dimensions,
   Platform,
+  Pressable,
+  SafeAreaView,
+  ScrollView,
+  StatusBar,
+  StyleSheet,
+  Text,
+  TextInput,
+  TouchableOpacity,
+  useColorScheme,
+  View,
 } from 'react-native';
-import MaterialIcons from 'react-native-vector-icons/MaterialIcons';
-import { useNavigation } from '@react-navigation/native';
 import Entypo from 'react-native-vector-icons/Entypo';
+import MaterialIcons from 'react-native-vector-icons/MaterialIcons';
 
 const { width } = Dimensions.get('window');
 
@@ -43,7 +43,7 @@ const EventCard = ({ name, lastMeetingDate, meetingsCount, eventId, meetings }) 
   return (
     <Pressable onPressIn={handlePressIn} onPressOut={handlePressOut} onPress={handleNavigate}>
       <Animated.View style={[styles.card, { transform: [{ scale }] }]}>
-        <View style={{ flex: 1}}>
+        <View style={{ flex: 1 }}>
           <View style={styles.eventHeaderRow}>
             <Text style={styles.eventName} numberOfLines={2}
               ellipsizeMode="tail">{name}</Text>

@@ -1,8 +1,8 @@
-import React, { createContext, useState, useEffect } from 'react';
-import { View, Text, StyleSheet, Animated, Dimensions, ActivityIndicator } from 'react-native';
 import NetInfo from '@react-native-community/netinfo';
-import networkLost from '../../assets/networkLost.json';
 import LottieView from 'lottie-react-native';
+import React, { createContext, useEffect, useState } from 'react';
+import { Animated, Dimensions, StyleSheet, Text } from 'react-native';
+import networkLost from '../../assets/networkLost.json';
 
 const { width } = Dimensions.get('window');
 

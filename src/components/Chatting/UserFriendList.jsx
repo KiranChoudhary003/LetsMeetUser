@@ -1,3 +1,4 @@
+import { BASE_URL } from '@env';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { useFocusEffect, useNavigation } from '@react-navigation/native';
 import React, { useCallback, useEffect, useState } from 'react';
@@ -5,22 +6,20 @@ import {
     ActivityIndicator,
     FlatList,
     Image,
+    Platform,
     StatusBar,
-    useColorScheme,
     StyleSheet,
     Text,
     TextInput,
     TouchableOpacity,
+    useColorScheme,
     View,
-    Platform,
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import Entypo from 'react-native-vector-icons/Entypo';
 import Ionicons from 'react-native-vector-icons/Ionicons';
 import { io } from 'socket.io-client';
 import profile from '../../assets/profile.png';
-
-const API_URL = 'https://letsmeet-backend-47lv.onrender.com/api';
 
 export default function UserListScreen() {
     const navigation = useNavigation();
@@ -38,7 +37,7 @@ export default function UserListScreen() {
     const fetchConnections = async () => {
         try {
             const token = await AsyncStorage.getItem('token');
-            const response = await fetch(`${API_URL}/user-chat/chat-connections`, {
+            const response = await fetch(`${BASE_URL}/api/user-chat/chat-connections`, {
                 headers: { Authorization: `Bearer ${token}` },
             });
             const data = await response.json();
@@ -57,7 +56,7 @@ export default function UserListScreen() {
             const token = await AsyncStorage.getItem('token');
             if (!token) { return; }
 
-            socket = io('https://letsmeet-backend-47lv.onrender.com/', {
+            socket = io(BASE_URL, {
                 auth: { token },
                 transports: ['websocket'],
             });

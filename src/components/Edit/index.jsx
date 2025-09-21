@@ -1,19 +1,24 @@
-import React, { useEffect, useState, useRef } from 'react';
+import { BASE_URL } from '@env';
+import AsyncStorage from '@react-native-async-storage/async-storage';
+import axios from 'axios';
+import React, { useEffect, useRef, useState } from 'react';
 import {
-    StyleSheet, Text, TextInput, TouchableOpacity, View,
-    ActivityIndicator, StatusBar, ScrollView, useColorScheme,
+    ActivityIndicator,
+    Alert,
     KeyboardAvoidingView,
     Platform,
-    Alert,
     Modal as RNModal,
+    ScrollView,
+    StatusBar,
+    StyleSheet, Text, TextInput, TouchableOpacity,
+    useColorScheme,
+    View,
 } from 'react-native';
 import { Checkbox, Menu, Modal as PaperModal, Provider } from 'react-native-paper';
-import axios from 'axios';
-import AsyncStorage from '@react-native-async-storage/async-storage';
+import { SafeAreaView } from 'react-native-safe-area-context';
 import Ionicons from 'react-native-vector-icons/Ionicons';
 import MaterialIcons from 'react-native-vector-icons/MaterialIcons';
 import validator from 'validator';
-import { SafeAreaView } from 'react-native-safe-area-context';
 
 const Edit = ({ route, navigation }) => {
     const {
@@ -61,7 +66,7 @@ const Edit = ({ route, navigation }) => {
         const fetchRoles = async () => {
             try {
                 const response = await axios.get(
-                    'https://letsmeet-backend-47lv.onrender.com/api/user-profile/roles',
+                    `${BASE_URL}/api/user-profile/roles`,
                     { headers: { 'Content-Type': 'application/json' } }
                 );
                 if (response.data.roles && Array.isArray(response.data.roles)) {
@@ -210,7 +215,7 @@ const Edit = ({ route, navigation }) => {
             const formattedLastName = capitalizeName(newLastName.trim());
 
             const response = await axios.put(
-                'https://letsmeet-backend-47lv.onrender.com/api/user-profile/edit',
+                `${BASE_URL}/api/user-profile/edit`,
                 {
                     first_name: formattedFirstName,
                     middle_name: formattedMiddleName || null,
@@ -228,7 +233,6 @@ const Edit = ({ route, navigation }) => {
                     },
                 }
             );
-            console.log('PUT API Response:', response.data);
             if (response.status === 200) {
                 Alert.alert('Success', 'Profile updated successfully');
                 navigation.goBack();

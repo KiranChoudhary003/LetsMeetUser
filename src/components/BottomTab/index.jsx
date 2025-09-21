@@ -1,8 +1,8 @@
 import { useNavigation, useNavigationState } from '@react-navigation/native';
 import React, { useCallback } from 'react';
-import { StyleSheet, TouchableOpacity, View, Text } from 'react-native';
-import MaterialCommunityIcons from 'react-native-vector-icons/MaterialCommunityIcons';
+import { StyleSheet, Text, TouchableOpacity } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
+import MaterialCommunityIcons from 'react-native-vector-icons/MaterialCommunityIcons';
 
 // Static tab configuration moved outside component
 const TABS = [

@@ -1,29 +1,30 @@
-import React, { useEffect, useState, useRef } from 'react';
+import { BASE_URL } from '@env';
+import AsyncStorage from '@react-native-async-storage/async-storage';
+import { BlurView } from '@react-native-community/blur';
+import axios from 'axios';
+import React, { useEffect, useRef, useState } from 'react';
 import {
     ActivityIndicator,
+    Dimensions,
     Image,
     Keyboard,
     KeyboardAvoidingView,
+    Linking,
     Modal,
+    Platform,
+    ScrollView,
+    StatusBar,
     StyleSheet,
     Text,
     TextInput,
     TouchableOpacity,
     TouchableWithoutFeedback,
-    View,
-    Platform,
-    Linking,
-    StatusBar,
     useColorScheme,
-    Dimensions,
-    ScrollView,
+    View,
 } from 'react-native';
-import logo from '../../assets/logo.png';
-import axios from 'axios';
-import AsyncStorage from '@react-native-async-storage/async-storage';
 import MaterialIcons from 'react-native-vector-icons/MaterialIcons';
-import { BlurView } from '@react-native-community/blur';
 import validator from 'validator';
+import logo from '../../assets/logo.png';
 
 const { width } = Dimensions.get('window');
 const INPUT_WIDTH = width * 0.85;
@@ -98,7 +99,7 @@ const Login = ({ navigation, route }) => {
 
         try {
             const response = await axios.post(
-                'https://letsmeet-backend-47lv.onrender.com/api/user-profile/login',
+                `${BASE_URL}/api/user-profile/login`,
                 {
                     email: login.email,
                     password: login.password,
@@ -193,7 +194,7 @@ const Login = ({ navigation, route }) => {
         setForgotLoading(true);
         try {
             await axios.post(
-                'https://letsmeet-backend-47lv.onrender.com/api/user-profile/forgot-password',
+                `${BASE_URL}/api/user-profile/forgot-password`,
                 { email: forgotEmail.toLowerCase() },
                 { headers: { 'Content-Type': 'application/json' } }
             );

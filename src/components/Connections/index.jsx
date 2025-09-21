@@ -1,3 +1,4 @@
+import { BASE_URL } from '@env';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { BlurView } from '@react-native-community/blur';
 import LottieView from 'lottie-react-native';
@@ -26,7 +27,6 @@ import Ionicons from 'react-native-vector-icons/Ionicons';
 
 
 const { width } = Dimensions.get('window');
-const API_URL = 'https://letsmeet-backend-47lv.onrender.com/api';
 
 const getToken = async () => {
   return AsyncStorage.getItem('token');
@@ -144,7 +144,7 @@ const Connections = ({ navigation, route }) => {
     setLoading(true);
     await Promise.all([
       fetchPendingRequests(),
-      fetchAllUsers(),
+      fetchAllUsers(eventId),
     ]);
     setLoading(false);
     if (isFirstLoad) setIsFirstLoad(false);
@@ -174,7 +174,7 @@ const Connections = ({ navigation, route }) => {
             (async () => {
               const token = await getToken();
               try {
-                await fetch(`${API_URL}/user-connections/respond/${localUndoUser.id}`, {
+                await fetch(`${BASE_URL}/api/user-connections/respond/${localUndoUser.id}`, {
                   method: 'PUT',
                   headers: {
                     'Content-Type': 'application/json',
@@ -202,7 +202,7 @@ const Connections = ({ navigation, route }) => {
   const fetchPendingRequests = async () => {
     const token = await getToken();
     try {
-      const response = await fetch(`${API_URL}/user-connections/pending-requests`, {
+      const response = await fetch(`${BASE_URL}/api/user-connections/pending-requests`, {
         headers: { Authorization: `Bearer ${token}` },
       });
       const data = await response.json();
@@ -227,7 +227,7 @@ const Connections = ({ navigation, route }) => {
     const token = await getToken();
     try {
       const query = id ? `?event_id=${id}` : '';
-      const response = await fetch(`${API_URL}/user-events/attended-users${query}`, {
+      const response = await fetch(`${BASE_URL}/api/user-events/attended-users${query}`, {
         headers: { Authorization: `Bearer ${token}` },
       });
       const data = await response.json();
@@ -267,7 +267,7 @@ const Connections = ({ navigation, route }) => {
       if (!undoUser || undoUser.id !== user.id) {
         const token = await getToken();
         try {
-          await fetch(`${API_URL}/user-connections/respond/${user.id}`, {
+          await fetch(`${BASE_URL}/api/user-connections/respond/${user.id}`, {
             method: 'PUT',
             headers: {
               'Content-Type': 'application/json',
@@ -294,7 +294,7 @@ const Connections = ({ navigation, route }) => {
     if (!selectedUser) { return; }
     const token = await getToken();
     try {
-      await fetch(`${API_URL}/user-connections/respond/${selectedUser.id}`, {
+      await fetch(`${BASE_URL}/api/user-connections/respond/${selectedUser.id}`, {
         method: 'PUT',
         headers: {
           'Content-Type': 'application/json',
@@ -320,7 +320,7 @@ const Connections = ({ navigation, route }) => {
     const timer = setTimeout(async () => {
       const token = await getToken();
       try {
-        await fetch(`${API_URL}/user-connections/send-request`, {
+        await fetch(`${BASE_URL}/api/user-connections/send-request`, {
           method: 'POST',
           headers: {
             'Content-Type': 'application/json',
@@ -348,8 +348,8 @@ const Connections = ({ navigation, route }) => {
       const token = await getToken();
       const url =
         type === 'accept'
-          ? `${API_URL}/user-connections/respond/${user.id}`
-          : `${API_URL}/user-connections/send-request`;
+          ? `${BASE_URL}/api/user-connections/respond/${user.id}`
+          : `${BASE_URL}/api/user-connections/send-request`;
 
       const method = type === 'accept' ? 'PUT' : 'POST';
       const body =

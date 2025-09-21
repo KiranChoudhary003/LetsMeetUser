@@ -1,6 +1,8 @@
+import { BASE_URL } from '@env';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { BlurView } from '@react-native-community/blur';
 import { CommonActions, useIsFocused, useNavigation } from '@react-navigation/native';
+import { FlashList } from '@shopify/flash-list';
 import { jwtDecode } from 'jwt-decode';
 import moment from 'moment';
 import React, { useEffect, useRef, useState } from 'react';
@@ -12,18 +14,17 @@ import {
     Platform,
     SafeAreaView,
     StatusBar,
-    useColorScheme,
     StyleSheet,
     Text,
     TextInput,
     TouchableOpacity,
+    useColorScheme,
     View,
 } from 'react-native';
 import FontAwesome from 'react-native-vector-icons/FontAwesome';
 import Ionicons from 'react-native-vector-icons/Ionicons';
 import { io } from 'socket.io-client';
 import profile from '../../assets/profile.png';
-import { FlashList } from '@shopify/flash-list';
 
 
 const ChatPage = ({ route }) => {
@@ -103,7 +104,7 @@ const ChatPage = ({ route }) => {
                 setCurrentUserAvatar(storedAvatar);
             }
 
-            const socket = io('https://letsmeet-backend-47lv.onrender.com/', {
+            const socket = io(BASE_URL, {
                 auth: { token },
                 transports: ['websocket'],
             });

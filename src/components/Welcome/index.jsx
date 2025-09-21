@@ -1,29 +1,28 @@
-import React, { useEffect, useRef, useContext, useState } from 'react';
-import {
-  View,
-  Text,
-  StyleSheet,
-  Image,
-  Animated,
-  Alert,
-  Platform,
-  StatusBar,
-  BackHandler,
-  PermissionsAndroid,
-} from 'react-native';
-import logo from '../../assets/logo.png';
-import {
-  PERMISSIONS,
-  check,
-  request,
-  RESULTS,
-  openSettings,
-  requestNotifications, // 🆕 for iOS notifications
-} from 'react-native-permissions';
-import Geolocation from 'react-native-geolocation-service';
-import { LocationContext } from '../../components/LocationContext/LocationContext';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { useFocusEffect } from '@react-navigation/native';
+import React, { useContext, useEffect, useRef } from 'react';
+import {
+  Alert,
+  Animated,
+  BackHandler,
+  Image,
+  PermissionsAndroid,
+  Platform,
+  StatusBar,
+  StyleSheet,
+  View,
+} from 'react-native';
+import Geolocation from 'react-native-geolocation-service';
+import {
+  PERMISSIONS,
+  RESULTS,
+  check,
+  openSettings,
+  request,
+  requestNotifications, // 🆕 for iOS notifications
+} from 'react-native-permissions';
+import logo from '../../assets/logo.png';
+import { LocationContext } from '../../components/LocationContext/LocationContext';
 
 // ✅ Modular Firebase imports
 import { getApp } from '@react-native-firebase/app';
@@ -38,10 +37,6 @@ const Welcome = ({ navigation }) => {
   const textFadeAnim = useRef(new Animated.Value(0)).current;
 
   const { setLocation } = useContext(LocationContext);
-  const [locationData, setLocationData] = useState({
-    latitude: null,
-    longitude: null,
-  });
 
   useFocusEffect(
     React.useCallback(() => {
@@ -66,7 +61,6 @@ const Welcome = ({ navigation }) => {
       if (locationGranted) {
         coords = await getCurrentLocation();
         setLocation(coords);
-        setLocationData(coords);
       }
 
       // Navigate immediately, no timer
