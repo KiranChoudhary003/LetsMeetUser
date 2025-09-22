@@ -3,7 +3,7 @@ import AsyncStorage from '@react-native-async-storage/async-storage';
 import axios from 'axios';
 import React, { useEffect, useState } from 'react';
 import {
-    ActivityIndicator, Alert, Modal,
+    ActivityIndicator, Modal,
     RefreshControl,
     SafeAreaView, ScrollView,
     StatusBar,
@@ -12,6 +12,7 @@ import {
     useColorScheme,
     View,
 } from 'react-native';
+import { BlurView } from '@react-native-community/blur';
 import { TextInput } from 'react-native-gesture-handler';
 import Ionicons from 'react-native-vector-icons/Ionicons';
 import MaterialIcons from 'react-native-vector-icons/MaterialIcons';
@@ -88,6 +89,8 @@ const SupportDesk = () => {
     const [loading, setLoading] = useState(true);
     const [saving, setSaving] = useState(false);
     const [isFirstLoad, setIsFirstLoad] = useState(true);
+    const [AlertVisible, setAlertVisible] = useState(false);
+    const [AlertMessage, setAlertMessage] = useState('');
 
 
     useEffect(() => {
@@ -102,6 +105,11 @@ const SupportDesk = () => {
         };
         loadData();
     }, []);
+
+    const triggerEventAlert = (message) => {
+        setAlertMessage(message);
+        setAlertVisible(true);
+    };
 
 
 
@@ -133,7 +141,7 @@ const SupportDesk = () => {
 
     const submitTicket = async () => {
         if (!newTicket.trim()) {
-            Alert.alert('Validation Error', 'Ticket cannot be empty.');
+            triggerEventAlert('Please enter your ticket issue before continuing.');
             return;
         }
 
@@ -152,13 +160,13 @@ const SupportDesk = () => {
                 }
             );
 
-            Alert.alert('Success', 'Your ticket has been submitted Successfully.');
+            triggerEventAlert('Your ticket has been submitted Successfully.');
             setNewTicket('');
             setShowModal(false);
 
             await fetchTickets();
         } catch (err) {
-            Alert.alert('Error', 'Something went wrong while submitting your ticket.');
+            triggerEventAlert('Something went wrong while submitting your ticket.');
         } finally {
             setSaving(false);
         }
@@ -315,6 +323,37 @@ const SupportDesk = () => {
                         </TouchableOpacity>
                     </Modal>
                 )}
+                <Modal
+                    transparent
+                    visible={AlertVisible}
+                    animationType="fade"
+                    onRequestClose={() => setAlertVisible(false)}
+                >
+                    <TouchableOpacity
+                        style={styles.overlayBox}
+                        activeOpacity={1}
+                        onPressOut={() => setAlertVisible(false)}
+                    >
+                        {/* Blur background */}
+                        <BlurView
+                            style={StyleSheet.absoluteFill}
+                            blurType="light"                           // keep it light for premium subtlety
+                            blurAmount={3}                            // stronger blur for soft glass effect
+                            reducedTransparencyFallbackColor="rgba(255,255,255,0.1)"  // very subtle fallback
+                        />
+
+                        <View style={styles.containerBox}>
+                            <Text style={styles.titleBox}>Message</Text>
+                            <Text style={styles.messageBox}>{AlertMessage}</Text>
+                            <TouchableOpacity
+                                onPress={() => setAlertVisible(false)}
+                                style={styles.buttonBox}
+                            >
+                                <Text style={styles.buttonTextBox}>OK</Text>
+                            </TouchableOpacity>
+                        </View>
+                    </TouchableOpacity>
+                </Modal>
             </SafeAreaView>
         </>
     );
@@ -508,5 +547,57 @@ const styles = StyleSheet.create({
     lastDate: {
         fontSize: 12,
         color: '#888',
+    },
+    overlayBox: {
+        flex: 1,
+        backgroundColor: 'rgba(0,0,0,0.35)',
+        justifyContent: 'center',
+        alignItems: 'center',
+    },
+    containerBox: {
+        backgroundColor: '#fff',
+        paddingVertical: 20,
+        paddingHorizontal: 24,
+        borderRadius: 16,
+        minWidth: '60%',
+        maxWidth: '80%',
+        shadowColor: '#000',
+        shadowOffset: { width: 0, height: 4 },
+        shadowOpacity: 0.1,
+        shadowRadius: 10,
+        elevation: 8,
+    },
+    titleBox: {
+        fontSize: 17,
+        fontWeight: '700',
+        marginBottom: 10,
+        textAlign: 'center',
+        color: '#222',
+    },
+    messageBox: {
+        fontSize: 14,
+        marginBottom: 16,
+        textAlign: 'center',
+        color: '#555',
+        lineHeight: 20,
+    },
+    buttonBox: {
+        backgroundColor: '#34495E',
+        paddingVertical: 8,
+        paddingHorizontal: 24,
+        borderRadius: 20,
+        alignSelf: 'center',
+        shadowColor: '#000',
+        shadowOffset: { width: 0, height: 3 },
+        shadowOpacity: 0.15,
+        shadowRadius: 6,
+        elevation: 5,
+    },
+    buttonTextBox: {
+        color: '#fff',
+        fontWeight: '600',
+        fontSize: 14,
+        textAlign: 'center',
+        letterSpacing: 0.4,
     },
 });

@@ -1,10 +1,9 @@
 import { useNavigation, useNavigationState } from '@react-navigation/native';
-import React, { useCallback } from 'react';
+import React, { useRef, useCallback, useState, useEffect } from 'react';
 import { StyleSheet, Text, TouchableOpacity } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import MaterialCommunityIcons from 'react-native-vector-icons/MaterialCommunityIcons';
 
-// Static tab configuration moved outside component
 const TABS = [
     { name: 'Home', iconActive: 'home', iconInactive: 'home-outline', label: 'Home' },
     { name: 'MyEvents', iconActive: 'calendar-month', iconInactive: 'calendar-month-outline', label: 'Events' },
@@ -12,44 +11,59 @@ const TABS = [
     { name: 'SupportDesk', iconActive: 'message-alert', iconInactive: 'message-alert-outline', label: 'Support' },
 ];
 
+// Memoized TabItem
+const TabItem = React.memo(({ tab, isActive, onPress }) => {
+    const iconName = isActive ? tab.iconActive : tab.iconInactive;
+    const iconColor = isActive ? '#34495e' : '#fff';
+    const wrapperStyle = isActive ? [styles.iconWrapper, styles.activeTab] : styles.iconWrapper;
+    const labelStyle = isActive ? [styles.label, styles.activeLabel] : styles.label;
+
+    return (
+        <TouchableOpacity onPress={onPress} style={wrapperStyle}>
+            <MaterialCommunityIcons name={iconName} size={26} color={iconColor} />
+            <Text style={labelStyle}>{tab.label}</Text>
+        </TouchableOpacity>
+    );
+}, (prev, next) => prev.isActive === next.isActive);
+
 const BottomTab = () => {
     const navigation = useNavigation();
+    const [currentScreen, setCurrentScreen] = useState('Home');
 
-    // Simplified current screen detection
-    const currentScreen = useNavigationState((state) => {
-        const layout = state.routes.find(r => r.name === 'Layout');
-        return layout?.state?.routes?.[layout.state.index]?.name ?? 'Home';
+    // Pre-create tab components in a ref (only once)
+    const tabRefs = useRef(
+        TABS.map((tab) => ({
+            tab,
+            onPress: () => handlePress(tab.name),
+            isActive: false,
+        }))
+    );
+
+    // Optimized current screen detection
+    const screenName = useNavigationState((state) => {
+        const layoutState = state.routes[0]?.state;
+        return layoutState?.routes?.[layoutState.index]?.name ?? 'Home';
     });
 
-    // Memoized press handler
+    // Update active state when navigation changes
+    useEffect(() => {
+        setCurrentScreen(screenName);
+    }, [screenName]);
+
+    // Memoized navigation function
     const handlePress = useCallback(
         (tabName) => navigation.navigate('Layout', { screen: tabName }),
         [navigation]
     );
 
-    // Tab item component for readability
-    const TabItem = ({ tab, isActive, onPress }) => (
-        <TouchableOpacity
-            onPress={onPress}
-            style={[styles.iconWrapper, isActive && styles.activeTab]}
-        >
-            <MaterialCommunityIcons
-                name={isActive ? tab.iconActive : tab.iconInactive}
-                size={26}
-                color={isActive ? '#34495e' : '#fff'}
-            />
-            <Text style={[styles.label, isActive && styles.activeLabel]}>{tab.label}</Text>
-        </TouchableOpacity>
-    );
-
     return (
         <SafeAreaView edges={['bottom']} style={styles.bottomBarContainer}>
-            {TABS.map(tab => (
+            {tabRefs.current.map(({ tab, onPress }) => (
                 <TabItem
                     key={tab.name}
                     tab={tab}
                     isActive={currentScreen === tab.name}
-                    onPress={() => handlePress(tab.name)}
+                    onPress={onPress}
                 />
             ))}
         </SafeAreaView>

@@ -2,6 +2,7 @@
 /* eslint-disable react-native/no-inline-styles */
 import { BASE_URL } from '@env';
 import AsyncStorage from '@react-native-async-storage/async-storage';
+import { BlurView } from '@react-native-community/blur';
 import { useFocusEffect, useNavigation } from '@react-navigation/native';
 import axios from 'axios';
 import dayjs from 'dayjs';
@@ -9,7 +10,7 @@ import timezone from 'dayjs/plugin/timezone';
 import utc from 'dayjs/plugin/utc';
 import React, { useCallback, useContext, useEffect, useMemo, useRef, useState } from 'react';
 import {
-    ActivityIndicator, Alert, Animated, Modal, Pressable,
+    ActivityIndicator, Animated, Modal, Pressable,
     RefreshControl,
     SafeAreaView, ScrollView, StatusBar, StyleSheet,
     Text, TouchableOpacity, TouchableWithoutFeedback, useColorScheme, View,
@@ -239,6 +240,9 @@ const Home = ({ navigation }) => {
     const [loading, setLoading] = useState(false);
     const [isFirstLoad, setIsFirstLoad] = useState(true);
     const [checkInDistance, setCheckInDistance] = useState(null);
+    const [AlertVisible, setAlertVisible] = useState(false);
+    const [AlertMessage, setAlertMessage] = useState('');
+
 
     const formatDateToLocalYYYYMMDD = (date) => {
         const year = date.getFullYear();
@@ -322,6 +326,12 @@ const Home = ({ navigation }) => {
         return R * c;
     };
 
+    const triggerEventAlert = (message) => {
+        setAlertMessage(message);
+        setAlertVisible(true);
+    };
+
+
 
     const { location } = useContext(LocationContext);
 
@@ -344,18 +354,12 @@ const Home = ({ navigation }) => {
                 }
             );
 
-            Alert.alert(
-                'Registration Successful',
-                `Check-in will be enabled when you are within ${checkInDistance} km of the event on the day of the event.`,
-                [{ text: 'OK' }]
+            triggerEventAlert(
+                `You’ll be able to check in when you are within ${(checkInDistance).toFixed(2)} km of the event location on the scheduled day.`
             );
             fetchUpcomingEvents();
         } catch (error) {
-            Alert.alert(
-                'Registration Failed',
-                'Something went wrong during registration. Please try again.',
-                [{ text: 'OK' }]
-            );
+            triggerEventAlert('Something went wrong during registration. Please try again.');
         }
     };
 
@@ -372,18 +376,10 @@ const Home = ({ navigation }) => {
                     },
                 }
             );
-            Alert.alert(
-                'Check-In Successful',
-                'You have successfully checked in to the event.',
-                [{ text: 'OK' }]
-            );
+            triggerEventAlert('You have successfully checked in to the event.');
             fetchUpcomingEvents();
         } catch (error) {
-            Alert.alert(
-                'Check-In Failed',
-                error.response?.data?.message || 'Something went wrong. Please try again.',
-                [{ text: 'OK' }]
-            );
+            triggerEventAlert(error.response?.data?.message || 'Something went wrong. Please try again.');
         }
     };
 
@@ -434,7 +430,7 @@ const Home = ({ navigation }) => {
         } catch (error) {
         } finally {
             setLoading(false);
-            if (isFirstLoad) setIsFirstLoad(false);
+            if (isFirstLoad) { setIsFirstLoad(false); }
         }
     }, [location, selectedFilter, customDate]);
 
@@ -642,6 +638,7 @@ const Home = ({ navigation }) => {
                                     {data.events.map((event) => (
                                         <EventCard
                                             key={event.id.toString()}
+                                            id={event.id}
                                             name={event.name}
                                             organizer={event.organizer}
                                             date={event.date}
@@ -694,6 +691,37 @@ const Home = ({ navigation }) => {
                         </>
                     )}
                 </ScrollView>
+                <Modal
+                    transparent
+                    visible={AlertVisible}
+                    animationType="fade"
+                    onRequestClose={() => setAlertVisible(false)}
+                >
+                    <TouchableOpacity
+                        style={styles.overlayBox}
+                        activeOpacity={1}
+                        onPressOut={() => setAlertVisible(false)}
+                    >
+                        {/* Blur background */}
+                        <BlurView
+                            style={StyleSheet.absoluteFill}
+                            blurType="light"                           // keep it light for premium subtlety
+                            blurAmount={3}                            // stronger blur for soft glass effect
+                            reducedTransparencyFallbackColor="rgba(255,255,255,0.1)"  // very subtle fallback
+                        />
+
+                        <View style={styles.containerBox}>
+                            <Text style={styles.titleBox}>Message</Text>
+                            <Text style={styles.messageBox}>{AlertMessage}</Text>
+                            <TouchableOpacity
+                                onPress={() => setAlertVisible(false)}
+                                style={styles.buttonBox}
+                            >
+                                <Text style={styles.buttonTextBox}>OK</Text>
+                            </TouchableOpacity>
+                        </View>
+                    </TouchableOpacity>
+                </Modal>
             </SafeAreaView>
         </View>
     );
@@ -861,6 +889,59 @@ const styles = StyleSheet.create({
         color: '#555',
         alignSelf: 'flex-start',
     },
+    overlayBox: {
+        flex: 1,
+        backgroundColor: 'rgba(0,0,0,0.35)',
+        justifyContent: 'center',
+        alignItems: 'center',
+    },
+    containerBox: {
+        backgroundColor: '#fff',
+        paddingVertical: 20,
+        paddingHorizontal: 24,
+        borderRadius: 16,
+        minWidth: '60%',
+        maxWidth: '80%',
+        shadowColor: '#000',
+        shadowOffset: { width: 0, height: 4 },
+        shadowOpacity: 0.1,
+        shadowRadius: 10,
+        elevation: 8,
+    },
+    titleBox: {
+        fontSize: 17,
+        fontWeight: '700',
+        marginBottom: 10,
+        textAlign: 'center',
+        color: '#222',
+    },
+    messageBox: {
+        fontSize: 14,
+        marginBottom: 16,
+        textAlign: 'center',
+        color: '#555',
+        lineHeight: 20,
+    },
+    buttonBox: {
+        backgroundColor: '#34495E',
+        paddingVertical: 8,
+        paddingHorizontal: 24,
+        borderRadius: 20,
+        alignSelf: 'center',
+        shadowColor: '#000',
+        shadowOffset: { width: 0, height: 3 },
+        shadowOpacity: 0.15,
+        shadowRadius: 6,
+        elevation: 5,
+    },
+    buttonTextBox: {
+        color: '#fff',
+        fontWeight: '600',
+        fontSize: 14,
+        textAlign: 'center',
+        letterSpacing: 0.4,
+    },
+
 });
 
 export default Home;

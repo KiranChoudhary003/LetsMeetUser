@@ -46,7 +46,7 @@ export default function UserListScreen() {
         } catch (error) {
         } finally {
             setLoading(false);
-            if (isFirstLoad) setIsFirstLoad(false);
+            if (isFirstLoad) {setIsFirstLoad(false);}
         }
     };
 

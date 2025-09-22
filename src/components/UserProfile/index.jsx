@@ -7,7 +7,7 @@ import axios from 'axios';
 import React, { useCallback, useEffect, useState } from 'react';
 import {
     ActivityIndicator,
-    Alert,
+    Modal as MessageModal,
     Dimensions,
     Image,
     Linking,
@@ -38,6 +38,8 @@ const UserProfile = ({ navigation, route }) => {
     const isViewingOwnProfile = !passedUser;
     const isDarkMode = useColorScheme() === 'dark';
     const [uploading, setUploading] = useState(false);
+    const [AlertVisible, setAlertVisible] = useState(false);
+    const [AlertMessage, setAlertMessage] = useState('');
 
 
     const fetchProfileData = async () => {
@@ -79,6 +81,11 @@ const UserProfile = ({ navigation, route }) => {
             if (!passedUser) { fetchProfileData(); }
         }, [])
     );
+
+    const triggerEventAlert = (message) => {
+        setAlertMessage(message);
+        setAlertVisible(true);
+    };
 
     const requestGalleryPermission = async () => {
         if (Platform.OS === 'android') {
@@ -123,7 +130,7 @@ const UserProfile = ({ navigation, route }) => {
             : await requestGalleryPermission();
 
         if (!hasPermission) {
-            Alert.alert('Permission Denied', 'Cannot access camera/gallery without permission.');
+            triggerEventAlert('Permission Denied\nCamera and gallery access is required to continue.');
             return;
         }
 
@@ -166,11 +173,11 @@ const UserProfile = ({ navigation, route }) => {
                 }
             );
 
-            Alert.alert('Success', 'Profile updated successfully');
+            triggerEventAlert('Your profile has been updated successfully.');
             fetchProfileData();
         } catch (err) {
-            if (err.code === 'E_PICKER_CANCELLED') return;
-            Alert.alert('Error', 'Upload failed');
+            if (err.code === 'E_PICKER_CANCELLED') {return;}
+            triggerEventAlert('Unable to upload the file. Please retry.');
         } finally {
             setUploading(false);
             setShowImageOptions(false);
@@ -469,8 +476,37 @@ const UserProfile = ({ navigation, route }) => {
                             </View>
                         </TouchableOpacity>
                     </Modal>
+                    <MessageModal
+                        transparent
+                        visible={AlertVisible}
+                        animationType="fade"
+                        onRequestClose={() => setAlertVisible(false)}
+                    >
+                        <TouchableOpacity
+                            style={styles.overlayBox}
+                            activeOpacity={1}
+                            onPressOut={() => setAlertVisible(false)}
+                        >
+                            {/* Blur background */}
+                            <BlurView
+                                style={StyleSheet.absoluteFill}
+                                blurType="light"                           // keep it light for premium subtlety
+                                blurAmount={3}                            // stronger blur for soft glass effect
+                                reducedTransparencyFallbackColor="rgba(255,255,255,0.1)"  // very subtle fallback
+                            />
 
-
+                            <View style={styles.containerBox}>
+                                <Text style={styles.titleBox}>Message</Text>
+                                <Text style={styles.messageBox}>{AlertMessage}</Text>
+                                <TouchableOpacity
+                                    onPress={() => setAlertVisible(false)}
+                                    style={styles.buttonBox}
+                                >
+                                    <Text style={styles.buttonTextBox}>OK</Text>
+                                </TouchableOpacity>
+                            </View>
+                        </TouchableOpacity>
+                    </MessageModal>
                 </ScrollView>
             </SafeAreaView >
         </>
@@ -795,7 +831,59 @@ const styles = StyleSheet.create({
     cancelText: {
         fontSize: 16,
         fontWeight: '600',
-    }
+    },
+    overlayBox: {
+        flex: 1,
+        backgroundColor: 'rgba(0,0,0,0.35)',
+        justifyContent: 'center',
+        alignItems: 'center',
+    },
+    containerBox: {
+        backgroundColor: '#fff',
+        paddingVertical: 20,
+        paddingHorizontal: 24,
+        borderRadius: 16,
+        minWidth: '60%',
+        maxWidth: '80%',
+        shadowColor: '#000',
+        shadowOffset: { width: 0, height: 4 },
+        shadowOpacity: 0.1,
+        shadowRadius: 10,
+        elevation: 8,
+    },
+    titleBox: {
+        fontSize: 17,
+        fontWeight: '700',
+        marginBottom: 10,
+        textAlign: 'center',
+        color: '#222',
+    },
+    messageBox: {
+        fontSize: 14,
+        marginBottom: 16,
+        textAlign: 'center',
+        color: '#555',
+        lineHeight: 20,
+    },
+    buttonBox: {
+        backgroundColor: '#34495E',
+        paddingVertical: 8,
+        paddingHorizontal: 24,
+        borderRadius: 20,
+        alignSelf: 'center',
+        shadowColor: '#000',
+        shadowOffset: { width: 0, height: 3 },
+        shadowOpacity: 0.15,
+        shadowRadius: 6,
+        elevation: 5,
+    },
+    buttonTextBox: {
+        color: '#fff',
+        fontWeight: '600',
+        fontSize: 14,
+        textAlign: 'center',
+        letterSpacing: 0.4,
+    },
 });
 
 export default UserProfile;

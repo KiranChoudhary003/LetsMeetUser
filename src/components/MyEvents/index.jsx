@@ -8,17 +8,19 @@ import timezone from 'dayjs/plugin/timezone';
 import utc from 'dayjs/plugin/utc';
 import React, { useContext, useEffect, useRef, useState } from 'react';
 import {
-  ActivityIndicator, Alert, Animated,
+  ActivityIndicator, Animated,
   Pressable,
   RefreshControl,
   SafeAreaView, ScrollView, StatusBar,
   StyleSheet, Text, TouchableOpacity,
   useColorScheme,
+  Modal,
   View,
 } from 'react-native';
 import Fontisto from 'react-native-vector-icons/Fontisto';
 import Ionicons from 'react-native-vector-icons/Ionicons';
 import { LocationContext } from '../LocationContext/LocationContext';
+import { BlurView } from '@react-native-community/blur';
 dayjs.extend(utc);
 dayjs.extend(timezone);
 
@@ -37,6 +39,7 @@ const EventCard = ({
   onCheckIn,
   onPress,
   checkInDistance,
+  triggerEventAlert,
 }) => {
   const scale = useRef(new Animated.Value(1)).current;
   const [withinRange, setWithinRange] = useState(false);
@@ -151,10 +154,8 @@ const EventCard = ({
                 if (withinRange) {
                   onCheckIn();
                 } else {
-                  Alert.alert(
-                    'Check-In Unavailable',
-                    `Check-in is not available at the moment.\nYou must be within ${checkInDistance} km range of the event location on the day of the event.`,
-                    [{ text: 'OK' }]
+                  triggerEventAlert(
+                    `Check-in is temporarily disabled.\nYou’ll be able to check in once you are within ${(checkInDistance).toFixed(2)} km of the event location on the scheduled day.`
                   );
                 }
               }}
@@ -238,7 +239,14 @@ const EventsScreen = ({ navigation }) => {
   const [loading, setLoading] = useState(true);
   const { location } = useContext(LocationContext);
   const [isFirstLoad, setIsFirstLoad] = useState(true);
+  const [AlertVisible, setAlertVisible] = useState(false);
+  const [AlertMessage, setAlertMessage] = useState('');
   const events = groupEventsByMonth(eventData);
+
+  const triggerEventAlert = (message) => {
+    setAlertMessage(message);
+    setAlertVisible(true);
+  };
 
   const handleCheckIn = async (eventId) => {
     try {
@@ -253,17 +261,13 @@ const EventsScreen = ({ navigation }) => {
           },
         }
       );
-      Alert.alert(
-        'Check-In Successful',
-        'You have successfully checked in to the event.',
-        [{ text: 'OK' }]
+      triggerEventAlert(
+        'You have successfully checked in to the event.'
       );
       fetchUpcomingEvents();
     } catch (error) {
-      Alert.alert(
-        'Check-In Failed',
-        error.response?.data?.message || 'Something went wrong. Please try again.',
-        [{ text: 'OK' }]
+      triggerEventAlert(
+        error.response?.data?.message || 'Something went wrong. Please try again.'
       );
     }
   };
@@ -321,7 +325,7 @@ const EventsScreen = ({ navigation }) => {
       console.error('🚨 fetchUpcomingEvents error:', error);
     } finally {
       setLoading(false);
-      if (isFirstLoad) setIsFirstLoad(false);
+      if (isFirstLoad) {setIsFirstLoad(false);}
     }
   };
 
@@ -429,6 +433,7 @@ const EventsScreen = ({ navigation }) => {
                     userLon={location?.longitude}
                     onCheckIn={() => handleCheckIn(event.id)}
                     checkInDistance={event.check_in_distance}
+                    triggerEventAlert={triggerEventAlert}
                     onPress={() =>
                       navigation.navigate("MyEventsDescription", {
                         id: event.id,
@@ -457,6 +462,37 @@ const EventsScreen = ({ navigation }) => {
             ))
           )}
         </ScrollView>
+        <Modal
+          transparent
+          visible={AlertVisible}
+          animationType="fade"
+          onRequestClose={() => setAlertVisible(false)}
+        >
+          <TouchableOpacity
+            style={styles.overlayBox}
+            activeOpacity={1}
+            onPressOut={() => setAlertVisible(false)}
+          >
+            {/* Blur background */}
+            <BlurView
+              style={StyleSheet.absoluteFill}
+              blurType="light"                           // keep it light for premium subtlety
+              blurAmount={3}                            // stronger blur for soft glass effect
+              reducedTransparencyFallbackColor="rgba(255,255,255,0.1)"  // very subtle fallback
+            />
+
+            <View style={styles.containerBox}>
+              <Text style={styles.titleBox}>Message</Text>
+              <Text style={styles.messageBox}>{AlertMessage}</Text>
+              <TouchableOpacity
+                onPress={() => setAlertVisible(false)}
+                style={styles.buttonBox}
+              >
+                <Text style={styles.buttonTextBox}>OK</Text>
+              </TouchableOpacity>
+            </View>
+          </TouchableOpacity>
+        </Modal>
       </SafeAreaView>
     </View>
   );
@@ -527,6 +563,58 @@ const styles = StyleSheet.create({
     fontSize: 12,
     color: '#555',
     alignSelf: 'flex-start',
+  },
+  overlayBox: {
+    flex: 1,
+    backgroundColor: 'rgba(0,0,0,0.35)',
+    justifyContent: 'center',
+    alignItems: 'center',
+  },
+  containerBox: {
+    backgroundColor: '#fff',
+    paddingVertical: 20,
+    paddingHorizontal: 24,
+    borderRadius: 16,
+    minWidth: '60%',
+    maxWidth: '80%',
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 4 },
+    shadowOpacity: 0.1,
+    shadowRadius: 10,
+    elevation: 8,
+  },
+  titleBox: {
+    fontSize: 17,
+    fontWeight: '700',
+    marginBottom: 10,
+    textAlign: 'center',
+    color: '#222',
+  },
+  messageBox: {
+    fontSize: 14,
+    marginBottom: 16,
+    textAlign: 'center',
+    color: '#555',
+    lineHeight: 20,
+  },
+  buttonBox: {
+    backgroundColor: '#34495E',
+    paddingVertical: 8,
+    paddingHorizontal: 24,
+    borderRadius: 20,
+    alignSelf: 'center',
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 3 },
+    shadowOpacity: 0.15,
+    shadowRadius: 6,
+    elevation: 5,
+  },
+  buttonTextBox: {
+    color: '#fff',
+    fontWeight: '600',
+    fontSize: 14,
+    textAlign: 'center',
+    letterSpacing: 0.4,
   },
 });
 

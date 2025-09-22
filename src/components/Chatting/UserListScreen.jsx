@@ -4,7 +4,6 @@ import { useFocusEffect, useNavigation } from '@react-navigation/native';
 import React, { useCallback, useEffect, useState } from 'react';
 import {
     ActivityIndicator,
-    Alert,
     FlatList,
     Image, Platform,
     StatusBar,
@@ -14,6 +13,8 @@ import {
     TouchableOpacity,
     useColorScheme,
     View,
+    Modal,
+    Modal as DeleteModal,
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import Entypo from 'react-native-vector-icons/Entypo';
@@ -21,6 +22,7 @@ import Ionicons from 'react-native-vector-icons/Ionicons';
 import MaterialCommunityIcons from 'react-native-vector-icons/MaterialCommunityIcons';
 import { io } from 'socket.io-client';
 import profile from '../../assets/profile.png';
+import { BlurView } from '@react-native-community/blur';
 
 export default function UserListScreen() {
     const navigation = useNavigation();
@@ -28,12 +30,23 @@ export default function UserListScreen() {
     const [searchQuery, setSearchQuery] = useState('');
     const [loading, setLoading] = useState(true);
     const [isFirstLoad, setIsFirstLoad] = useState(true);
+    const [AlertVisible, setAlertVisible] = useState(false);
+    const [AlertMessage, setAlertMessage] = useState('');
+    const [confirmVisible, setConfirmVisible] = useState(false);
+    const [selectedUser, setSelectedUser] = useState(null);
+
+
 
     useFocusEffect(
         useCallback(() => {
             fetchConnections();
         }, [])
     );
+
+    const triggerEventAlert = (message) => {
+        setAlertMessage(message);
+        setAlertVisible(true);
+    };
 
 
     const fetchConnections = async () => {
@@ -119,48 +132,37 @@ export default function UserListScreen() {
         navigation.navigate('QRCode');
     };
 
+    const handleDeleteChat = async (user) => {
+        try {
+            const token = await AsyncStorage.getItem('token');
+            const res = await fetch(`${BASE_URL}/api/user-chat/delete/${user.id}`, {
+                method: 'DELETE',
+                headers: { Authorization: `Bearer ${token}` },
+            });
+            const result = await res.json();
+            if (res.ok) {
+                setUsers(prev => prev.filter(u => u.id !== user.id));
+                triggerEventAlert('The chat has been successfully deleted.');
+            } else {
+                triggerEventAlert(result.message || 'Chat could not be deleted. Please try again.');
+            }
+        } catch (err) {
+            console.error('Delete error:', err);
+            triggerEventAlert('Unable to delete chat. Please try again.');
+        }
+    };
+
     const renderItem = ({ item }) => {
         const unreadCount = item.unread_count || 0;
-
-        const handleDeleteChat = () => {
-            Alert.alert(
-                'Delete Chat',
-                `Are you sure you want to delete chat with ${item.first_name} ${item.last_name}?`,
-                [
-                    { text: 'Cancel', style: 'cancel' },
-                    {
-                        text: 'Delete',
-                        onPress: async () => {
-                            try {
-                                const token = await AsyncStorage.getItem('token');
-                                const res = await fetch(`${BASE_URL}/api/user-chat/delete/${item.id}`, {
-                                    method: 'DELETE',
-                                    headers: { Authorization: `Bearer ${token}` },
-                                });
-                                const result = await res.json();
-                                if (res.ok) {
-                                    setUsers(prev => prev.filter(user => user.id !== item.id));
-                                    Alert.alert('Success', 'Chat deleted successfully');
-                                } else {
-                                    Alert.alert('Error', result.message || 'Failed to delete chat');
-                                }
-                            } catch (err) {
-                                console.error('Delete error:', err);
-                                Alert.alert('Error', 'Error deleting chat');
-                            }
-                        },
-                        style: 'destructive',
-                    },
-                ],
-                { cancelable: true }
-            );
-        };
 
         return (
             <TouchableOpacity
                 style={styles.userCard}
                 onPress={() => navigation.navigate('ChatPage', { peer: item })}
-                onLongPress={handleDeleteChat}
+                onLongPress={() => {
+                    setSelectedUser(item);
+                    setConfirmVisible(true);
+                }}
             >
                 <View style={styles.row}>
                     <Image
@@ -256,6 +258,82 @@ export default function UserListScreen() {
                 >
                     <Ionicons name="add" size={30} color="#fff" />
                 </TouchableOpacity>
+                <Modal
+                    transparent
+                    visible={AlertVisible}
+                    animationType="fade"
+                    onRequestClose={() => setAlertVisible(false)}
+                >
+                    <TouchableOpacity
+                        style={styles.overlayBox}
+                        activeOpacity={1}
+                        onPressOut={() => setAlertVisible(false)}
+                    >
+                        {/* Blur background */}
+                        <BlurView
+                            style={StyleSheet.absoluteFill}
+                            blurType="light"                           // keep it light for premium subtlety
+                            blurAmount={3}                            // stronger blur for soft glass effect
+                            reducedTransparencyFallbackColor="rgba(255,255,255,0.1)"  // very subtle fallback
+                        />
+
+                        <View style={styles.containerBox}>
+                            <Text style={styles.titleBox}>Message</Text>
+                            <Text style={styles.messageBox}>{AlertMessage}</Text>
+                            <TouchableOpacity
+                                onPress={() => setAlertVisible(false)}
+                                style={styles.buttonBox}
+                            >
+                                <Text style={styles.buttonTextBox}>OK</Text>
+                            </TouchableOpacity>
+                        </View>
+                    </TouchableOpacity>
+                </Modal>
+                <DeleteModal
+                    visible={confirmVisible}
+                    transparent
+                    animationType="fade"
+                    onRequestClose={() => setConfirmVisible(false)}
+                >
+                    <View style={styles.overlay}>
+                        <View style={styles.modalContainer}>
+                            <Text style={styles.deleteTitle}>Confirm Action</Text>
+                            {selectedUser && (
+                                <Text style={styles.message}>
+                                    Are you sure you want to delete{" "}
+                                    <Text style={{ fontWeight: '700' }}>
+                                        {[selectedUser.first_name, selectedUser.middle_name, selectedUser.last_name]
+                                            .filter(Boolean)
+                                            .join(' ')}
+                                    </Text>
+                                    's chat?
+                                </Text>
+                            )}
+
+                            <View style={styles.actions}>
+                                <TouchableOpacity
+                                    style={[styles.button, styles.cancelButton]}
+                                    onPress={() => setConfirmVisible(false)}
+                                >
+                                    <Text style={[styles.buttonText, styles.cancelText]}>Cancel</Text>
+                                </TouchableOpacity>
+
+                                <TouchableOpacity
+                                    style={[styles.button, styles.rejectButton]}
+                                    onPress={async () => {
+                                        setConfirmVisible(false); // hide modal
+                                        if (selectedUser) {
+                                            await handleDeleteChat(selectedUser); // delete selected user
+                                            setSelectedUser(null); // reset
+                                        }
+                                    }}
+                                >
+                                    <Text style={styles.buttonText}>Delete</Text>
+                                </TouchableOpacity>
+                            </View>
+                        </View>
+                    </View>
+                </DeleteModal>
             </SafeAreaView>
         </>
     );
@@ -371,5 +449,104 @@ const styles = StyleSheet.create({
         shadowRadius: 5,
         elevation: 6,
     },
-
+    overlayBox: {
+        flex: 1,
+        backgroundColor: 'rgba(0,0,0,0.35)',
+        justifyContent: 'center',
+        alignItems: 'center',
+    },
+    containerBox: {
+        backgroundColor: '#fff',
+        paddingVertical: 20,
+        paddingHorizontal: 24,
+        borderRadius: 16,
+        minWidth: '60%',
+        maxWidth: '80%',
+        shadowColor: '#000',
+        shadowOffset: { width: 0, height: 4 },
+        shadowOpacity: 0.1,
+        shadowRadius: 10,
+        elevation: 8,
+    },
+    titleBox: {
+        fontSize: 17,
+        fontWeight: '700',
+        marginBottom: 10,
+        textAlign: 'center',
+        color: '#222',
+    },
+    messageBox: {
+        fontSize: 14,
+        marginBottom: 16,
+        textAlign: 'center',
+        color: '#555',
+        lineHeight: 20,
+    },
+    buttonBox: {
+        backgroundColor: '#34495E',
+        paddingVertical: 8,
+        paddingHorizontal: 24,
+        borderRadius: 20,
+        alignSelf: 'center',
+        shadowColor: '#000',
+        shadowOffset: { width: 0, height: 3 },
+        shadowOpacity: 0.15,
+        shadowRadius: 6,
+        elevation: 5,
+    },
+    buttonTextBox: {
+        color: '#fff',
+        fontWeight: '600',
+        fontSize: 14,
+        textAlign: 'center',
+        letterSpacing: 0.4,
+    },
+    overlay: {
+        flex: 1,
+        backgroundColor: 'rgba(0,0,0,0.4)',
+        justifyContent: 'center',
+        alignItems: 'center',
+    },
+    modalContainer: {
+        width: '80%',
+        backgroundColor: '#fff',
+        borderRadius: 16,
+        padding: 20,
+        elevation: 8,
+    },
+    deleteTitle: {
+        fontSize: 18,
+        fontWeight: '700',
+        marginBottom: 10,
+        color: '#34495e',
+    },
+    message: {
+        fontSize: 15,
+        color: '#555',
+        marginBottom: 20,
+    },
+    actions: {
+        flexDirection: 'row',
+        justifyContent: 'flex-end',
+    },
+    button: {
+        paddingVertical: 10,
+        paddingHorizontal: 16,
+        borderRadius: 10,
+        marginLeft: 10,
+    },
+    cancelButton: {
+        backgroundColor: '#f0f0f0',
+    },
+    rejectButton: {
+        backgroundColor: '#e74c3c',
+    },
+    buttonText: {
+        fontWeight: '600',
+        fontSize: 14,
+        color: '#fff',
+    },
+    cancelText: {
+        color: '#34495e',
+    },
 });

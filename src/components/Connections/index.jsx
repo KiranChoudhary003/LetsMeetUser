@@ -2,7 +2,7 @@ import { BASE_URL } from '@env';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { BlurView } from '@react-native-community/blur';
 import LottieView from 'lottie-react-native';
-import React, { useEffect, useRef, useState } from 'react';
+import React, { useEffect, useRef, useState, useCallback } from 'react';
 import {
   ActivityIndicator,
   Animated,
@@ -142,20 +142,21 @@ const Connections = ({ navigation, route }) => {
   );
 
 
-  useEffect(() => {
-    const fetchData = async () => {
-      setLoading(true);
-      await Promise.all([
-        fetchPendingRequests(),
-        fetchAllUsers(eventId),
-      ]);
-      setLoading(false);
-      if (isFirstLoad) { setIsFirstLoad(false); }
-    };
+  const fetchData = async () => {
+    setLoading(true);
+    await Promise.all([
+      fetchPendingRequests(),
+      fetchAllUsers(eventId),
+    ]);
+    setLoading(false);
+    if (isFirstLoad) {
+      setIsFirstLoad(false);
+    }
+  };
 
+  useEffect(() => {
     fetchData();
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [eventId]);
+  }, []);
 
 
   useEffect(() => {
@@ -656,16 +657,16 @@ const Connections = ({ navigation, route }) => {
           {/* Attendees Tab */}
           <View style={{ width }}>
             {selectedTab === 'Attendees' && (
-              loading ? (
+              loading && isFirstLoad ? (
                 <View style={{ alignItems: 'center', marginTop: 40 }}>
                   <ActivityIndicator size="large" color="#34495e" />
                   <Text style={{ marginTop: 10, fontSize: 16, color: '#333' }}>
-                    Fetching connections...
+                    Loading attendee connections...
                   </Text>
                 </View>
               ) : attendeesFiltered.length === 0 ? (
                 <View style={styles.filterResultContainer}>
-                  <Text style={styles.filterResultText}>No connections found!</Text>
+                  <Text style={styles.filterResultText}>No attendees found!</Text>
                   <LottieView
                     style={styles.lottieContainer}
                     source={require('../../assets/Not-Found.json')}
@@ -692,11 +693,11 @@ const Connections = ({ navigation, route }) => {
           {/* Inbox Tab */}
           <View style={{ width }}>
             {selectedTab === 'Inbox' && (
-              loading ? (
+              loading && isFirstLoad ? (
                 <View style={{ alignItems: 'center', marginTop: 40 }}>
                   <ActivityIndicator size="large" color="#34495e" />
                   <Text style={{ marginTop: 10, fontSize: 16, color: '#333' }}>
-                    Fetching connections...
+                    Fetching connection requests...
                   </Text>
                 </View>
               ) : inboxFiltered.length === 0 ? (
