@@ -72,7 +72,7 @@ const Scanner = ({ navigation }) => {
     const setupSocket = async () => {
       try {
         const socket = await getSocket();
-        if (!socket) return; // prevent crashes if null
+        if (!socket) { return; } // prevent crashes if null
 
         activeSocket = socket;
 
@@ -137,7 +137,7 @@ const Scanner = ({ navigation }) => {
   }, [showPopup]);
 
   const onSuccess = async (e) => {
-    if (scanCompleted) return;
+    if (scanCompleted) { return; }
 
     Vibration.vibrate(150);
 
@@ -228,7 +228,7 @@ const Scanner = ({ navigation }) => {
             {device ? (
               <View
                 style={{
-                  height: 500,
+                  height: 450,
                   width: 295,
                   borderRadius: 20,
                   overflow: 'hidden',
@@ -389,7 +389,8 @@ const styles = StyleSheet.create({
   scannerBox: {
     width: 250,
     height: 250,
-    top: 0,
+    top: -35,
+    justifyContent: 'center',
     borderColor: '#34495e',
     borderWidth: 3,
     borderRadius: 20,
@@ -405,9 +406,9 @@ const styles = StyleSheet.create({
   },
   overlayContainer: {
     position: 'absolute',
-    top: '32%',
+    top: '50%',
     left: '50%',
-    transform: [{ translateX: -125 }],
+    transform: [{ translateX: -125 }, { translateY: -125 }],
     width: 250,
     height: 250,
     justifyContent: 'center',
@@ -415,6 +416,7 @@ const styles = StyleSheet.create({
     zIndex: 10,
     borderRadius: 20,
   },
+
   loadingOverlay: {
     position: 'absolute',
     top: 100,
