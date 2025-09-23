@@ -46,7 +46,11 @@ const QRCodeScreen = ({ navigation }) => {
 
   return (
     <>
-      <StatusBar barStyle={useColorScheme() === 'dark' ? 'light-content' : 'dark-content'} />
+      <StatusBar
+              translucent
+              backgroundColor="transparent"
+              barStyle="dark-content"
+            />
       <SafeAreaView style={{ flex: 1, backgroundColor: '#e8effc' }}>
         <View style={styles.header}>
           <TouchableOpacity onPress={() => navigation.goBack()}>

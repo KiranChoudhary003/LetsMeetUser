@@ -19,6 +19,7 @@ import {
     StatusBar,
     StyleSheet, Text, TouchableOpacity,
     useColorScheme,
+    KeyboardAvoidingView,
     View,
 } from 'react-native';
 import ImagePicker from 'react-native-image-crop-picker';
@@ -176,7 +177,7 @@ const UserProfile = ({ navigation, route }) => {
             triggerEventAlert('Your profile has been updated successfully.');
             fetchProfileData();
         } catch (err) {
-            if (err.code === 'E_PICKER_CANCELLED') {return;}
+            if (err.code === 'E_PICKER_CANCELLED') { return; }
             triggerEventAlert('Unable to upload the file. Please retry.');
         } finally {
             setUploading(false);
@@ -250,266 +251,268 @@ const UserProfile = ({ navigation, route }) => {
     };
 
     return (
-        <>
-            <StatusBar barStyle={isDarkMode ? 'light-content' : 'dark-content'} />
-            <SafeAreaView style={styles.container}>
-                <ScrollView contentContainerStyle={{ flexGrow: 1 }}>
-                    <View style={styles.headerContainer}>
-                        <View style={styles.header}>
-                            <TouchableOpacity onPress={() => navigation.goBack()}>
-                                <MaterialIcons name="arrow-back" size={24} color="#fff" />
+        <SafeAreaView style={{ flex: 1, backgroundColor: '#34495e' }}>
+            <StatusBar
+                translucent
+                backgroundColor="transparent"
+                barStyle="light-content"
+            />
+            <View style={styles.container}>
+                <View style={styles.headerContainer}>
+                    <View style={styles.header}>
+                        <TouchableOpacity onPress={() => navigation.goBack()}>
+                            <MaterialIcons name="arrow-back" size={24} color="#fff" />
+                        </TouchableOpacity>
+                        <Text style={styles.profileHeader}>Profile</Text>
+                        {isViewingOwnProfile ? (
+                            <TouchableOpacity onPress={handleProfileEdit}>
+                                <MaterialIcons name="edit" size={24} color="#fff" />
                             </TouchableOpacity>
-                            <Text style={styles.profileHeader}>Profile</Text>
-                            {isViewingOwnProfile ? (
-                                <TouchableOpacity onPress={handleProfileEdit}>
+                        ) : (
+                            <View style={{ width: 24 }} />
+                        )}
+                    </View>
+                    <View style={styles.userName}>
+                        <Text style={styles.userDetail}>
+                            {[userProfile.first_name, userProfile.middle_name, userProfile.last_name]
+                                .filter(Boolean)
+                                .join(" ")}
+                        </Text>
+
+                    </View>
+                    <View style={styles.userRole}>
+                        <Text style={styles.userDetail}>{userProfile.attendees_role}</Text>
+                    </View>
+                </View>
+
+                <View style={styles.profileWrapper}>
+                    <TouchableOpacity onPress={() => setProfileView(true)}>
+                        <Image source={getProfileImageSource()} style={styles.profile} />
+
+                        {uploading && (
+                            <View style={styles.uploadOverlay}>
+                                <ActivityIndicator size="large" color="#fff" />
+                            </View>
+                        )}
+                    </TouchableOpacity>
+                </View>
+                <Modal visible={profileView} transparent animationType="fade">
+                    <BlurView style={styles.blur} blurType="light" blurAmount={15} />
+                    <FontAwesome name="close" size={28} color="#ffffff" style={styles.profileCloseIcon} onPress={() => setProfileView(false)} />
+                    <TouchableOpacity style={styles.modalOverlay} onPressOut={() => setProfileView(false)}>
+                        <View style={styles.modalContent}>
+                            <Image
+                                source={getProfileImageSource()}
+                                style={styles.fullImage}
+                                resizeMode="contain"
+                            />
+                            {isViewingOwnProfile && (
+                                <TouchableOpacity style={styles.editIcon} onPress={() => setShowImageOptions(true)}>
                                     <MaterialIcons name="edit" size={24} color="#fff" />
                                 </TouchableOpacity>
-                            ) : (
-                                <View style={{ width: 24 }} />
                             )}
                         </View>
-                        <View style={styles.userName}>
-                            <Text style={styles.userDetail}>
-                                {[userProfile.first_name, userProfile.middle_name, userProfile.last_name]
-                                    .filter(Boolean)
-                                    .join(" ")}
-                            </Text>
-
-                        </View>
-                        <View style={styles.userRole}>
-                            <Text style={styles.userDetail}>{userProfile.attendees_role}</Text>
-                        </View>
+                    </TouchableOpacity>
+                </Modal>
+                {isViewingOwnProfile && loading ? (
+                    <View style={{ marginTop: 150, alignItems: 'center' }}>
+                        <ActivityIndicator size="large" color="#34495e" />
+                        <Text style={{ marginTop: 10, color: '#34495e', fontWeight: '600' }}>Loading Profile...</Text>
                     </View>
-
-                    <View style={styles.profileWrapper}>
-                        <TouchableOpacity onPress={() => setProfileView(true)}>
-                            <Image source={getProfileImageSource()} style={styles.profile} />
-
-                            {uploading && (
-                                <View style={styles.uploadOverlay}>
-                                    <ActivityIndicator size="large" color="#fff" />
-                                </View>
+                ) : (
+                    <View style={styles.user}>
+                        <View style={styles.iconRow}>
+                            {userProfile.email && (
+                                <TouchableOpacity
+                                    onPress={() => Linking.openURL(`mailto:${userProfile.email}`)}
+                                    activeOpacity={0.7}
+                                    style={styles.iconButton}
+                                >
+                                    <MaterialIcons name="email" size={24} color="#34495e" />
+                                </TouchableOpacity>
                             )}
-                        </TouchableOpacity>
-                    </View>
-                    <Modal visible={profileView} transparent animationType="fade">
-                        <BlurView style={styles.blur} blurType="light" blurAmount={15} />
-                        <FontAwesome name="close" size={28} color="#ffffff" style={styles.profileCloseIcon} onPress={() => setProfileView(false)} />
-                        <TouchableOpacity style={styles.modalOverlay} onPressOut={() => setProfileView(false)}>
-                            <View style={styles.modalContent}>
-                                <Image
-                                    source={getProfileImageSource()}
-                                    style={styles.fullImage}
-                                    resizeMode="contain"
+
+                            {userProfile.linkedin_url && (
+                                <TouchableOpacity
+                                    onPress={() => Linking.openURL(userProfile.linkedin_url)}
+                                    activeOpacity={0.7}
+                                    style={styles.iconButton}
+                                >
+                                    <FontAwesome name="linkedin" size={24} color="#0A66C2" />
+                                </TouchableOpacity>
+                            )}
+                            <TouchableOpacity onPress={handleQRCode} style={styles.iconButton} activeOpacity={0.7}>
+                                <MaterialCommunityIcons name="qrcode-scan"
+                                    size={24}
+                                    color="#34495e"
                                 />
-                                {isViewingOwnProfile && (
-                                    <TouchableOpacity style={styles.editIcon} onPress={() => setShowImageOptions(true)}>
-                                        <MaterialIcons name="edit" size={24} color="#fff" />
-                                    </TouchableOpacity>
+                            </TouchableOpacity>
+                        </View>
+
+                        <View style={styles.preferenceSection}>
+                            <View style={styles.preferenceRow}>
+                                <Text style={styles.preferenceLabel}>Company Name: </Text>
+                                <Text style={styles.companyDetails}>
+                                    {userProfile.company_name && userProfile.company_name.trim() !== ''
+                                        ? userProfile.company_name
+                                        : 'Not Provided'}
+                                </Text>
+                            </View>
+
+                            <View style={styles.preferenceRow}>
+                                <Text style={styles.preferenceLabel}>Preferences:</Text>
+
+                                {userProfile.preference?.length > 0 ? null : (
+                                    <Text style={styles.noneText}>None</Text>
                                 )}
                             </View>
-                        </TouchableOpacity>
-                    </Modal>
-                    {isViewingOwnProfile && loading ? (
-                        <View style={{ marginTop: 150, alignItems: 'center' }}>
-                            <ActivityIndicator size="large" color="#34495e" />
-                            <Text style={{ marginTop: 10, color: '#34495e', fontWeight: '600' }}>Loading Profile...</Text>
-                        </View>
-                    ) : (
-                        <View style={styles.user}>
-                            <View style={styles.iconRow}>
-                                {userProfile.email && (
-                                    <TouchableOpacity
-                                        onPress={() => Linking.openURL(`mailto:${userProfile.email}`)}
-                                        activeOpacity={0.7}
-                                        style={styles.iconButton}
-                                    >
-                                        <MaterialIcons name="email" size={24} color="#34495e" />
-                                    </TouchableOpacity>
-                                )}
 
-                                {userProfile.linkedin_url && (
-                                    <TouchableOpacity
-                                        onPress={() => Linking.openURL(userProfile.linkedin_url)}
-                                        activeOpacity={0.7}
-                                        style={styles.iconButton}
-                                    >
-                                        <FontAwesome name="linkedin" size={24} color="#0A66C2" />
-                                    </TouchableOpacity>
-                                )}
-                                <TouchableOpacity onPress={handleQRCode} style={styles.iconButton} activeOpacity={0.7}>
-                                    <MaterialCommunityIcons name="qrcode-scan"
-                                        size={24}
-                                        color="#34495e"
+                            {userProfile.preference?.length > 0 && (
+                                <ScrollView
+                                    style={styles.preferenceScroll}
+                                    contentContainerStyle={styles.tagContainer}
+                                    showsVerticalScrollIndicator={false}
+                                >
+                                    {userProfile.preference.map((item, index) => (
+                                        <View key={index} style={styles.tag}>
+                                            <Text style={styles.tagText}>{item}</Text>
+                                        </View>
+                                    ))}
+                                </ScrollView>
+                            )}
+                        </View>
+
+                        {isViewingOwnProfile && (
+                            logoutLoading ? (
+                                <ActivityIndicator size="large" color="#34495e" style={{ marginTop: 10 }} />
+                            ) : (
+                                <TouchableOpacity onPress={handleLogout}>
+                                    <Text style={styles.logout}>Logout</Text>
+                                </TouchableOpacity>
+                            ))}
+                    </View>
+                )}
+
+                <Modal
+                    visible={showImageOptions}
+                    transparent
+                    animationType="slide"
+                    onRequestClose={() => setShowImageOptions(false)}
+                >
+                    <TouchableOpacity
+                        style={styles.modalOverlayBottom}
+                        activeOpacity={1}
+                        onPressOut={() => setShowImageOptions(false)}
+                    >
+                        <View
+                            style={[
+                                styles.bottomModal,
+                                { backgroundColor: isDarkMode ? '#1c1c1e' : '#fff', shadowColor: isDarkMode ? '#000' : '#aaa' }
+                            ]}
+                        >
+                            {/* Modal Header with Title + Close Icon */}
+                            <View style={{ flexDirection: 'row', justifyContent: 'space-between', width: '100%', marginBottom: 18, alignItems: 'center' }}>
+                                <Text
+                                    style={[
+                                        styles.modalTitle,
+                                        { color: isDarkMode ? '#fff' : '#000', fontSize: 18 } // white in dark, black in light
+                                    ]}
+                                >
+                                    Choose Option
+                                </Text>
+
+                                <TouchableOpacity onPress={() => setShowImageOptions(false)}>
+                                    <MaterialIcons
+                                        name="close"
+                                        size={28}
+                                        color={isDarkMode ? '#fff' : '#000'} // white in dark, black in light
                                     />
                                 </TouchableOpacity>
                             </View>
 
-                            <View style={styles.preferenceSection}>
-                                <View style={styles.preferenceRow}>
-                                    <Text style={styles.preferenceLabel}>Company Name: </Text>
-                                    <Text style={styles.companyDetails}>
-                                        {userProfile.company_name && userProfile.company_name.trim() !== ''
-                                            ? userProfile.company_name
-                                            : 'Not Provided'}
-                                    </Text>
-                                </View>
-
-                                <View style={styles.preferenceRow}>
-                                    <Text style={styles.preferenceLabel}>Preferences:</Text>
-
-                                    {userProfile.preference?.length > 0 ? null : (
-                                        <Text style={styles.noneText}>None</Text>
-                                    )}
-                                </View>
-
-                                {userProfile.preference?.length > 0 && (
-                                    <ScrollView
-                                        style={styles.preferenceScroll}
-                                        contentContainerStyle={styles.tagContainer}
-                                        showsVerticalScrollIndicator={false}
-                                    >
-                                        {userProfile.preference.map((item, index) => (
-                                            <View key={index} style={styles.tag}>
-                                                <Text style={styles.tagText}>{item}</Text>
-                                            </View>
-                                        ))}
-                                    </ScrollView>
-                                )}
-                            </View>
-
-                            {isViewingOwnProfile && (
-                                logoutLoading ? (
-                                    <ActivityIndicator size="large" color="#34495e" style={{ marginTop: 10 }} />
-                                ) : (
-                                    <TouchableOpacity onPress={handleLogout}>
-                                        <Text style={styles.logout}>Logout</Text>
-                                    </TouchableOpacity>
-                                ))}
-                        </View>
-                    )}
-
-                    <Modal
-                        visible={showImageOptions}
-                        transparent
-                        animationType="slide"
-                        onRequestClose={() => setShowImageOptions(false)}
-                    >
-                        <TouchableOpacity
-                            style={styles.modalOverlayBottom}
-                            activeOpacity={1}
-                            onPressOut={() => setShowImageOptions(false)}
-                        >
-                            <View
+                            {/* Take Photo Button */}
+                            <TouchableOpacity
                                 style={[
-                                    styles.bottomModal,
-                                    { backgroundColor: isDarkMode ? '#1c1c1e' : '#fff', shadowColor: isDarkMode ? '#000' : '#aaa' }
+                                    styles.optionButton,
+                                    { backgroundColor: isDarkMode ? '#2c2c2e' : '#f0f4fa' }
                                 ]}
+                                onPress={() => pickImage(true)}
                             >
-                                {/* Modal Header with Title + Close Icon */}
-                                <View style={{ flexDirection: 'row', justifyContent: 'space-between', width: '100%', marginBottom: 18, alignItems: 'center' }}>
-                                    <Text
-                                        style={[
-                                            styles.modalTitle,
-                                            { color: isDarkMode ? '#fff' : '#000', fontSize: 18 } // white in dark, black in light
-                                        ]}
-                                    >
-                                        Choose Option
-                                    </Text>
-
-                                    <TouchableOpacity onPress={() => setShowImageOptions(false)}>
-                                        <MaterialIcons
-                                            name="close"
-                                            size={28}
-                                            color={isDarkMode ? '#fff' : '#000'} // white in dark, black in light
-                                        />
-                                    </TouchableOpacity>
-                                </View>
-
-                                {/* Take Photo Button */}
-                                <TouchableOpacity
+                                <MaterialIcons
+                                    name="photo-camera"
+                                    size={24}
+                                    color={isDarkMode ? '#fff' : '#000'} // white/black
+                                    style={{ marginRight: 10 }}
+                                />
+                                <Text
                                     style={[
-                                        styles.optionButton,
-                                        { backgroundColor: isDarkMode ? '#2c2c2e' : '#f0f4fa' }
+                                        styles.optionText,
+                                        { color: isDarkMode ? '#fff' : '#000' } // white/black
                                     ]}
-                                    onPress={() => pickImage(true)}
                                 >
-                                    <MaterialIcons
-                                        name="photo-camera"
-                                        size={24}
-                                        color={isDarkMode ? '#fff' : '#000'} // white/black
-                                        style={{ marginRight: 10 }}
-                                    />
-                                    <Text
-                                        style={[
-                                            styles.optionText,
-                                            { color: isDarkMode ? '#fff' : '#000' } // white/black
-                                        ]}
-                                    >
-                                        Take Photo
-                                    </Text>
-                                </TouchableOpacity>
+                                    Take Photo
+                                </Text>
+                            </TouchableOpacity>
 
-                                {/* Choose from Gallery Button */}
-                                <TouchableOpacity
+                            {/* Choose from Gallery Button */}
+                            <TouchableOpacity
+                                style={[
+                                    styles.optionButton,
+                                    { backgroundColor: isDarkMode ? '#2c2c2e' : '#f0f4fa' }
+                                ]}
+                                onPress={() => pickImage(false)}
+                            >
+                                <MaterialIcons
+                                    name="photo-library"
+                                    size={24}
+                                    color={isDarkMode ? '#fff' : '#000'} // white/black
+                                    style={{ marginRight: 10 }}
+                                />
+                                <Text
                                     style={[
-                                        styles.optionButton,
-                                        { backgroundColor: isDarkMode ? '#2c2c2e' : '#f0f4fa' }
+                                        styles.optionText,
+                                        { color: isDarkMode ? '#fff' : '#000' } // white/black
                                     ]}
-                                    onPress={() => pickImage(false)}
                                 >
-                                    <MaterialIcons
-                                        name="photo-library"
-                                        size={24}
-                                        color={isDarkMode ? '#fff' : '#000'} // white/black
-                                        style={{ marginRight: 10 }}
-                                    />
-                                    <Text
-                                        style={[
-                                            styles.optionText,
-                                            { color: isDarkMode ? '#fff' : '#000' } // white/black
-                                        ]}
-                                    >
-                                        Choose from Gallery
-                                    </Text>
-                                </TouchableOpacity>
-                            </View>
-                        </TouchableOpacity>
-                    </Modal>
-                    <MessageModal
-                        transparent
-                        visible={AlertVisible}
-                        animationType="fade"
-                        onRequestClose={() => setAlertVisible(false)}
+                                    Choose from Gallery
+                                </Text>
+                            </TouchableOpacity>
+                        </View>
+                    </TouchableOpacity>
+                </Modal>
+                <MessageModal
+                    transparent
+                    visible={AlertVisible}
+                    animationType="fade"
+                    onRequestClose={() => setAlertVisible(false)}
+                >
+                    <TouchableOpacity
+                        style={styles.overlayBox}
+                        activeOpacity={1}
+                        onPressOut={() => setAlertVisible(false)}
                     >
-                        <TouchableOpacity
-                            style={styles.overlayBox}
-                            activeOpacity={1}
-                            onPressOut={() => setAlertVisible(false)}
-                        >
-                            {/* Blur background */}
-                            <BlurView
-                                style={StyleSheet.absoluteFill}
-                                blurType="light"                           // keep it light for premium subtlety
-                                blurAmount={3}                            // stronger blur for soft glass effect
-                                reducedTransparencyFallbackColor="rgba(255,255,255,0.1)"  // very subtle fallback
-                            />
+                        {/* Blur background */}
+                        <BlurView
+                            style={StyleSheet.absoluteFill}
+                            blurType="light"                           // keep it light for premium subtlety
+                            blurAmount={3}                            // stronger blur for soft glass effect
+                            reducedTransparencyFallbackColor="rgba(255,255,255,0.1)"  // very subtle fallback
+                        />
 
-                            <View style={styles.containerBox}>
-                                <Text style={styles.titleBox}>Message</Text>
-                                <Text style={styles.messageBox}>{AlertMessage}</Text>
-                                <TouchableOpacity
-                                    onPress={() => setAlertVisible(false)}
-                                    style={styles.buttonBox}
-                                >
-                                    <Text style={styles.buttonTextBox}>OK</Text>
-                                </TouchableOpacity>
-                            </View>
-                        </TouchableOpacity>
-                    </MessageModal>
-                </ScrollView>
-            </SafeAreaView >
-        </>
+                        <View style={styles.containerBox}>
+                            <Text style={styles.titleBox}>Message</Text>
+                            <Text style={styles.messageBox}>{AlertMessage}</Text>
+                            <TouchableOpacity
+                                onPress={() => setAlertVisible(false)}
+                                style={styles.buttonBox}
+                            >
+                                <Text style={styles.buttonTextBox}>OK</Text>
+                            </TouchableOpacity>
+                        </View>
+                    </TouchableOpacity>
+                </MessageModal>
+            </View >
+        </SafeAreaView>
     );
 };
 
@@ -552,7 +555,7 @@ const styles = StyleSheet.create({
         alignItems: 'center',
         justifyContent: 'space-between',
         paddingHorizontal: 20,
-        paddingTop: 15,
+        marginTop: Platform.OS === 'android' ? StatusBar.currentHeight + 20 : 0,
     },
 
     profileHeader: {

@@ -214,7 +214,11 @@ const Login = ({ navigation, route }) => {
 
     return (
         <>
-            <StatusBar barStyle={useColorScheme() === 'dark' ? 'light-content' : 'dark-content'} />
+            <StatusBar
+                translucent
+                backgroundColor="transparent"
+                barStyle="dark-content"
+            />
             <KeyboardAvoidingView
                 style={styles.container}
                 behavior={Platform.OS === 'ios' ? 'padding' : 'padding'}

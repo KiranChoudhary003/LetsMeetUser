@@ -123,8 +123,12 @@ export default function MeetingRecords() {
     );
 
     return (
-        <SafeAreaView style={{ flex: 1 }}>
-            <StatusBar barStyle={useColorScheme() === 'dark' ? 'light-content' : 'dark-content'} />
+        <SafeAreaView style={{ flex: 1, backgroundColor: '#34495e', paddingTop: StatusBar.currentHeight }}>
+            <StatusBar
+                translucent
+                backgroundColor="transparent"
+                barStyle="light-content"
+            />
             <View style={styles.topBar}>
                 <TouchableOpacity style={styles.backButton} onPress={() => navigation.goBack()}>
                     <Icon name="arrow-back" size={24} color="#fff" />

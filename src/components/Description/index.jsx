@@ -142,9 +142,13 @@ const Description = ({ navigation, route }) => {
 
 
     return (
-        <>
-            <StatusBar barStyle={useColorScheme() === 'dark' ? 'light-content' : 'dark-content'} />
-            <SafeAreaView style={styles.container}>
+           <SafeAreaView style={{ flex: 1, backgroundColor: '#34495e', paddingTop: StatusBar.currentHeight }}>
+            <StatusBar
+                translucent
+                backgroundColor="transparent"
+                barStyle="light-content"
+            />
+            <View style={styles.container}>
                 <View style={styles.header}>
                     <TouchableOpacity style={styles.backArrow} onPress={() => navigation.goBack()}>
                         <Ionicons name="arrow-back-outline" size={24} color="#f9efef" />
@@ -281,8 +285,8 @@ const Description = ({ navigation, route }) => {
                         </View>
                     </TouchableOpacity>
                 </Modal>
-            </SafeAreaView>
-        </>
+            </View>
+        </SafeAreaView>
     );
 };
 

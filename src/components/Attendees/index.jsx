@@ -563,9 +563,13 @@ const Connections = ({ navigation, route }) => {
 
 
   return (
-    <>
-      <StatusBar barStyle={useColorScheme() === 'dark' ? 'light-content' : 'dark-content'} />
-      <SafeAreaView style={{ flex: 1, backgroundColor: '#e8effc', }}>
+    <SafeAreaView style={{ flex: 1, backgroundColor: '#34495e', paddingTop: StatusBar.currentHeight }}>
+      <StatusBar
+        translucent
+        backgroundColor="transparent"
+        barStyle="light-content"
+      />
+      <View style={{ flex: 1, backgroundColor: '#e8effc', }}>
         <View style={styles.header}>
           {/* Top row */}
           <View style={styles.headerTopRow}>
@@ -897,8 +901,8 @@ const Connections = ({ navigation, route }) => {
             </View>
           </View>
         </Modal>
-      </SafeAreaView>
-    </>
+      </View>
+    </SafeAreaView>
   );
 
 };

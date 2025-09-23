@@ -361,9 +361,13 @@ const ChatPage = ({ route }) => {
     };
 
     return (
-        <>
-            <StatusBar barStyle={useColorScheme() === 'dark' ? 'light-content' : 'dark-content'} />
-            <SafeAreaView style={styles.container}>
+        <SafeAreaView style={{ flex: 1, backgroundColor: '#34495e', paddingTop: StatusBar.currentHeight }}>
+            <StatusBar
+                translucent
+                backgroundColor="transparent"
+                barStyle="light-content"
+            />
+            <View style={styles.container}>
 
                 <View style={{ flex: 1 }}>
                     {loading ? (
@@ -476,8 +480,8 @@ const ChatPage = ({ route }) => {
                         </TouchableOpacity>
                     </View>
                 </Modal>
-            </SafeAreaView >
-        </>
+            </View >
+        </SafeAreaView>
     );
 };
 

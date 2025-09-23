@@ -20,7 +20,7 @@ import { initializeGlobalSocketListeners } from './src/components/InitializeSock
 import ChatPage from './src/components/Chatting/ChatPage';
 import UserFriendList from './src/components/Chatting/UserFriendList';
 import UserListScreen from './src/components/Chatting/UserListScreen';
-import Connection from './src/components/Connections';
+import Connection from './src/components/Attendees';
 import Description from './src/components/Description';
 import Edit from './src/components/Edit';
 import Layout from './src/components/Layout';
@@ -176,8 +176,14 @@ const App = () => {
         <SafeAreaProvider>
           <LocationProvider>
             <NavigationContainer ref={navigationRef}>
-              <StatusBar barStyle="dark-content" backgroundColor="#fff" />
-              <Stack.Navigator initialRouteName="Welcome" screenOptions={{ headerShown: false }}>
+              <Stack.Navigator
+                initialRouteName="Welcome"
+                screenOptions={{
+                  headerShown: false,
+                  statusBarColor: '#34495e',   // 👈 Android background
+                  statusBarStyle: 'light',     // 👈 icons/text color
+                }}
+              >
                 <Stack.Screen name="Welcome" component={Welcome} />
                 <Stack.Screen name="Login" component={Login} />
                 <Stack.Screen name="SignUp" component={SignUp} />

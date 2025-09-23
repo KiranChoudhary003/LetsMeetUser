@@ -467,271 +467,270 @@ const Home = ({ navigation }) => {
     }, [customDate]);
 
     return (
-        <View style={styles.background} resizeMode="cover">
-            <SafeAreaView style={styles.container}>
-                <StatusBar barStyle={useColorScheme() === 'dark' ? 'light-content' : 'dark-content'} />
-                <View style={styles.header}>
-                    <View style={styles.centerContainer}>
-                        <View style={styles.eventsLabel}>
-                            <Text style={styles.eventsLabelText}>Events for you</Text>
+        <SafeAreaView style={styles.container}>
+            <StatusBar
+                translucent
+                backgroundColor="transparent"
+                barStyle="light-content"
+            />
+            <View style={styles.header}>
+                <View style={styles.centerContainer}>
+                    <View style={styles.eventsLabel}>
+                        <Text style={styles.eventsLabelText}>Events for you</Text>
+                    </View>
+                    <TouchableOpacity
+                        onPress={() => {
+                            setPreviousFilter(selectedFilter);
+                            setShowFilters(!showFilters);
+                        }}
+                        style={styles.filterContainer}
+                    >
+                        <Text style={styles.filterButtonText}>Filter</Text>
+                        <View style={styles.filterIcon}>
+                            <Ionicons name="filter" size={16} color="#000" />
                         </View>
+                    </TouchableOpacity>
+                </View>
+                <View style={styles.selectedFilterContainer}>
+                    {selectedFilter !== 'All' ? (
                         <TouchableOpacity
                             onPress={() => {
-                                setPreviousFilter(selectedFilter);
-                                setShowFilters(!showFilters);
+                                setSelectedFilter('All');
+                                setCustomDate(new Date());
+                                const filtered = filterEvents(eventData, 'All', null, location);
+                                setFilteredEvents(filtered);
                             }}
-                            style={styles.filterContainer}
+                            style={styles.clearFilterButton}
                         >
-                            <Text style={styles.filterButtonText}>Filter</Text>
-                            <View style={styles.filterIcon}>
-                                <Ionicons name="filter" size={16} color="#000" />
+                            <View style={styles.filterContent}>
+                                <Text style={styles.selectedFilter}>
+                                    {customDate && selectedFilter === 'Choose from Calendar'
+                                        ? formatDate(customDate)
+                                        : selectedFilter}
+                                </Text>
+                                <Ionicons name="close-circle" size={18} color="#34495e" style={styles.closeIcon} />
                             </View>
                         </TouchableOpacity>
-                    </View>
-                    <View style={styles.selectedFilterContainer}>
-                        {selectedFilter !== 'All' ? (
-                            <TouchableOpacity
-                                onPress={() => {
-                                    setSelectedFilter('All');
-                                    setCustomDate(new Date());
-                                    const filtered = filterEvents(eventData, 'All', null, location);
-                                    setFilteredEvents(filtered);
-                                }}
-                                style={styles.clearFilterButton}
-                            >
-                                <View style={styles.filterContent}>
-                                    <Text style={styles.selectedFilter}>
-                                        {customDate && selectedFilter === 'Choose from Calendar'
-                                            ? formatDate(customDate)
-                                            : selectedFilter}
-                                    </Text>
-                                    <Ionicons name="close-circle" size={18} color="#34495e" style={styles.closeIcon} />
-                                </View>
-                            </TouchableOpacity>
-                        ) : (
-                            <View style={{ height: 23 }} />
-                        )}
-                    </View>
-                </View>
-                <ScrollView contentContainerStyle={styles.scrollView}
-                    refreshControl={
-                        <RefreshControl
-                            refreshing={loading && !isFirstLoad && eventData.length > 0}
-                            onRefresh={fetchUpcomingEvents}
-                            colors={["#34495e"]}
-                            tintColor="#34495e"
-                        />
-                    }>
-                    {showFilters && (
-                        <Modal
-                            animationType="slide"
-                            transparent
-                            visible={showFilters}
-                            onRequestClose={() => setShowFilters(false)}
-                        >
-                            <TouchableOpacity
-                                style={styles.filterOptionsContainer}
-                                activeOpacity={1}
-                                onPressOut={() => setShowFilters(false)}
-                            >
-                                <TouchableWithoutFeedback>
-                                    <View style={styles.filterOptions}>
-                                        {['All', 'Today', 'Tomorrow', 'Choose from Calendar', 'Near Me'].map((option) => (
-                                            <TouchableOpacity
-                                                key={option}
-                                                style={[styles.filterOption, selectedFilter === option && styles.filterActive]}
-                                                onPress={() => handleFilterChange(option)}
-                                            >
-                                                <Text style={styles.filterText}>{option}</Text>
-                                            </TouchableOpacity>
-                                        ))}
-                                    </View>
-                                </TouchableWithoutFeedback>
-                            </TouchableOpacity>
-                        </Modal>
+                    ) : (
+                        <View style={{ height: 23 }} />
                     )}
-                    {showDatePicker && (
-                        <Modal
-                            animationType="fade"
-                            transparent
-                            visible={showDatePicker}
-                            onRequestClose={() => {
+                </View>
+            </View>
+            <ScrollView contentContainerStyle={styles.scrollView}
+                refreshControl={
+                    <RefreshControl
+                        refreshing={loading && !isFirstLoad && eventData.length > 0}
+                        onRefresh={fetchUpcomingEvents}
+                        colors={["#34495e"]}
+                        tintColor="#34495e"
+                    />
+                }>
+                {showFilters && (
+                    <Modal
+                        animationType="slide"
+                        transparent
+                        visible={showFilters}
+                        onRequestClose={() => setShowFilters(false)}
+                    >
+                        <TouchableOpacity
+                            style={styles.filterOptionsContainer}
+                            activeOpacity={1}
+                            onPressOut={() => setShowFilters(false)}
+                        >
+                            <TouchableWithoutFeedback>
+                                <View style={styles.filterOptions}>
+                                    {['All', 'Today', 'Tomorrow', 'Choose from Calendar', 'Near Me'].map((option) => (
+                                        <TouchableOpacity
+                                            key={option}
+                                            style={[styles.filterOption, selectedFilter === option && styles.filterActive]}
+                                            onPress={() => handleFilterChange(option)}
+                                        >
+                                            <Text style={styles.filterText}>{option}</Text>
+                                        </TouchableOpacity>
+                                    ))}
+                                </View>
+                            </TouchableWithoutFeedback>
+                        </TouchableOpacity>
+                    </Modal>
+                )}
+                {showDatePicker && (
+                    <Modal
+                        animationType="fade"
+                        transparent
+                        visible={showDatePicker}
+                        onRequestClose={() => {
+                            setHasDateBeenPicked(false);
+                            setShowDatePicker(false);
+                        }}
+                    >
+                        <TouchableOpacity
+                            style={styles.modalOverlay}
+                            activeOpacity={1}
+                            onPressOut={() => {
+                                if (!hasDateBeenPicked) {
+                                    setCustomDate(undefined);
+                                    setSelectedFilter(previousFilter);
+                                }
                                 setHasDateBeenPicked(false);
                                 setShowDatePicker(false);
                             }}
                         >
-                            <TouchableOpacity
-                                style={styles.modalOverlay}
-                                activeOpacity={1}
-                                onPressOut={() => {
-                                    if (!hasDateBeenPicked) {
-                                        setCustomDate(undefined);
-                                        setSelectedFilter(previousFilter);
-                                    }
-                                    setHasDateBeenPicked(false);
-                                    setShowDatePicker(false);
-                                }}
-                            >
-                                <TouchableWithoutFeedback>
-                                    <View style={styles.modalContainer}>
-                                        <TouchableOpacity
-                                            style={styles.closeButton}
-                                            onPress={() => {
-                                                setShowDatePicker(false);
-                                                setHasDateBeenPicked(false);
-                                                setSelectedFilter(previousFilter);
-                                            }}
-                                        >
-                                            <Text style={styles.closeButtonText}>×</Text>
-                                        </TouchableOpacity>
-                                        <Text style={styles.modalTitle}>Select a Date</Text>
-                                        <Calendar
-                                            current={
-                                                customDate
-                                                    ? formatDateToLocalYYYYMMDD(customDate)
-                                                    : formatDateToLocalYYYYMMDD(new Date())
-                                            }
-                                            markedDates={
-                                                customDate
-                                                    ? {
-                                                        [formatDateToLocalYYYYMMDD(customDate)]: {
-                                                            selected: true,
-                                                            selectedColor: '#7680de',
-                                                            selectedTextColor: '#fff',
-                                                        },
-                                                    }
-                                                    : {}
-                                            }
-                                            onDayPress={({ dateString }) => {
-                                                const [year, month, day] = dateString.split('-');
-                                                const pickedDate = new Date(year, month - 1, day);
-                                                setCustomDate(pickedDate);
-                                                setSelectedFilter('Choose from Calendar');
-                                                const filtered = filterEvents(eventData, 'Choose from Calendar', pickedDate, location);
-                                                setFilteredEvents(filtered);
-                                                setHasDateBeenPicked(true);
-                                                setShowDatePicker(false);
-                                            }}
-                                        />
-                                    </View>
-                                </TouchableWithoutFeedback>
-                            </TouchableOpacity>
-                        </Modal>
-                    )}
-                    {loading && eventData.length === 0 ? (
-                        <View style={{ marginTop: 40, alignItems: 'center' }}>
-                            <ActivityIndicator size="large" color="#34495e" />
-                            <Text style={{ marginTop: 10, color: '#34495e', fontWeight: '600' }}>Loading events...</Text>
-                        </View>
-                    ) : (
-                        <>
-                            {Object.keys(events).length === 0 && (
-                                <View style={{ flex: 1, justifyContent: 'center', alignItems: 'center', height: 400 }}>
-                                    <Text style={{ color: '#555', fontSize: 16, textAlign: 'center' }}>
-                                        No Events Available.
-                                    </Text>
-                                </View>
-                            )}
-                            {Object.entries(events).map(([month, data]) => (
-                                <View key={month} style={styles.monthSection}>
-                                    <Text style={styles.monthTitle}>{`${data.monthName} ${data.year}`}</Text>
-                                    {data.events.map((event) => (
-                                        <EventCard
-                                            key={event.id.toString()}
-                                            id={event.id}
-                                            name={event.name}
-                                            organizer={event.organizer}
-                                            date={event.date}
-                                            lat={event.lat}
-                                            lon={event.lon}
-                                            isRegistered={event.is_registered}
-                                            checkInAvailable={event.check_in_available}
-                                            already_checked_in={event.already_checked_in}
-                                            checkInDistance={event.check_in_distance}
-                                            onRegister={() => handleRegister(event.id)}
-                                            onCheckIn={() => handleCheckIn(event.id)}
-                                            onPress={() =>
-                                                navigation.navigate('Description', {
-                                                    id: event.id,
-                                                    name: event.name,
-                                                    organizer: event.organizer,
-                                                    description: event.description,
-                                                    date: event.date,
-                                                    endDate: event.endDate,
-                                                    lat: event.lat,
-                                                    lon: event.lon,
-                                                    webUrl: event.webUrl,
-                                                    banner: event.banner,
-                                                    isRegistered: event.is_registered,
-                                                    checkInAvailable: event.check_in_available,
-                                                    already_checked_in: event.already_checked_in,
-                                                    checkInDistance: event.check_in_distance,
-                                                    onRegisterSuccess: (eventId, latestCheckInAvailable) => {
-                                                        setEventData((prev) =>
-                                                            prev.map((item) =>
-                                                                item.id === eventId
-                                                                    ? { ...item, is_registered: true, check_in_available: latestCheckInAvailable }
-                                                                    : item
-                                                            )
-                                                        );
+                            <TouchableWithoutFeedback>
+                                <View style={styles.modalContainer}>
+                                    <TouchableOpacity
+                                        style={styles.closeButton}
+                                        onPress={() => {
+                                            setShowDatePicker(false);
+                                            setHasDateBeenPicked(false);
+                                            setSelectedFilter(previousFilter);
+                                        }}
+                                    >
+                                        <Text style={styles.closeButtonText}>×</Text>
+                                    </TouchableOpacity>
+                                    <Text style={styles.modalTitle}>Select a Date</Text>
+                                    <Calendar
+                                        current={
+                                            customDate
+                                                ? formatDateToLocalYYYYMMDD(customDate)
+                                                : formatDateToLocalYYYYMMDD(new Date())
+                                        }
+                                        markedDates={
+                                            customDate
+                                                ? {
+                                                    [formatDateToLocalYYYYMMDD(customDate)]: {
+                                                        selected: true,
+                                                        selectedColor: '#7680de',
+                                                        selectedTextColor: '#fff',
                                                     },
-                                                    onCheckInSuccess: (eventId) => {
-                                                        setEventData((prev) =>
-                                                            prev.map((item) =>
-                                                                item.id === eventId ? { ...item, already_checked_in: true } : item
-                                                            )
-                                                        );
-                                                    },
-                                                })
-                                            }
-                                        />
-                                    ))}
+                                                }
+                                                : {}
+                                        }
+                                        onDayPress={({ dateString }) => {
+                                            const [year, month, day] = dateString.split('-');
+                                            const pickedDate = new Date(year, month - 1, day);
+                                            setCustomDate(pickedDate);
+                                            setSelectedFilter('Choose from Calendar');
+                                            const filtered = filterEvents(eventData, 'Choose from Calendar', pickedDate, location);
+                                            setFilteredEvents(filtered);
+                                            setHasDateBeenPicked(true);
+                                            setShowDatePicker(false);
+                                        }}
+                                    />
                                 </View>
-                            ))}
-                        </>
-                    )}
-                </ScrollView>
-                <Modal
-                    transparent
-                    visible={AlertVisible}
-                    animationType="fade"
-                    onRequestClose={() => setAlertVisible(false)}
+                            </TouchableWithoutFeedback>
+                        </TouchableOpacity>
+                    </Modal>
+                )}
+                {loading && eventData.length === 0 ? (
+                    <View style={{ marginTop: 40, alignItems: 'center' }}>
+                        <ActivityIndicator size="large" color="#34495e" />
+                        <Text style={{ marginTop: 10, color: '#34495e', fontWeight: '600' }}>Loading events...</Text>
+                    </View>
+                ) : (
+                    <>
+                        {Object.keys(events).length === 0 && (
+                            <View style={{ flex: 1, justifyContent: 'center', alignItems: 'center', height: 400 }}>
+                                <Text style={{ color: '#555', fontSize: 16, textAlign: 'center' }}>
+                                    No Events Available.
+                                </Text>
+                            </View>
+                        )}
+                        {Object.entries(events).map(([month, data]) => (
+                            <View key={month} style={styles.monthSection}>
+                                <Text style={styles.monthTitle}>{`${data.monthName} ${data.year}`}</Text>
+                                {data.events.map((event) => (
+                                    <EventCard
+                                        key={event.id.toString()}
+                                        id={event.id}
+                                        name={event.name}
+                                        organizer={event.organizer}
+                                        date={event.date}
+                                        lat={event.lat}
+                                        lon={event.lon}
+                                        isRegistered={event.is_registered}
+                                        checkInAvailable={event.check_in_available}
+                                        already_checked_in={event.already_checked_in}
+                                        checkInDistance={event.check_in_distance}
+                                        onRegister={() => handleRegister(event.id)}
+                                        onCheckIn={() => handleCheckIn(event.id)}
+                                        onPress={() =>
+                                            navigation.navigate('Description', {
+                                                id: event.id,
+                                                name: event.name,
+                                                organizer: event.organizer,
+                                                description: event.description,
+                                                date: event.date,
+                                                endDate: event.endDate,
+                                                lat: event.lat,
+                                                lon: event.lon,
+                                                webUrl: event.webUrl,
+                                                banner: event.banner,
+                                                isRegistered: event.is_registered,
+                                                checkInAvailable: event.check_in_available,
+                                                already_checked_in: event.already_checked_in,
+                                                checkInDistance: event.check_in_distance,
+                                                onRegisterSuccess: (eventId, latestCheckInAvailable) => {
+                                                    setEventData((prev) =>
+                                                        prev.map((item) =>
+                                                            item.id === eventId
+                                                                ? { ...item, is_registered: true, check_in_available: latestCheckInAvailable }
+                                                                : item
+                                                        )
+                                                    );
+                                                },
+                                                onCheckInSuccess: (eventId) => {
+                                                    setEventData((prev) =>
+                                                        prev.map((item) =>
+                                                            item.id === eventId ? { ...item, already_checked_in: true } : item
+                                                        )
+                                                    );
+                                                },
+                                            })
+                                        }
+                                    />
+                                ))}
+                            </View>
+                        ))}
+                    </>
+                )}
+            </ScrollView>
+            <Modal
+                transparent
+                visible={AlertVisible}
+                animationType="fade"
+                onRequestClose={() => setAlertVisible(false)}
+            >
+                <TouchableOpacity
+                    style={styles.overlayBox}
+                    activeOpacity={1}
+                    onPressOut={() => setAlertVisible(false)}
                 >
-                    <TouchableOpacity
-                        style={styles.overlayBox}
-                        activeOpacity={1}
-                        onPressOut={() => setAlertVisible(false)}
-                    >
-                        {/* Blur background */}
-                        <BlurView
-                            style={StyleSheet.absoluteFill}
-                            blurType="light"                           // keep it light for premium subtlety
-                            blurAmount={3}                            // stronger blur for soft glass effect
-                            reducedTransparencyFallbackColor="rgba(255,255,255,0.1)"  // very subtle fallback
-                        />
+                    {/* Blur background */}
+                    <BlurView
+                        style={StyleSheet.absoluteFill}
+                        blurType="light"                           // keep it light for premium subtlety
+                        blurAmount={3}                            // stronger blur for soft glass effect
+                        reducedTransparencyFallbackColor="rgba(255,255,255,0.1)"  // very subtle fallback
+                    />
 
-                        <View style={styles.containerBox}>
-                            <Text style={styles.titleBox}>Message</Text>
-                            <Text style={styles.messageBox}>{AlertMessage}</Text>
-                            <TouchableOpacity
-                                onPress={() => setAlertVisible(false)}
-                                style={styles.buttonBox}
-                            >
-                                <Text style={styles.buttonTextBox}>OK</Text>
-                            </TouchableOpacity>
-                        </View>
-                    </TouchableOpacity>
-                </Modal>
-            </SafeAreaView>
-        </View>
+                    <View style={styles.containerBox}>
+                        <Text style={styles.titleBox}>Message</Text>
+                        <Text style={styles.messageBox}>{AlertMessage}</Text>
+                        <TouchableOpacity
+                            onPress={() => setAlertVisible(false)}
+                            style={styles.buttonBox}
+                        >
+                            <Text style={styles.buttonTextBox}>OK</Text>
+                        </TouchableOpacity>
+                    </View>
+                </TouchableOpacity>
+            </Modal>
+        </SafeAreaView>
     );
 };
 
 const styles = StyleSheet.create({
     container: {
-        flex: 1,
-    },
-    background: {
         flex: 1,
         resizeMode: 'cover',
         backgroundColor: '#e8effc',

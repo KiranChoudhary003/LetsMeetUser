@@ -203,9 +203,13 @@ export default function UserListScreen() {
     };
 
     return (
-        <>
-            <StatusBar barStyle={useColorScheme() === 'dark' ? 'light-content' : 'dark-content'} />
-            <SafeAreaView style={styles.safeContainer}>
+        <SafeAreaView style={{ flex: 1, backgroundColor: '#34495e' }}>
+            <StatusBar
+                translucent
+                backgroundColor="transparent"
+                barStyle="light-content"
+            />
+            <View style={styles.safeContainer}>
                 <View style={styles.headingContainer}>
                     <TouchableOpacity onPress={() => navigation.goBack()} style={styles.backButton}>
                         <Ionicons name="arrow-back-outline" size={24} color="white" />
@@ -334,8 +338,8 @@ export default function UserListScreen() {
                         </View>
                     </View>
                 </DeleteModal>
-            </SafeAreaView>
-        </>
+            </View>
+        </SafeAreaView>
     );
 }
 

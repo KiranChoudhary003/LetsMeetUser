@@ -217,132 +217,133 @@ const Scanner = ({ navigation }) => {
 
   return (
     <>
-      <StatusBar barStyle={useColorScheme() === 'dark' ? 'light-content' : 'dark-content'} />
+      <StatusBar
+        translucent
+        backgroundColor="transparent"
+        barStyle="dark-content"
+      />
       <SafeAreaView style={{ flex: 1, backgroundColor: '#e8effc' }}>
-        <View style={{ flex: 1, backgroundColor: '#e8effc' }}>
-          <TouchableOpacity style={styles.backButton} onPress={() => navigation.goBack()}>
-            <MaterialIcons name="arrow-back" size={24} color="#000" />
-          </TouchableOpacity>
+        <TouchableOpacity style={styles.backButton} onPress={() => navigation.goBack()}>
+          <MaterialIcons name="arrow-back" size={24} color="#000" />
+        </TouchableOpacity>
 
-          <View style={{ flex: 1, alignItems: 'center', top: 70 }}>
-            {device ? (
-              <View
-                style={{
-                  height: 450,
-                  width: 295,
-                  borderRadius: 20,
-                  overflow: 'hidden',
-                }}
-              >
-                <Camera
-                  style={{ flex: 1 }}
-                  device={device}
-                  isActive={true}
-                  codeScanner={codeScanner}
-                />
-              </View>
-            ) : (
-              <ActivityIndicator size="large" color="#34495e" style={{ marginTop: 200 }} />
-            )}
-          </View>
-
-          <View style={styles.overlayContainer}>
-            <View style={styles.scannerBox}>
-              <Animated.View
-                style={[
-                  styles.scannerLine,
-                  {
-                    transform: [
-                      {
-                        translateY: moveAnim.interpolate({
-                          inputRange: [0, 1],
-                          outputRange: [0, 250],
-                        }),
-                      },
-                    ],
-                  },
-                ]}
+        <View style={{ flex: 1, alignItems: 'center'}}>
+          {device ? (
+            <View
+              style={{
+                height: 450,
+                width: 295,
+                borderRadius: 20,
+                overflow: 'hidden',
+              }}
+            >
+              <Camera
+                style={{ flex: 1 }}
+                device={device}
+                isActive={true}
+                codeScanner={codeScanner}
               />
             </View>
-          </View>
-
-          <View style={styles.connect}>
-            <Text style={styles.centerText}>Scan to Connect New People</Text>
-          </View>
-
-          {loading && (
-            <View style={styles.loadingOverlay}>
-              <View style={styles.loadingContent}>
-                <ActivityIndicator size="large" color="#34495e" />
-                <Text style={styles.loadingText}>Checking connection...</Text>
-              </View>
-            </View>
+          ) : (
+            <ActivityIndicator size="large" color="#34495e" style={{ marginTop: 200 }} />
           )}
-
-          <Modal visible={showPopup} transparent animationType="fade">
-            <View style={styles.popupOverlay}>
-              <View style={styles.popupContainer}>
-                {(connectionStatus === 'fail' || connectionStatus === 'invalid') && (
-                  <Text style={styles.warningHeader}>
-                    {connectionStatus === 'invalid' ? 'Invalid QR Code' : 'Request Failed'}
-                  </Text>
-                )}
-
-                <Image
-                  source={
-                    isSuccessImage
-                      ? require('../../assets/success.png')
-                      : require('../../assets/notconnected.png')
-                  }
-                  style={styles.popupImage}
-                />
-
-                <Text
-                  style={[
-                    styles.popupText,
-                    {
-                      color:
-                        connectionStatus === 'success'
-                          ? '#2ecc71'
-                          : connectionStatus === 'invalid'
-                            ? 'red'
-                            : '#000',
-                    },
-                  ]}
-                >
-                  {connectionStatus === 'success' ? (
-                    <>
-                      Connection established with{' '}
-                      <Text style={styles.userName}>
-                        {fullName?.length > 12 ? fullName.substring(0, 12) + '...' : fullName}
-                      </Text>
-                    </>
-                  ) : scannedData && fullName ? (
-                    <>
-                      {failureReason}{' '}
-                      {failureReason.toLowerCase() !== "you're too far from the event." ? (
-                        <Text style={styles.userName}>
-                          {fullName.length > 12 ? fullName.substring(0, 12) + '...' : fullName}
-                        </Text>
-                      ) : (
-                        ' '
-                      )}
-                    </>
-                  ) : (
-                    'Connection Not Allowed'
-                  )}
-                </Text>
-              </View>
-            </View>
-          </Modal>
         </View>
+
+        <View style={styles.overlayContainer}>
+          <View style={styles.scannerBox}>
+            <Animated.View
+              style={[
+                styles.scannerLine,
+                {
+                  transform: [
+                    {
+                      translateY: moveAnim.interpolate({
+                        inputRange: [0, 1],
+                        outputRange: [0, 250],
+                      }),
+                    },
+                  ],
+                },
+              ]}
+            />
+          </View>
+        </View>
+
+        <View style={styles.connect}>
+          <Text style={styles.centerText}>Scan to Connect New People</Text>
+        </View>
+
+        {loading && (
+          <View style={styles.loadingOverlay}>
+            <View style={styles.loadingContent}>
+              <ActivityIndicator size="large" color="#34495e" />
+              <Text style={styles.loadingText}>Checking connection...</Text>
+            </View>
+          </View>
+        )}
+
+        <Modal visible={showPopup} transparent animationType="fade">
+          <View style={styles.popupOverlay}>
+            <View style={styles.popupContainer}>
+              {(connectionStatus === 'fail' || connectionStatus === 'invalid') && (
+                <Text style={styles.warningHeader}>
+                  {connectionStatus === 'invalid' ? 'Invalid QR Code' : 'Request Failed'}
+                </Text>
+              )}
+
+              <Image
+                source={
+                  isSuccessImage
+                    ? require('../../assets/success.png')
+                    : require('../../assets/notconnected.png')
+                }
+                style={styles.popupImage}
+              />
+
+              <Text
+                style={[
+                  styles.popupText,
+                  {
+                    color:
+                      connectionStatus === 'success'
+                        ? '#2ecc71'
+                        : connectionStatus === 'invalid'
+                          ? 'red'
+                          : '#000',
+                  },
+                ]}
+              >
+                {connectionStatus === 'success' ? (
+                  <>
+                    Connection established with{' '}
+                    <Text style={styles.userName}>
+                      {fullName?.length > 12 ? fullName.substring(0, 12) + '...' : fullName}
+                    </Text>
+                  </>
+                ) : scannedData && fullName ? (
+                  <>
+                    {failureReason}{' '}
+                    {failureReason.toLowerCase() !== "you're too far from the event." ? (
+                      <Text style={styles.userName}>
+                        {fullName.length > 12 ? fullName.substring(0, 12) + '...' : fullName}
+                      </Text>
+                    ) : (
+                      ' '
+                    )}
+                  </>
+                ) : (
+                  'Connection Not Allowed'
+                )}
+              </Text>
+            </View>
+          </View>
+        </Modal>
       </SafeAreaView>
     </>
   );
 };
 
 const styles = StyleSheet.create({
-  container: { flex: 1 },
   popupOverlay: {
     flex: 1,
     backgroundColor: 'rgba(0,0,0,0.6)',
@@ -439,7 +440,7 @@ const styles = StyleSheet.create({
     color: '#000000',
     fontWeight: '600',
   },
-  backButton: { paddingHorizontal: 12, paddingVertical: 12 },
+  backButton: { paddingHorizontal: 12, paddingVertical: 60 },
   connect: {
     display: 'flex',
     alignItems: 'center',

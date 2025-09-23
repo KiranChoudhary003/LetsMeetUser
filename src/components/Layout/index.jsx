@@ -14,7 +14,11 @@ const InnerStack = createStackNavigator();
 const Layout = () => {
   return (
     <SafeAreaView style={styles.safeArea} edges={['top', 'bottom']}>
-      <StatusBar barStyle={useColorScheme() === 'dark' ? 'light-content' : 'dark-content'} />
+      <StatusBar
+        translucent
+        backgroundColor="transparent"
+        barStyle="light-content"
+      />
       <View style={styles.container}>
         <View style={styles.header}>
           <Header />
@@ -42,7 +46,7 @@ export default Layout;
 const styles = StyleSheet.create({
   safeArea: {
     flex: 1,
-    backgroundColor: '#e8effc',
+    backgroundColor: '#34495e',
   },
   container: {
     flex: 1,

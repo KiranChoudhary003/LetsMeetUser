@@ -203,7 +203,11 @@ const SupportDesk = () => {
 
     return (
         <>
-            <StatusBar barStyle={useColorScheme() === 'dark' ? 'light-content' : 'dark-content'} />
+            <StatusBar
+                translucent
+                backgroundColor="transparent"
+                barStyle="light-content"
+            />
             <SafeAreaView style={styles.container}>
                 <View style={styles.header}>
                     <View style={styles.centerContainer}>

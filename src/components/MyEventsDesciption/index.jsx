@@ -120,177 +120,173 @@ const MyEventsDesciption = ({ navigation, route }) => {
     };
 
     return (
-        <>
-            <StatusBar barStyle={useColorScheme() === 'dark' ? 'light-content' : 'dark-content'} />
-            <View style={styles.background}>
-                <SafeAreaView style={styles.container}>
+        <SafeAreaView style={{ flex: 1, backgroundColor: '#34495e', paddingTop: StatusBar.currentHeight }}>
+            <StatusBar
+                translucent
+                backgroundColor="transparent"
+                barStyle="light-content"
+            />
+            <View style={styles.container}>
+                <View style={styles.header}>
+                    <TouchableOpacity style={styles.backArrow} onPress={() => navigation.goBack()}>
+                        <Ionicons name="arrow-back-outline" size={24} color="#f9efef" />
+                    </TouchableOpacity>
 
-                    <View style={styles.header}>
-                        <TouchableOpacity style={styles.backArrow} onPress={() => navigation.goBack()}>
-                            <Ionicons name="arrow-back-outline" size={24} color="#f9efef" />
-                        </TouchableOpacity>
+                    <Text
+                        style={styles.headerTitle}
+                        numberOfLines={1}
+                        ellipsizeMode="tail"
+                    >
+                        {name.split(' ').slice(0, 4).join(' ') + (name.split(' ').length > 4 ? '...' : '')}
+                    </Text>
 
-                        <Text
-                            style={styles.headerTitle}
-                            numberOfLines={1}
-                            ellipsizeMode="tail"
-                        >
-                            {name.split(' ').slice(0, 4).join(' ') + (name.split(' ').length > 4 ? '...' : '')}
-                        </Text>
+                    <TouchableOpacity
+                        onPress={() => navigation.navigate('UserMeetings', { event: { id } })}
+                        style={styles.iconWrapper}
+                    >
+                        <MaterialCommunityIcons
+                            name="card-account-details"
+                            size={26}
+                            color="#fff"
+                        />
+                    </TouchableOpacity>
+                </View>
 
-                        <TouchableOpacity
-                            onPress={() => navigation.navigate('UserMeetings', { event: { id } })}
-                            style={styles.iconWrapper}
-                        >
-                            <MaterialCommunityIcons
-                                name="card-account-details"
-                                size={26}
-                                color="#fff"
-                            />
-                        </TouchableOpacity>
+                <ScrollView contentContainerStyle={styles.scrollContainer}>
+                    {banner && (
+                        <Image
+                            source={{ uri: banner }}
+                            style={styles.poster}
+                            resizeMode="cover"
+                        />
+                    )}
+
+                    <View style={styles.locationLabel}>
+                        <Ionicons name="location-outline" size={16} color="#000" />
+                        <Text style={styles.locationText}> {organizer}</Text>
                     </View>
 
-                    <ScrollView contentContainerStyle={styles.scrollContainer}>
-                        {banner && (
-                            <Image
-                                source={{ uri: banner }}
-                                style={styles.poster}
-                                resizeMode="cover"
-                            />
-                        )}
+                    <Text style={styles.descriptionHeading}>Start Date</Text>
+                    <Text style={styles.descriptionText}>
+                        {new Date(start_date).toLocaleString('en-GB', {
+                            day: '2-digit',
+                            month: 'short',
+                            year: 'numeric',
+                            hour: '2-digit',
+                            minute: '2-digit',
+                            hour12: false,
+                        })}
+                    </Text>
 
-                        <View style={styles.locationLabel}>
-                            <Ionicons name="location-outline" size={16} color="#000" />
-                            <Text style={styles.locationText}> {organizer}</Text>
-                        </View>
+                    <Text style={styles.descriptionHeading}>End Date</Text>
+                    <Text style={styles.descriptionText}>
+                        {new Date(end_date).toLocaleString('en-GB', {
+                            day: '2-digit',
+                            month: 'short',
+                            year: 'numeric',
+                            hour: '2-digit',
+                            minute: '2-digit',
+                            hour12: false,
+                        })}
+                    </Text>
 
-                        <Text style={styles.descriptionHeading}>Start Date</Text>
-                        <Text style={styles.descriptionText}>
-                            {new Date(start_date).toLocaleString('en-GB', {
-                                day: '2-digit',
-                                month: 'short',
-                                year: 'numeric',
-                                hour: '2-digit',
-                                minute: '2-digit',
-                                hour12: false,
-                            })}
-                        </Text>
+                    <Text style={styles.descriptionHeading}>Description</Text>
+                    <Text style={styles.descriptionText}>{description}</Text>
 
-                        <Text style={styles.descriptionHeading}>End Date</Text>
-                        <Text style={styles.descriptionText}>
-                            {new Date(end_date).toLocaleString('en-GB', {
-                                day: '2-digit',
-                                month: 'short',
-                                year: 'numeric',
-                                hour: '2-digit',
-                                minute: '2-digit',
-                                hour12: false,
-                            })}
-                        </Text>
-
-                        <Text style={styles.descriptionHeading}>Description</Text>
-                        <Text style={styles.descriptionText}>{description}</Text>
-
-                        <TouchableOpacity
-                            style={[
-                                styles.attendButton,
-                                {
-                                    backgroundColor:
-                                        buttonState === 'checkedin'
-                                            ? 'transparent'
-                                            : buttonState === 'checkin'
-                                                ? checkInAvailable
-                                                    ? '#4CAF50'
-                                                    : '#aaa'
-                                                : '#e8effc',
-                                    borderColor:
-                                        buttonState === 'checkedin' || buttonState === 'missed'
-                                            ? 'transparent'
-                                            : '#000000',
-                                },
-                            ]}
-                            onPress={handlePress}
-                            disabled={isLoading || buttonState !== 'checkin'}
-                        >
-                            {isLoading ? (
-                                <ActivityIndicator size="small" color="#34495e" />
-                            ) : buttonState === 'checkedin' ? (
-                                <View style={styles.tickWrapper}>
-                                    <Text style={styles.tickText}>You have Attended the Event</Text>
-                                </View>
-                            ) : buttonState === 'missed' ? (
-                                <View style={styles.tickWrapper}>
-                                    <Text style={[styles.tickText, { color: 'red' }]}>
-                                        You didn't attend the event
-                                    </Text>
-                                </View>
-                            ) : (
-                                <Text style={[styles.attendButtonText, { color: 'white' }]}>
-                                    Check In
-                                </Text>
-                            )}
-                        </TouchableOpacity>
-
-                        <View style={styles.statsContainer}>
-                            <View style={styles.statBox}>
-                                <Text style={styles.statLabel}>Total connection made</Text>
-                                <Text style={styles.statNumber}>{totalConnections || 0}</Text>
-                            </View>
-                            <View style={styles.statBox}>
-                                <Text style={styles.statLabel}>Requested</Text>
-                                <Text style={styles.statNumber}>{pendingRequests || 0}</Text>
-                            </View>
-                            <View style={styles.statBox}>
-                                <Text style={styles.statLabel}>Accepted</Text>
-                                <Text style={styles.statNumber}>{approvedRequests || 0}</Text>
-                            </View  >
-                        </View>
-                    </ScrollView>
-                    <Modal
-                        transparent
-                        visible={AlertVisible}
-                        animationType="fade"
-                        onRequestClose={() => setAlertVisible(false)}
+                    <TouchableOpacity
+                        style={[
+                            styles.attendButton,
+                            {
+                                backgroundColor:
+                                    buttonState === 'checkedin'
+                                        ? 'transparent'
+                                        : buttonState === 'checkin'
+                                            ? checkInAvailable
+                                                ? '#4CAF50'
+                                                : '#aaa'
+                                            : '#e8effc',
+                                borderColor:
+                                    buttonState === 'checkedin' || buttonState === 'missed'
+                                        ? 'transparent'
+                                        : '#000000',
+                            },
+                        ]}
+                        onPress={handlePress}
+                        disabled={isLoading || buttonState !== 'checkin'}
                     >
-                        <TouchableOpacity
-                            style={styles.overlayBox}
-                            activeOpacity={1}
-                            onPressOut={() => setAlertVisible(false)}
-                        >
-                            {/* Blur background */}
-                            <BlurView
-                                style={StyleSheet.absoluteFill}
-                                blurType="light"                           // keep it light for premium subtlety
-                                blurAmount={3}                            // stronger blur for soft glass effect
-                                reducedTransparencyFallbackColor="rgba(255,255,255,0.1)"  // very subtle fallback
-                            />
-
-                            <View style={styles.containerBox}>
-                                <Text style={styles.titleBox}>Message</Text>
-                                <Text style={styles.messageBox}>{AlertMessage}</Text>
-                                <TouchableOpacity
-                                    onPress={() => setAlertVisible(false)}
-                                    style={styles.buttonBox}
-                                >
-                                    <Text style={styles.buttonTextBox}>OK</Text>
-                                </TouchableOpacity>
+                        {isLoading ? (
+                            <ActivityIndicator size="small" color="#34495e" />
+                        ) : buttonState === 'checkedin' ? (
+                            <View style={styles.tickWrapper}>
+                                <Text style={styles.tickText}>You have Attended the Event</Text>
                             </View>
-                        </TouchableOpacity>
-                    </Modal>
+                        ) : buttonState === 'missed' ? (
+                            <View style={styles.tickWrapper}>
+                                <Text style={[styles.tickText, { color: 'red' }]}>
+                                    You didn't attend the event
+                                </Text>
+                            </View>
+                        ) : (
+                            <Text style={[styles.attendButtonText, { color: 'white' }]}>
+                                Check In
+                            </Text>
+                        )}
+                    </TouchableOpacity>
 
-                </SafeAreaView>
+                    <View style={styles.statsContainer}>
+                        <View style={styles.statBox}>
+                            <Text style={styles.statLabel}>Total connection made</Text>
+                            <Text style={styles.statNumber}>{totalConnections || 0}</Text>
+                        </View>
+                        <View style={styles.statBox}>
+                            <Text style={styles.statLabel}>Requested</Text>
+                            <Text style={styles.statNumber}>{pendingRequests || 0}</Text>
+                        </View>
+                        <View style={styles.statBox}>
+                            <Text style={styles.statLabel}>Accepted</Text>
+                            <Text style={styles.statNumber}>{approvedRequests || 0}</Text>
+                        </View  >
+                    </View>
+                </ScrollView>
+                <Modal
+                    transparent
+                    visible={AlertVisible}
+                    animationType="fade"
+                    onRequestClose={() => setAlertVisible(false)}
+                >
+                    <TouchableOpacity
+                        style={styles.overlayBox}
+                        activeOpacity={1}
+                        onPressOut={() => setAlertVisible(false)}
+                    >
+                        {/* Blur background */}
+                        <BlurView
+                            style={StyleSheet.absoluteFill}
+                            blurType="light"                           // keep it light for premium subtlety
+                            blurAmount={3}                            // stronger blur for soft glass effect
+                            reducedTransparencyFallbackColor="rgba(255,255,255,0.1)"  // very subtle fallback
+                        />
+
+                        <View style={styles.containerBox}>
+                            <Text style={styles.titleBox}>Message</Text>
+                            <Text style={styles.messageBox}>{AlertMessage}</Text>
+                            <TouchableOpacity
+                                onPress={() => setAlertVisible(false)}
+                                style={styles.buttonBox}
+                            >
+                                <Text style={styles.buttonTextBox}>OK</Text>
+                            </TouchableOpacity>
+                        </View>
+                    </TouchableOpacity>
+                </Modal>
             </View>
-        </>
+        </SafeAreaView>
     );
 };
 
 export default MyEventsDesciption;
 
 const styles = StyleSheet.create({
-    background: {
-        flex: 1,
-        resizeMode: 'cover',
-    },
     container: {
         flex: 1,
         backgroundColor: '#e8effc',

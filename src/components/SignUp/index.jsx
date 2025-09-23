@@ -300,10 +300,14 @@ const SignUp = ({ navigation, route }) => {
 
 
     return (
-        <Provider>
-            <StatusBar barStyle={useColorScheme() === 'dark' ? 'light-content' : 'dark-content'} />
+        <SafeAreaView style={{ flex: 1, backgroundColor: '#e8effc'}}>
+            <Provider>
+                <StatusBar
+                    translucent
+                    backgroundColor="transparent"
+                    barStyle="dark-content"
+                />
 
-            <SafeAreaView style={styles.container}>
                 <RNModal
                     transparent
                     visible={errorModalVisible}
@@ -775,40 +779,40 @@ const SignUp = ({ navigation, route }) => {
                         </View>
                     </Modal>
 
-                </View>
-                <Modal
-                    animationType="fade"
-                    transparent
-                    visible={alertModalVisible}
-                    onRequestClose={() => {
-                        setalertModalVisible(false);
-                        if (alertAction) {
-                            alertAction();
-                            setAlertAction(null);
-                        }
-                    }}
-                >
-                    <View style={styles.modalOverlay}>
-                        <View style={[styles.modalContainer, { padding: 24 }]}>
-                            <Text style={styles.modalTitle}>Alert</Text>
-                            <Text style={styles.modalText}>{alertMessage}</Text>
-                            <TouchableOpacity
-                                style={[styles.doneButton, { marginTop: 16 }]}
-                                onPress={() => {
-                                    setalertModalVisible(false);
-                                    if (alertAction) {
-                                        alertAction();
-                                        setAlertAction(null);
-                                    }
-                                }}
-                            >
-                                <Text style={styles.doneText}>OK</Text>
-                            </TouchableOpacity>
+                    <Modal
+                        animationType="fade"
+                        transparent
+                        visible={alertModalVisible}
+                        onRequestClose={() => {
+                            setalertModalVisible(false);
+                            if (alertAction) {
+                                alertAction();
+                                setAlertAction(null);
+                            }
+                        }}
+                    >
+                        <View style={styles.modalOverlay}>
+                            <View style={[styles.modalContainer, { padding: 24 }]}>
+                                <Text style={styles.modalTitle}>Alert</Text>
+                                <Text style={styles.modalText}>{alertMessage}</Text>
+                                <TouchableOpacity
+                                    style={[styles.doneButton, { marginTop: 16 }]}
+                                    onPress={() => {
+                                        setalertModalVisible(false);
+                                        if (alertAction) {
+                                            alertAction();
+                                            setAlertAction(null);
+                                        }
+                                    }}
+                                >
+                                    <Text style={styles.doneText}>OK</Text>
+                                </TouchableOpacity>
+                            </View>
                         </View>
-                    </View>
-                </Modal>
-            </SafeAreaView >
-        </Provider>
+                    </Modal>
+                </View >
+            </Provider>
+        </SafeAreaView>
     );
 };
 
@@ -861,7 +865,6 @@ const styles = StyleSheet.create({
         color: '#888',
     },
     modalOverlay: {
-        backgroundColor: 'rgba(0, 0, 0, 0.3)',
         justifyContent: 'center',
         alignItems: 'center',
         height: '100%',

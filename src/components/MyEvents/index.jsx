@@ -325,7 +325,7 @@ const EventsScreen = ({ navigation }) => {
       console.error('🚨 fetchUpcomingEvents error:', error);
     } finally {
       setLoading(false);
-      if (isFirstLoad) {setIsFirstLoad(false);}
+      if (isFirstLoad) { setIsFirstLoad(false); }
     }
   };
 
@@ -353,9 +353,9 @@ const EventsScreen = ({ navigation }) => {
     <View style={styles.background}>
       <SafeAreaView style={styles.container}>
         <StatusBar
-          barStyle={
-            useColorScheme() === "dark" ? "light-content" : "dark-content"
-          }
+          translucent
+          backgroundColor="transparent"
+          barStyle="light-content"
         />
         <View style={styles.header}>
           <View style={styles.centerContainer}>

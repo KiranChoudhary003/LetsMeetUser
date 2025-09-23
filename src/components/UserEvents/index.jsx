@@ -73,9 +73,13 @@ export default function UserEvents({ route }) {
   );
 
   return (
-    <>
-      <StatusBar barStyle={useColorScheme() === 'dark' ? 'light-content' : 'dark-content'} />
-      <SafeAreaView style={styles.container}>
+    <SafeAreaView style={{ flex: 1, backgroundColor: '#34495e', paddingTop: StatusBar.currentHeight }}>
+      <StatusBar
+        translucent
+        backgroundColor="transparent"
+        barStyle="light-content"
+      />
+      <View style={styles.container}>
         <View style={styles.header}>
           <TouchableOpacity onPress={() => navigation.goBack()} style={styles.backButton}>
             <MaterialIcons name="arrow-back" size={24} color="#fff" />
@@ -108,8 +112,8 @@ export default function UserEvents({ route }) {
             />
           ))}
         </ScrollView>
-      </SafeAreaView>
-    </>
+      </View>
+    </SafeAreaView>
   );
 }
 

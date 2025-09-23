@@ -9,6 +9,7 @@ import {
   StyleSheet,
   TouchableOpacity,
   useColorScheme,
+  SafeAreaView,
   View,
 } from 'react-native';
 import Ionicons from 'react-native-vector-icons/Ionicons';
@@ -75,8 +76,12 @@ const Header = () => {
   };
 
   return (
-    <>
-      <StatusBar barStyle={useColorScheme() === 'dark' ? 'light-content' : 'dark-content'} />
+    <SafeAreaView style={{backgroundColor: '#34495e'}}>
+      <StatusBar
+        translucent
+        backgroundColor="transparent"
+        barStyle="light-content"
+      />
       <View style={styles.customHeader}>
         <View style={{ flexDirection: 'row', gap: 25 }}>
           <TouchableOpacity onPress={handleProfile}>
@@ -114,7 +119,7 @@ const Header = () => {
           </TouchableOpacity>
         </View>
       </View>
-    </>
+    </SafeAreaView>
   );
 };
 

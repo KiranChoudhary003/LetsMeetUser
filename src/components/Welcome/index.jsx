@@ -258,7 +258,11 @@ const Welcome = ({ navigation }) => {
 
   return (
     <>
-      <StatusBar barStyle="light-content" backgroundColor="#34495e" />
+      <StatusBar
+        translucent
+        backgroundColor="transparent"
+        barStyle="light-content"
+      />
       <View style={styles.container}>
         <Animated.View
           style={[

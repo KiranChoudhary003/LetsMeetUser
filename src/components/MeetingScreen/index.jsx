@@ -99,9 +99,13 @@ export default function MeetingScreen() {
   );
 
   return (
-    <>
-      <StatusBar barStyle={useColorScheme() === 'dark' ? 'light-content' : 'dark-content'} />
-      <SafeAreaView style={{ flex: 1, backgroundColor: '#e8effc' }}>
+    <SafeAreaView style={{ flex: 1, backgroundColor: '#34495e' }}>
+      <StatusBar
+        translucent
+        backgroundColor="transparent"
+        barStyle="light-content"
+      />
+      <View style={{ flex: 1, backgroundColor: '#e8effc' }}>
         <View style={styles.topBar}>
           <TouchableOpacity style={styles.backButton} onPress={() => navigation.goBack()}>
             <Icon name="arrow-back" size={24} color="#fff" />
@@ -209,8 +213,8 @@ export default function MeetingScreen() {
             </KeyboardAvoidingView>
           </Modal>
         )}
-      </SafeAreaView>
-    </>
+      </View>
+    </SafeAreaView>
   );
 }
 

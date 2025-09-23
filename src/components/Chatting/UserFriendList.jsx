@@ -46,7 +46,7 @@ export default function UserListScreen() {
         } catch (error) {
         } finally {
             setLoading(false);
-            if (isFirstLoad) {setIsFirstLoad(false);}
+            if (isFirstLoad) { setIsFirstLoad(false); }
         }
     };
 
@@ -153,9 +153,13 @@ export default function UserListScreen() {
     );
 
     return (
-        <>
-            <StatusBar barStyle={useColorScheme() === 'dark' ? 'light-content' : 'dark-content'} />
-            <SafeAreaView style={styles.safeContainer}>
+        <SafeAreaView style={{ flex: 1, backgroundColor: '#34495e'}}>
+            <StatusBar
+                translucent
+                backgroundColor="transparent"
+                barStyle="light-content"
+            />
+            <View style={styles.safeContainer}>
                 <View style={styles.headingContainer}>
                     <View style={styles.headerRow}>
                         <TouchableOpacity
@@ -207,8 +211,8 @@ export default function UserListScreen() {
                     }
                 />
 
-            </SafeAreaView>
-        </>
+            </View>
+        </SafeAreaView>
     );
 }
 
@@ -228,7 +232,7 @@ const styles = StyleSheet.create({
         alignItems: 'center',
         justifyContent: 'center',
         position: 'relative',
-        height: 40,
+        height: 45,
     },
     backButton: {
         position: 'absolute',

@@ -168,7 +168,11 @@ const Meeting = ({ navigation }) => {
 
   return (
     <SafeAreaView style={{ flex: 1, backgroundColor: '#34495E' }}>
-      <StatusBar barStyle={useColorScheme() === 'dark' ? 'light-content' : 'dark-content'} />
+      <StatusBar
+        translucent
+        backgroundColor="transparent"
+        barStyle="light-content"
+      />
       <View style={{ flex: 1, backgroundColor: '#E8EFFC' }}>
         <View style={styles.header}>
           <View style={styles.centerContainer}>
