@@ -1,5 +1,5 @@
 import { useNavigation, useNavigationState } from '@react-navigation/native';
-import React, { useRef, useCallback, useState, useEffect } from 'react';
+import React, { useCallback, useEffect, useRef, useState } from 'react';
 import { StyleSheet, Text, TouchableOpacity } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import MaterialCommunityIcons from 'react-native-vector-icons/MaterialCommunityIcons';
@@ -90,7 +90,7 @@ const styles = StyleSheet.create({
         justifyContent: 'center',
         padding: 6,
         borderRadius: 10,
-        width: 70,
+        width: 75,
     },
     label: {
         fontSize: 12,

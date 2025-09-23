@@ -108,7 +108,7 @@ export default function UserListScreen() {
         [
             user.first_name,
             user.middle_name,
-            user.last_name
+            user.last_name,
         ]
             .filter(Boolean)
             .join(' ')
@@ -140,7 +140,7 @@ export default function UserListScreen() {
                             {[
                                 item.first_name,
                                 item.middle_name, // add middle name
-                                item.last_name
+                                item.last_name,
                             ].filter(Boolean).join(' ')}
                         </Text>
                     </View>

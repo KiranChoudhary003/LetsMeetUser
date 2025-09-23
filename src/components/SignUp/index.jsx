@@ -81,23 +81,23 @@ const SignUp = ({ navigation, route }) => {
     };
 
     const rules = [
-        { regex: /.{8,}/, message: "At least 8 characters" },
-        { regex: /^.{0,20}$/, message: "No more than 20 characters" },
-        { regex: /^\S*$/, message: "No spaces allowed" },
-        { regex: /[A-Z]/, message: "At least one uppercase letter" },
-        { regex: /[a-z]/, message: "At least one lowercase letter" },
-        { regex: /[0-9]/, message: "At least one number" },
-        { regex: /[!@#$%^&*(),.?\":{}|<>]/, message: "At least one special character" },
+        { regex: /.{8,}/, message: 'At least 8 characters' },
+        { regex: /^.{0,20}$/, message: 'No more than 20 characters' },
+        { regex: /^\S*$/, message: 'No spaces allowed' },
+        { regex: /[A-Z]/, message: 'At least one uppercase letter' },
+        { regex: /[a-z]/, message: 'At least one lowercase letter' },
+        { regex: /[0-9]/, message: 'At least one number' },
+        { regex: /[!@#$%^&*(),.?\":{}|<>]/, message: 'At least one special character' },
     ];
 
     const checkRule = (rule) => rule.regex.test(password);
     const passwordValid = rules.every(checkRule);
 
     const emailRules = [
-        { check: (email) => !/[^a-zA-Z0-9@._-]/.test(email), message: "No invalid characters" },
-        { check: (email) => !email.includes(".."), message: "No consecutive dots" },
-        { check: (email) => !/\s/.test(email), message: "No spaces allowed" },
-        { check: (email) => validator.isEmail(email), message: "Must be a valid email" },
+        { check: (email) => !/[^a-zA-Z0-9@._-]/.test(email), message: 'No invalid characters' },
+        { check: (email) => !email.includes('..'), message: 'No consecutive dots' },
+        { check: (email) => !/\s/.test(email), message: 'No spaces allowed' },
+        { check: (email) => validator.isEmail(email), message: 'Must be a valid email' },
     ];
 
 
@@ -349,7 +349,7 @@ const SignUp = ({ navigation, route }) => {
                                     onChangeText={onFullNameChange}
                                 />
                                 <View
-                                    style={{ width: "85%", alignSelf: "center", height: 45, marginBottom: 12 }}
+                                    style={{ width: '85%', alignSelf: 'center', height: 45, marginBottom: 12 }}
                                     ref={emailRef}
                                     onLayout={() => {
                                         if (containerRef.current && emailRef.current) {
@@ -363,7 +363,7 @@ const SignUp = ({ navigation, route }) => {
                                     }}
                                 >
                                     <TextInput
-                                        style={[styles.input, { width: "100%", marginBottom: 0 }]}
+                                        style={[styles.input, { width: '100%', marginBottom: 0 }]}
                                         placeholder="E-mail*"
                                         placeholderTextColor="#888"
                                         value={email}
@@ -376,7 +376,7 @@ const SignUp = ({ navigation, route }) => {
                                         }}
                                         onFocus={() => {
                                             const isValid = emailRules.every((rule) => rule.check(email));
-                                            if (email.length > 0 && !isValid) setShowEmailTooltip(true);
+                                            if (email.length > 0 && !isValid) {setShowEmailTooltip(true);}
                                         }}
                                         onBlur={() => setShowEmailTooltip(false)}
                                     />
@@ -612,12 +612,12 @@ const SignUp = ({ navigation, route }) => {
                                             return (
                                                 <View
                                                     key={index}
-                                                    style={{ flexDirection: "row", alignItems: "center", marginBottom: 4 }}
+                                                    style={{ flexDirection: 'row', alignItems: 'center', marginBottom: 4 }}
                                                 >
                                                     <MaterialIcons
-                                                        name={passed ? "check-circle" : "cancel"}
+                                                        name={passed ? 'check-circle' : 'cancel'}
                                                         size={16}
-                                                        color={passed ? "lightgreen" : "red"}
+                                                        color={passed ? 'lightgreen' : 'red'}
                                                         style={{ marginRight: 6 }}
                                                     />
                                                     <Text style={styles.tooltipText}>{rule.message}</Text>
@@ -650,12 +650,12 @@ const SignUp = ({ navigation, route }) => {
                                             return (
                                                 <View
                                                     key={index}
-                                                    style={{ flexDirection: "row", alignItems: "center", marginBottom: 4 }}
+                                                    style={{ flexDirection: 'row', alignItems: 'center', marginBottom: 4 }}
                                                 >
                                                     <MaterialIcons
-                                                        name={passed ? "check-circle" : "cancel"}
+                                                        name={passed ? 'check-circle' : 'cancel'}
                                                         size={16}
-                                                        color={passed ? "lightgreen" : "red"}
+                                                        color={passed ? 'lightgreen' : 'red'}
                                                         style={{ marginRight: 6 }}
                                                     />
                                                     <Text style={styles.tooltipText}>{rule.message}</Text>
@@ -1061,19 +1061,19 @@ const styles = StyleSheet.create({
         fontWeight: 'bold',
     },
     tooltipOverlay: {
-        position: "absolute",
-        alignItems: "center",
-        backgroundColor: "transparent",
+        position: 'absolute',
+        alignItems: 'center',
+        backgroundColor: 'transparent',
         zIndex: 9999,   // 👈 force top stacking
         elevation: 9999, // 👈 required for Android
     },
 
     tooltip: {
-        backgroundColor: "#333",
+        backgroundColor: '#333',
         padding: 12,
         borderRadius: 8,
         maxWidth: 280,
-        shadowColor: "#000",
+        shadowColor: '#000',
         shadowOffset: { width: 0, height: 2 },
         shadowOpacity: 0.3,
         shadowRadius: 4,
@@ -1081,7 +1081,7 @@ const styles = StyleSheet.create({
     },
     tooltipText: {
         fontSize: 12,
-        color: "#fff",
+        color: '#fff',
     },
     arrowDown: {
         width: 0,
@@ -1089,9 +1089,9 @@ const styles = StyleSheet.create({
         borderLeftWidth: 8,
         borderRightWidth: 8,
         borderTopWidth: 8,
-        borderLeftColor: "transparent",
-        borderRightColor: "transparent",
-        borderTopColor: "#333",
+        borderLeftColor: 'transparent',
+        borderRightColor: 'transparent',
+        borderTopColor: '#333',
         marginTop: -1,
     },
     inputMeasureWrapper: {

@@ -151,7 +151,7 @@ const UserProfile = ({ navigation, route }) => {
                     mediaType: 'photo',
                 });
 
-            if (!image?.path) return;
+            if (!image?.path) {return;}
 
             setUploading(true);
 
@@ -276,7 +276,7 @@ const UserProfile = ({ navigation, route }) => {
                         <Text style={styles.userDetail}>
                             {[userProfile.first_name, userProfile.middle_name, userProfile.last_name]
                                 .filter(Boolean)
-                                .join(" ")}
+                                .join(' ')}
                         </Text>
 
                     </View>
@@ -407,7 +407,7 @@ const UserProfile = ({ navigation, route }) => {
                         <View
                             style={[
                                 styles.bottomModal,
-                                { backgroundColor: isDarkMode ? '#1c1c1e' : '#fff', shadowColor: isDarkMode ? '#000' : '#aaa' }
+                                { backgroundColor: isDarkMode ? '#1c1c1e' : '#fff', shadowColor: isDarkMode ? '#000' : '#aaa' },
                             ]}
                         >
                             {/* Modal Header with Title + Close Icon */}
@@ -415,7 +415,7 @@ const UserProfile = ({ navigation, route }) => {
                                 <Text
                                     style={[
                                         styles.modalTitle,
-                                        { color: isDarkMode ? '#fff' : '#000', fontSize: 18 } // white in dark, black in light
+                                        { color: isDarkMode ? '#fff' : '#000', fontSize: 18 }, // white in dark, black in light
                                     ]}
                                 >
                                     Choose Option
@@ -434,7 +434,7 @@ const UserProfile = ({ navigation, route }) => {
                             <TouchableOpacity
                                 style={[
                                     styles.optionButton,
-                                    { backgroundColor: isDarkMode ? '#2c2c2e' : '#f0f4fa' }
+                                    { backgroundColor: isDarkMode ? '#2c2c2e' : '#f0f4fa' },
                                 ]}
                                 onPress={() => pickImage(true)}
                             >
@@ -447,7 +447,7 @@ const UserProfile = ({ navigation, route }) => {
                                 <Text
                                     style={[
                                         styles.optionText,
-                                        { color: isDarkMode ? '#fff' : '#000' } // white/black
+                                        { color: isDarkMode ? '#fff' : '#000' }, // white/black
                                     ]}
                                 >
                                     Take Photo
@@ -458,7 +458,7 @@ const UserProfile = ({ navigation, route }) => {
                             <TouchableOpacity
                                 style={[
                                     styles.optionButton,
-                                    { backgroundColor: isDarkMode ? '#2c2c2e' : '#f0f4fa' }
+                                    { backgroundColor: isDarkMode ? '#2c2c2e' : '#f0f4fa' },
                                 ]}
                                 onPress={() => pickImage(false)}
                             >
@@ -471,7 +471,7 @@ const UserProfile = ({ navigation, route }) => {
                                 <Text
                                     style={[
                                         styles.optionText,
-                                        { color: isDarkMode ? '#fff' : '#000' } // white/black
+                                        { color: isDarkMode ? '#fff' : '#000' }, // white/black
                                     ]}
                                 >
                                     Choose from Gallery

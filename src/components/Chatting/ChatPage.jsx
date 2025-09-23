@@ -393,7 +393,7 @@ const ChatPage = ({ route }) => {
                                     {[
                                         peer.first_name,
                                         peer.middle_name,
-                                        peer.last_name
+                                        peer.last_name,
                                     ].filter(Boolean).join(' ')}
                                 </Text>
                             </View>

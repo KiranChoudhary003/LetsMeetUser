@@ -8,13 +8,13 @@ let initialized = false;
 let connectingPromise = null;
 
 export const connectSocket = async (passedToken = null) => {
-  if (initialized && socket?.connected) return socket;
+  if (initialized && socket?.connected) {return socket;}
 
-  if (connectingPromise) return connectingPromise;
+  if (connectingPromise) {return connectingPromise;}
 
   connectingPromise = (async () => {
     let token = passedToken;
-    if (!token) token = await AsyncStorage.getItem('token');
+    if (!token) {token = await AsyncStorage.getItem('token');}
     if (!token) {
       connectingPromise = null;
       console.warn('⚠️ No token found. Skipping socket connection.');
@@ -24,7 +24,7 @@ export const connectSocket = async (passedToken = null) => {
     try {
       const decoded = jwtDecode(token);
       const userId = decoded?.id || decoded?.user?.id;
-      if (userId) await AsyncStorage.setItem('userId', String(userId));
+      if (userId) {await AsyncStorage.setItem('userId', String(userId));}
     } catch (e) {
       console.warn('JWT decode failed:', e.message);
     }

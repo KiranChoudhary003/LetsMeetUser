@@ -60,7 +60,7 @@ const UserMeetings = ({ route, navigation }) => {
                         name: [
                             user.first_name,
                             user.middle_name,
-                            user.last_name
+                            user.last_name,
                         ].filter(Boolean).join(' '),
                         role: user.role || 'N/A',
                         image: user.photo || '',
@@ -84,7 +84,7 @@ const UserMeetings = ({ route, navigation }) => {
     }, []);
 
     const getUserImageSource = (photo) => {
-        if (!photo || photo.trim() === '') return null; // No photo
+        if (!photo || photo.trim() === '') {return null;} // No photo
 
         if (photo.startsWith('data:image')) {
             return { uri: photo }; // Already a valid data URI

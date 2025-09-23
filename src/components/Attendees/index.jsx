@@ -569,7 +569,7 @@ const Connections = ({ navigation, route }) => {
         backgroundColor="transparent"
         barStyle="light-content"
       />
-      <View style={{ flex: 1, backgroundColor: '#e8effc', }}>
+      <View style={{ flex: 1, backgroundColor: '#e8effc' }}>
         <View style={styles.header}>
           {/* Top row */}
           <View style={styles.headerTopRow}>
@@ -652,7 +652,7 @@ const Connections = ({ navigation, route }) => {
             <RefreshControl
               refreshing={loading && !isFirstLoad && (attendeesFiltered.length > 0 || inboxFiltered.length > 0)}
               onRefresh={fetchData}
-              colors={["#34495e"]}
+              colors={['#34495e']}
               tintColor="#34495e"
             />
           }
@@ -878,7 +878,7 @@ const Connections = ({ navigation, route }) => {
               <Text style={styles.title}>Confirm Action</Text>
               {selectedUser && (
                 <Text style={styles.message}>
-                  Are you sure you want to delete{" "}
+                  Are you sure you want to delete{' '}
                   <Text style={{ fontWeight: '700' }}>{selectedUser.name}</Text>'s request?
                 </Text>
               )}

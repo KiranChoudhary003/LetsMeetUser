@@ -89,7 +89,7 @@ const Welcome = ({ navigation }) => {
 
     const askAgain = async () => {
       const newStatus = await request(permission);
-      if (newStatus === RESULTS.GRANTED) return true;
+      if (newStatus === RESULTS.GRANTED) {return true;}
       if (newStatus === RESULTS.BLOCKED) {
         Alert.alert(
           'Location Permission Required',
@@ -125,7 +125,7 @@ const Welcome = ({ navigation }) => {
       Platform.OS === 'android' ? PERMISSIONS.ANDROID.CAMERA : PERMISSIONS.IOS.CAMERA;
 
     const result = await request(permission);
-    if (result === RESULTS.GRANTED) return true;
+    if (result === RESULTS.GRANTED) {return true;}
 
     Alert.alert(
       'Camera Permission',
@@ -140,7 +140,7 @@ const Welcome = ({ navigation }) => {
       if (Platform.OS === 'android') {
         if (Platform.Version >= 33) {
           const result = await request(PERMISSIONS.ANDROID.READ_MEDIA_IMAGES);
-          if (result === RESULTS.GRANTED) return true;
+          if (result === RESULTS.GRANTED) {return true;}
 
           if (result === RESULTS.BLOCKED) {
             Alert.alert(
@@ -155,7 +155,7 @@ const Welcome = ({ navigation }) => {
           return false;
         } else {
           const write = await request(PERMISSIONS.ANDROID.WRITE_EXTERNAL_STORAGE);
-          if (write === RESULTS.GRANTED) return true;
+          if (write === RESULTS.GRANTED) {return true;}
 
           if (write === RESULTS.BLOCKED) {
             Alert.alert(
@@ -171,7 +171,7 @@ const Welcome = ({ navigation }) => {
         }
       } else {
         const result = await request(PERMISSIONS.IOS.PHOTO_LIBRARY);
-        if (result === RESULTS.GRANTED) return true;
+        if (result === RESULTS.GRANTED) {return true;}
         if (result === RESULTS.BLOCKED) {
           Alert.alert(
             'Photo Library Blocked',
@@ -195,7 +195,7 @@ const Welcome = ({ navigation }) => {
       const result = await PermissionsAndroid.request(
         PermissionsAndroid.PERMISSIONS.POST_NOTIFICATIONS
       );
-      if (result !== PermissionsAndroid.RESULTS.GRANTED) return null;
+      if (result !== PermissionsAndroid.RESULTS.GRANTED) {return null;}
     }
 
     if (Platform.OS === 'ios') {
@@ -222,7 +222,7 @@ const Welcome = ({ navigation }) => {
         token = await getToken(messaging);
       } else {
         console.warn('Skipping FCM token on iOS — requires paid Apple Developer account.');
-        Alert.alert("FCM Token", "iOS FCM token skipped (requires paid Apple Developer account)");
+        Alert.alert('FCM Token', 'iOS FCM token skipped (requires paid Apple Developer account)');
       }
 
       return token ?? null;

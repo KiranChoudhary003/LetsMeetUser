@@ -57,7 +57,7 @@ export default function MeetingRecords() {
             userName: [
                 user.first_name,
                 user.middle_name,
-                user.last_name
+                user.last_name,
             ].filter(Boolean).join(' '),
 
         }));

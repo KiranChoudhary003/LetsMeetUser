@@ -371,17 +371,17 @@ const EventsScreen = ({ navigation }) => {
             <RefreshControl
               refreshing={loading && !isFirstLoad && eventData.length > 0}
               onRefresh={fetchUpcomingEvents}
-              colors={["#34495e"]}
+              colors={['#34495e']}
               tintColor="#34495e"
             />
           }
         >
           {loading && eventData.length === 0 ? (
             <View
-              style={{ flex: 1, justifyContent: "center", alignItems: "center" }}
+              style={{ flex: 1, justifyContent: 'center', alignItems: 'center' }}
             >
               <Text
-                style={{ marginBottom: 10, fontSize: 16, color: "#555" }}
+                style={{ marginBottom: 10, fontSize: 16, color: '#555' }}
               >
                 Loading your events...
               </Text>
@@ -392,10 +392,10 @@ const EventsScreen = ({ navigation }) => {
               <Text
                 style={{
                   fontSize: 18,
-                  fontWeight: "600",
-                  color: "#2c3e50",
+                  fontWeight: '600',
+                  color: '#2c3e50',
                   marginTop: 16,
-                  textAlign: "center",
+                  textAlign: 'center',
                 }}
               >
                 No Events Found
@@ -403,8 +403,8 @@ const EventsScreen = ({ navigation }) => {
               <Text
                 style={{
                   fontSize: 14,
-                  color: "#7f8c8d",
-                  textAlign: "center",
+                  color: '#7f8c8d',
+                  textAlign: 'center',
                   marginTop: 6,
                 }}
               >
@@ -435,7 +435,7 @@ const EventsScreen = ({ navigation }) => {
                     checkInDistance={event.check_in_distance}
                     triggerEventAlert={triggerEventAlert}
                     onPress={() =>
-                      navigation.navigate("MyEventsDescription", {
+                      navigation.navigate('MyEventsDescription', {
                         id: event.id,
                         name: event.name,
                         organizer: event.organizer,

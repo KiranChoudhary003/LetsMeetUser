@@ -85,7 +85,7 @@ const Description = ({ navigation, route }) => {
     const handleRegister = async (eventId) => {
         try {
             const token = await AsyncStorage.getItem('token');
-            if (!eventId) return;
+            if (!eventId) {return;}
 
             const res = await axios.post(
                 `${BASE_URL}/api/user-events/register-event`,

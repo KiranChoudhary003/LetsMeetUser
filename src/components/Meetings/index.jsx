@@ -18,7 +18,7 @@ import {
   TextInput,
   TouchableOpacity,
   useColorScheme,
-  View
+  View,
 } from 'react-native';
 import Entypo from 'react-native-vector-icons/Entypo';
 
@@ -84,7 +84,7 @@ const Meeting = ({ navigation }) => {
               name: [
                 user.first_name,
                 user.middle_name,
-                user.last_name
+                user.last_name,
               ].filter(Boolean).join(' '),
               role: user.role || 'Attendee',
               photo: user.photo || '',
@@ -109,7 +109,7 @@ const Meeting = ({ navigation }) => {
 
 
   const getUserImageSource = (photo) => {
-    if (!photo || photo.trim() === '') return null; // No photo
+    if (!photo || photo.trim() === '') {return null;} // No photo
 
     if (photo.startsWith('data:image')) {
       return { uri: photo }; // Already a valid data URI

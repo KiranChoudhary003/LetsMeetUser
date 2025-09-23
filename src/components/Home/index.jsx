@@ -13,7 +13,8 @@ import {
     ActivityIndicator, Animated, Modal, Pressable,
     RefreshControl,
     SafeAreaView, ScrollView, StatusBar, StyleSheet,
-    Text, TouchableOpacity, TouchableWithoutFeedback, useColorScheme, View,
+    Text, TouchableOpacity, TouchableWithoutFeedback,
+    View
 } from 'react-native';
 import { Calendar } from 'react-native-calendars';
 import Fontisto from 'react-native-vector-icons/Fontisto';
@@ -55,26 +56,26 @@ const EventCard = ({
                         {
                             transform: [{ scale }],
                             flexDirection: 'row',
-                            justifyContent: 'space-between',
+                            justifyContent: 'space-around',
                             alignItems: 'center',
                         },
                     ]}
                 >
-                    <View style={{ flex: 1 }}>
+                    <View style={{ flex: 1, justifyContent: 'space-evenly' }}>
                         <Text style={styles.eventName}>{name}</Text>
+                        <View style={[styles.bottomRow, { flex: 1, justifyContent: 'space-evenly' }]}>
+                            <View style={{ flexDirection: 'row', alignItems: 'center' }}>
+                                <Ionicons name="location-sharp" size={14} color="#34495e" style={{ marginRight: 4 }} />
+                                <Text style={styles.eventOrganizer}>{organizer}</Text>
+                            </View>
 
-                        {/* Organizer with location icon */}
-                        <View style={{ flexDirection: 'row', alignItems: 'center' }}>
-                            <Ionicons name="location-sharp" size={14} color="#34495e" style={{ marginRight: 4 }} />
-                            <Text style={styles.eventOrganizer}>{organizer}</Text>
-                        </View>
-
-                        {/* Date with calendar icon */}
-                        <View style={{ flexDirection: 'row', alignItems: 'center' }}>
-                            <Fontisto name="date" size={14} color="#34495e" style={{ marginRight: 4 }} />
-                            <Text style={styles.eventDate}>{formatDate(date)}</Text>
+                            <View style={{ flexDirection: 'row', alignItems: 'center' }}>
+                                <Fontisto name="date" size={14} color="#34495e" style={{ marginRight: 4 }} />
+                                <Text style={styles.eventDate}>{formatDate(date)}</Text>
+                            </View>
                         </View>
                     </View>
+
 
                     <View>
                         {!isRegistered ? (
@@ -85,7 +86,7 @@ const EventCard = ({
                                     borderWidth: 1,
                                     borderColor: 'rgba(157, 9, 11, 0.96 )',
                                     paddingHorizontal: 12,
-                                    paddingVertical: 4,
+                                    paddingVertical: 6,
                                     borderRadius: 20,
                                     alignItems: 'center',
                                     justifyContent: 'center',
@@ -102,7 +103,7 @@ const EventCard = ({
                                         backgroundColor: '#4CAF50',
                                         opacity: 0.6,
                                         paddingHorizontal: 8,
-                                        paddingVertical: 4,
+                                        paddingVertical: 6,
                                         borderRadius: 20,
                                         alignItems: 'center',
                                         justifyContent: 'center',
@@ -115,8 +116,8 @@ const EventCard = ({
                                 <View
                                     style={{
                                         backgroundColor: '#34495e',
-                                        marginTop: 4,
-                                        paddingVertical: 4,
+                                        marginTop: 12,
+                                        paddingVertical: 6,
                                         paddingHorizontal: 8,
                                         borderRadius: 20,
                                         alignItems: 'center',
@@ -144,7 +145,7 @@ const EventCard = ({
                                 style={{
                                     backgroundColor: 'rgba(16,192,72,0.96)',
                                     paddingHorizontal: 12,
-                                    paddingVertical: 4,
+                                    paddingVertical: 6,
                                     borderRadius: 20,
                                     alignItems: 'center',
                                     justifyContent: 'center',
@@ -159,7 +160,7 @@ const EventCard = ({
                                 style={{
                                     backgroundColor: '#bbb',
                                     paddingHorizontal: 12,
-                                    paddingVertical: 4,
+                                    paddingVertical: 6,
                                     borderRadius: 20,
                                     alignItems: 'center',
                                     justifyContent: 'center',
@@ -521,7 +522,7 @@ const Home = ({ navigation }) => {
                     <RefreshControl
                         refreshing={loading && !isFirstLoad && eventData.length > 0}
                         onRefresh={fetchUpcomingEvents}
-                        colors={["#34495e"]}
+                        colors={['#34495e']}
                         tintColor="#34495e"
                     />
                 }>
@@ -868,15 +869,18 @@ const styles = StyleSheet.create({
     },
     card: {
         width: '100%',
-        minHeight: 90,
+        minHeight: 80,
         marginVertical: 6,
         borderBottomWidth: 0.5,
     },
     eventName: {
         fontSize: 18,
         fontWeight: 'bold',
-        marginBottom: 4,
         color: '#111',
+    },
+    bottomRow: {
+        alignItems: 'flex-start',
+        marginBottom: 6,
     },
     eventOrganizer: {
         fontSize: 12,

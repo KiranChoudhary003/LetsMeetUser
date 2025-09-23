@@ -51,12 +51,12 @@ const TicketCard = ({ description, status, updatedAt }) => {
                     <View>
                         <Text style={styles.updatedDate}>Updated Date</Text>
                         <Text style={styles.lastDate}>
-                            {new Date(updatedAt).toLocaleString("en-US", {
-                                month: "2-digit",
-                                day: "2-digit",
-                                year: "numeric",
-                                hour: "2-digit",
-                                minute: "2-digit",
+                            {new Date(updatedAt).toLocaleString('en-US', {
+                                month: '2-digit',
+                                day: '2-digit',
+                                year: 'numeric',
+                                hour: '2-digit',
+                                minute: '2-digit',
                                 hour12: false,
                             })}
                         </Text>
@@ -65,7 +65,7 @@ const TicketCard = ({ description, status, updatedAt }) => {
                     <View style={[
                         styles.ticketStatus,
                         { backgroundColor: backgroundColor },
-                        { borderColor: borderColor }
+                        { borderColor: borderColor },
                     ]}>
                         <Text style={[styles.updateStatus, { color: statusColor, fontWeight: 'bold' }]}>
                             {formattedStatus}
@@ -135,7 +135,7 @@ const SupportDesk = () => {
         } catch (error) {
         } finally {
             setLoading(false);
-            if (isFirstLoad) setIsFirstLoad(false);
+            if (isFirstLoad) {setIsFirstLoad(false);}
         }
     };
 
@@ -235,7 +235,7 @@ const SupportDesk = () => {
                             <RefreshControl
                                 refreshing={loading && !isFirstLoad && tickets.length > 0}
                                 onRefresh={fetchTickets}
-                                colors={["#34495e"]}
+                                colors={['#34495e']}
                                 tintColor="#34495e"
                             />
                         }>

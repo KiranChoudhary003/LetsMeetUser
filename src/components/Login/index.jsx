@@ -20,6 +20,7 @@ import {
     TouchableOpacity,
     TouchableWithoutFeedback,
     useColorScheme,
+    SafeAreaView,
     View,
 } from 'react-native';
 import MaterialIcons from 'react-native-vector-icons/MaterialIcons';
@@ -213,18 +214,18 @@ const Login = ({ navigation, route }) => {
 
 
     return (
-        <>
+        <SafeAreaView style={{ flex: 1, backgroundColor: '#e8effc', paddingTop: StatusBar.currentHeight }}>
             <StatusBar
                 translucent
                 backgroundColor="transparent"
-                barStyle="dark-content"
+                barStyle="light-content"
             />
             <KeyboardAvoidingView
                 style={styles.container}
                 behavior={Platform.OS === 'ios' ? 'padding' : 'padding'}
             >
                 <TouchableWithoutFeedback onPress={Keyboard.dismiss}>
-                    <ScrollView contentContainerStyle={styles.inner}>
+                    <ScrollView contentContainerStyle={styles.inner} showsVerticalScrollIndicator={false}>
                         <Image source={logo} style={styles.logo} />
                         <Text style={styles.text}>Let's Meet</Text>
 
@@ -312,59 +313,59 @@ const Login = ({ navigation, route }) => {
                         </Modal>
                     </ScrollView>
                 </TouchableWithoutFeedback>
-
-                <View style={styles.contactContainer}>
-                    <Text style={styles.contactText}>
-                        Having trouble?
-                        <Text
-                            style={styles.contactLink}
-                            onPress={() =>
-                                Linking.openURL(
-                                    'mailto:support@zordial.com?subject=Login Issue'
-                                )
-                            }
-                        >
-                            {' '}Contact Us
-                        </Text>
-                    </Text>
-                </View>
-
-                <Modal
-                    animationType="fade"
-                    transparent
-                    visible={alertModalVisible}
-                    onRequestClose={() => {
-                        if (!isRetryLocked) { setalertModalVisible(false); }
-                    }}
-                >
-                    <View style={styles.modalContainer}>
-                        {isRetryLocked && (
-                            <BlurView
-                                style={StyleSheet.absoluteFill}
-                                blurType="light"
-                                blurAmount={4}
-                                reducedTransparencyFallbackColor="white"
-                            />
-                        )}
-                        <View style={styles.modalBox}>
-                            <Text style={styles.modalTitle}>Message</Text>
-                            <Text style={styles.modalMessage}>
-                                {isRetryLocked
-                                    ? `Please wait ${retryCountdown} seconds before trying again.`
-                                    : alertMessage}
-                            </Text>
-                            {!isRetryLocked && (
-                                <TouchableOpacity style={styles.button} onPress={() => setalertModalVisible(false)}>
-                                    <Text style={styles.buttonText}>OK</Text>
-                                </TouchableOpacity>
-                            )}
-                        </View>
-                    </View>
-                </Modal>
             </KeyboardAvoidingView>
 
+            <View style={styles.contactContainer}>
+                <Text style={styles.contactText}>
+                    Having trouble?
+                    <Text
+                        style={styles.contactLink}
+                        onPress={() =>
+                            Linking.openURL(
+                                'mailto:support@zordial.com?subject=Login Issue'
+                            )
+                        }
+                    >
+                        {' '}Contact Us
+                    </Text>
+                </Text>
+            </View>
 
-        </>
+            <Modal
+                animationType="fade"
+                transparent
+                visible={alertModalVisible}
+                onRequestClose={() => {
+                    if (!isRetryLocked) { setalertModalVisible(false); }
+                }}
+            >
+                <View style={styles.modalContainer}>
+                    {isRetryLocked && (
+                        <BlurView
+                            style={StyleSheet.absoluteFill}
+                            blurType="light"
+                            blurAmount={4}
+                            reducedTransparencyFallbackColor="white"
+                        />
+                    )}
+                    <View style={styles.modalBox}>
+                        <Text style={styles.modalTitle}>Message</Text>
+                        <Text style={styles.modalMessage}>
+                            {isRetryLocked
+                                ? `Please wait ${retryCountdown} seconds before trying again.`
+                                : alertMessage}
+                        </Text>
+                        {!isRetryLocked && (
+                            <TouchableOpacity style={styles.button} onPress={() => setalertModalVisible(false)}>
+                                <Text style={styles.buttonText}>OK</Text>
+                            </TouchableOpacity>
+                        )}
+                    </View>
+                </View>
+            </Modal>
+
+
+        </SafeAreaView>
     );
 };
 
@@ -408,7 +409,9 @@ const styles = StyleSheet.create({
     forgotPassword: {
         fontSize: 13,
         color: '#7f8c8d',
-        marginLeft: '60%',
+        justifyContent: 'flex-end',
+        textAlign: 'right',
+        marginRight: width * 0.080,
     },
     button: {
         width: width * 0.5,

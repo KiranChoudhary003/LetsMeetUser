@@ -64,7 +64,7 @@ export default function UserListScreen() {
             console.error('Error fetching connections:', error);
         } finally {
             setLoading(false);
-            if (isFirstLoad) setIsFirstLoad(false);
+            if (isFirstLoad) {setIsFirstLoad(false);}
         }
     };
 
@@ -184,7 +184,7 @@ export default function UserListScreen() {
                                 {[
                                     item.first_name,
                                     item.middle_name, // include middle name
-                                    item.last_name
+                                    item.last_name,
                                 ].filter(Boolean).join(' ')}
                             </Text>
                             {unreadCount > 0 && (
@@ -304,7 +304,7 @@ export default function UserListScreen() {
                             <Text style={styles.deleteTitle}>Confirm Action</Text>
                             {selectedUser && (
                                 <Text style={styles.message}>
-                                    Are you sure you want to delete{" "}
+                                    Are you sure you want to delete{' '}
                                     <Text style={{ fontWeight: '700' }}>
                                         {[selectedUser.first_name, selectedUser.middle_name, selectedUser.last_name]
                                             .filter(Boolean)
