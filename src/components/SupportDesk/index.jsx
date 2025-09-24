@@ -42,15 +42,13 @@ const TicketCard = ({ description, status, updatedAt }) => {
     }
 
     return (
-        <View style={styles.card}>
-            <View style={styles.ticketData}>
-                <View style={styles.ticketDetails}>
-                    <Text style={styles.description}>{description}</Text>
-                </View>
-                <View style={styles.date}>
-                    <View>
-                        <Text style={styles.updatedDate}>Updated Date</Text>
-                        <Text style={styles.lastDate}>
+        <View style={[styles.card, { flexDirection: 'row', justifyContent: 'space-between' }]}>
+            <View style={{ flex: 1, justifyContent: 'space-evenly' }}>
+                <Text style={styles.description}>{description}</Text>
+
+                <View style={[styles.bottomRow]}>
+                    <View style={{ flexDirection: 'row', alignItems: 'center' }}>
+                        <Text style={styles.updatedDate}>Updated At:{' '}
                             {new Date(updatedAt).toLocaleString('en-US', {
                                 month: '2-digit',
                                 day: '2-digit',
@@ -62,18 +60,22 @@ const TicketCard = ({ description, status, updatedAt }) => {
                         </Text>
                     </View>
 
-                    <View style={[
-                        styles.ticketStatus,
-                        { backgroundColor: backgroundColor },
-                        { borderColor: borderColor },
-                    ]}>
-                        <Text style={[styles.updateStatus, { color: statusColor, fontWeight: 'bold' }]}>
-                            {formattedStatus}
-                        </Text>
-                    </View>
                 </View>
             </View>
+
+            <View style={[
+                styles.ticketStatus,
+                {
+                    backgroundColor,
+                    borderColor,
+                },
+            ]}>
+                <Text style={[styles.updateStatus, { color: statusColor, fontWeight: 'bold' }]}>
+                    {formattedStatus}
+                </Text>
+            </View>
         </View>
+
     );
 };
 
@@ -135,7 +137,7 @@ const SupportDesk = () => {
         } catch (error) {
         } finally {
             setLoading(false);
-            if (isFirstLoad) {setIsFirstLoad(false);}
+            if (isFirstLoad) { setIsFirstLoad(false); }
         }
     };
 
@@ -411,19 +413,27 @@ const styles = StyleSheet.create({
     description: {
         fontSize: 18,
         fontWeight: 'bold',
-        marginBottom: 4,
         color: '#111',
     },
     updateStatus: {
         fontSize: 12,
         color: '#555',
-        marginBottom: 4,
     },
     card: {
-        minHeight: 90,
-        marginVertical: 3,
+        width: '100%',
+        minHeight: 60,
+        marginVertical: 2,
         borderBottomWidth: 0.5,
-        borderRadius: 8,
+    },
+    bottomRow: {
+        flex: 1,
+        justifyContent: 'space-evenly',
+        marginBottom: 6,
+    },
+    updatedDate: {
+        fontSize: 12,
+        color: '#555',
+        alignSelf: 'flex-start',
     },
     plus: {
         width: 60,
@@ -479,31 +489,17 @@ const styles = StyleSheet.create({
         color: '#fff',
         fontWeight: '600',
     },
-    ticketData: {
-        width: '100%',
-        flexDirection: 'column',
-        justifyContent: 'space-between',
-    },
     ticketStatus: {
-        width: 110,
+        alignSelf: 'center',
         borderWidth: 1,
         borderRadius: 50,
         alignItems: 'center',
         justifyContent: 'center',
         borderColor: '#888',
-        paddingVertical: 3,
+        paddingHorizontal: 8,
+        paddingVertical: 4,
+        minWidth: 100,
     },
-
-    ticketDetails: {
-        width: '100%',
-    },
-    date: {
-        flexDirection: 'row',
-        justifyContent: 'space-between',
-        alignItems: 'center',
-        width: '100%',
-    },
-
     filterOptionsContainer: {
         flex: 1,
         justifyContent: 'flex-start',
@@ -543,14 +539,6 @@ const styles = StyleSheet.create({
         justifyContent: 'center',
         alignItems: 'center',
         marginTop: 50,
-    },
-    updatedDate: {
-        fontSize: 12,
-        color: '#888',
-    },
-    lastDate: {
-        fontSize: 12,
-        color: '#888',
     },
     overlayBox: {
         flex: 1,

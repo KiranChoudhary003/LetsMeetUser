@@ -137,7 +137,13 @@ const MyEventsDesciption = ({ navigation, route }) => {
                         numberOfLines={1}
                         ellipsizeMode="tail"
                     >
-                        {name.split(' ').slice(0, 4).join(' ') + (name.split(' ').length > 4 ? '...' : '')}
+                        {
+                            (name.length > 40
+                                ? name.slice(0, 25) + '...'
+                                : name.split(' ').slice(0, 4).join(' ') +
+                                (name.split(' ').length > 4 ? '...' : '')
+                            )
+                        }
                     </Text>
 
                     <TouchableOpacity
@@ -310,6 +316,9 @@ const styles = StyleSheet.create({
         color: 'white',
         fontSize: 18,
         fontWeight: 'bold',
+        textAlign: 'center',
+        marginLeft: 30,
+        marginRight: 30,
     },
     scrollContainer: {
         padding: 16,

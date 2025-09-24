@@ -85,7 +85,7 @@ const Description = ({ navigation, route }) => {
     const handleRegister = async (eventId) => {
         try {
             const token = await AsyncStorage.getItem('token');
-            if (!eventId) {return;}
+            if (!eventId) { return; }
 
             const res = await axios.post(
                 `${BASE_URL}/api/user-events/register-event`,
@@ -142,7 +142,7 @@ const Description = ({ navigation, route }) => {
 
 
     return (
-           <SafeAreaView style={{ flex: 1, backgroundColor: '#34495e', paddingTop: StatusBar.currentHeight }}>
+        <SafeAreaView style={{ flex: 1, backgroundColor: '#34495e', paddingTop: StatusBar.currentHeight }}>
             <StatusBar
                 translucent
                 backgroundColor="transparent"
@@ -158,7 +158,14 @@ const Description = ({ navigation, route }) => {
                         numberOfLines={1}
                         ellipsizeMode="tail"
                     >
-                        {name.split(' ').slice(0, 4).join(' ') + (name.split(' ').length > 4 ? '...' : '')}
+                        {
+                            (name.length > 40
+                                ? name.slice(0, 40) + '...'
+                                : name.split(' ').slice(0, 4).join(' ') +
+                                (name.split(' ').length > 4 ? '...' : '')
+                            )
+                        }
+
                     </Text>
                 </View>
 
@@ -308,6 +315,9 @@ const styles = StyleSheet.create({
         color: 'white',
         fontSize: 18,
         fontWeight: 'bold',
+        textAlign: 'center',
+        marginLeft: 30,
+        marginRight: 30,
     },
     backArrow: {
         position: 'absolute',

@@ -2,6 +2,7 @@
 /* eslint-disable react-hooks/exhaustive-deps */
 import { BASE_URL } from '@env';
 import AsyncStorage from '@react-native-async-storage/async-storage';
+import { BlurView } from '@react-native-community/blur';
 import axios from 'axios';
 import dayjs from 'dayjs';
 import timezone from 'dayjs/plugin/timezone';
@@ -9,18 +10,16 @@ import utc from 'dayjs/plugin/utc';
 import React, { useContext, useEffect, useRef, useState } from 'react';
 import {
   ActivityIndicator, Animated,
+  Modal,
   Pressable,
   RefreshControl,
   SafeAreaView, ScrollView, StatusBar,
   StyleSheet, Text, TouchableOpacity,
-  useColorScheme,
-  Modal,
-  View,
+  View
 } from 'react-native';
 import Fontisto from 'react-native-vector-icons/Fontisto';
 import Ionicons from 'react-native-vector-icons/Ionicons';
 import { LocationContext } from '../LocationContext/LocationContext';
-import { BlurView } from '@react-native-community/blur';
 dayjs.extend(utc);
 dayjs.extend(timezone);
 
@@ -115,24 +114,23 @@ const EventCard = ({
           {
             transform: [{ scale }],
             flexDirection: 'row',
-            justifyContent: 'space-between',
+            justifyContent: 'space-around',
             alignItems: 'center',
           },
         ]}
       >
-        <View style={{ flex: 1 }}>
+        <View style={{ flex: 1, justifyContent: 'space-evenly' }}>
           <Text style={styles.eventName}>{name}</Text>
+          <View style={[styles.bottomRow, { flex: 1, justifyContent: 'space-evenly' }]}>
+            <View style={{ flexDirection: 'row', alignItems: 'center' }}>
+              <Ionicons name="location-sharp" size={14} color="#34495e" style={{ marginRight: 4 }} />
+              <Text style={styles.eventOrganizer}>{organizer}</Text>
+            </View>
 
-          {/* Organizer with location icon */}
-          <View style={{ flexDirection: 'row', alignItems: 'center' }}>
-            <Ionicons name="location-sharp" size={14} color="#34495e" style={{ marginRight: 4 }} />
-            <Text style={styles.eventOrganizer}>{organizer}</Text>
-          </View>
-
-          {/* Date with calendar icon */}
-          <View style={{ flexDirection: 'row', alignItems: 'center' }}>
-            <Fontisto name="date" size={14} color="#34495e" style={{ marginRight: 4 }} />
-            <Text style={styles.eventDate}>{formatDate(start_date)}</Text>
+            <View style={{ flexDirection: 'row', alignItems: 'center' }}>
+              <Fontisto name="date" size={14} color="#34495e" style={{ marginRight: 4 }} />
+              <Text style={styles.eventDate}>{formatDate(start_date)}</Text>
+            </View>
           </View>
         </View>
 
@@ -141,7 +139,7 @@ const EventCard = ({
             <View style={{
               backgroundColor: '#4CAF50',
               paddingHorizontal: 12,
-              paddingVertical: 4,
+              paddingVertical: 6,
               borderRadius: 20,
               alignItems: 'center',
               justifyContent: 'center',
@@ -162,7 +160,7 @@ const EventCard = ({
               style={{
                 backgroundColor: withinRange ? '#4CAF50' : '#bbb',
                 paddingHorizontal: 12,
-                paddingVertical: 4,
+                paddingVertical: 6,
                 borderRadius: 20,
                 alignItems: 'center',
                 justifyContent: 'center',
@@ -174,7 +172,7 @@ const EventCard = ({
             <View style={{
               backgroundColor: '#e74c3c',
               paddingHorizontal: 12,
-              paddingVertical: 4,
+              paddingVertical: 6,
               borderRadius: 20,
               alignItems: 'center',
               justifyContent: 'center',
@@ -544,15 +542,19 @@ const styles = StyleSheet.create({
   },
   card: {
     width: '100%',
-    minHeight: 90,
-    marginVertical: 6,
+    minHeight: 80,
+    marginVertical: 2,
     borderBottomWidth: 0.5,
   },
   eventName: {
     fontSize: 18,
     fontWeight: 'bold',
-    marginBottom: 4,
     color: '#111',
+    textAlign:'left',
+  },
+  bottomRow: {
+    alignItems: 'flex-start',
+    marginBottom: 6,
   },
   eventOrganizer: {
     fontSize: 12,

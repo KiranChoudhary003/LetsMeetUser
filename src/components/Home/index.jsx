@@ -870,7 +870,7 @@ const styles = StyleSheet.create({
     card: {
         width: '100%',
         minHeight: 80,
-        marginVertical: 6,
+        marginVertical: 2,
         borderBottomWidth: 0.5,
     },
     eventName: {
