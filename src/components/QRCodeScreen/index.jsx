@@ -46,40 +46,22 @@ const QRCodeScreen = ({ navigation }) => {
 
   return (
     <>
-      <StatusBar
-              translucent
-              backgroundColor="transparent"
-              barStyle="dark-content"
-            />
-      <SafeAreaView style={{ flex: 1, backgroundColor: '#e8effc' }}>
-        <View style={styles.header}>
-          <TouchableOpacity onPress={() => navigation.goBack()}>
-            <MaterialIcons name="arrow-back" size={24} color="#000" />
-          </TouchableOpacity>
-          <TouchableOpacity
-            style={styles.headerTitle}
-            onPress={() => navigation.replace('Scanner')}
-          >
-            <Text style={{ fontSize: 20, paddingHorizontal: 10, color: '#000' }}>Scan</Text>
-          </TouchableOpacity>
-        </View>
-        <View style={styles.container}>
-          <View style={styles.card}>
-            <Text style={styles.cardTitle}>Your Profile QR Code</Text>
-            <View style={styles.qrBox}>
-              {loading ? (
-                <ActivityIndicator size="large" color="#34495e" />
-              ) : (
-                <QRCode
-                  value={qrValue}
-                  size={180}
-                  getRef={(c) => (qrCodeRef.current = c)}
-                />
-              )}
-            </View>
+      <View style={styles.container}>
+        <View style={styles.card}>
+          <Text style={styles.cardTitle}>Your Profile QR Code</Text>
+          <View style={styles.qrBox}>
+            {loading ? (
+              <ActivityIndicator size="large" color="#34495e" />
+            ) : (
+              <QRCode
+                value={qrValue}
+                size={180}
+                getRef={(c) => (qrCodeRef.current = c)}
+              />
+            )}
           </View>
         </View>
-      </SafeAreaView>
+      </View>
     </>
   );
 };
@@ -89,15 +71,16 @@ export default QRCodeScreen;
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    // padding: 20,
+    padding: 20,
     alignItems: 'center',
   },
   header: {
     flexDirection: 'row',
     justifyContent: 'space-between',
     alignItems: 'center',
-    paddingHorizontal: 12,
+    paddingHorizontal: 16,
     paddingVertical: 12,
+    height: 70,
   },
   headerTitle: {
     fontSize: 18,

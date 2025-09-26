@@ -17,8 +17,7 @@ import {
     Text,
     TextInput,
     TouchableOpacity,
-    useColorScheme,
-    View,
+    View
 } from 'react-native';
 import Entypo from 'react-native-vector-icons/Entypo';
 import MaterialIcons from 'react-native-vector-icons/MaterialIcons';
@@ -84,7 +83,7 @@ const UserMeetings = ({ route, navigation }) => {
     }, []);
 
     const getUserImageSource = (photo) => {
-        if (!photo || photo.trim() === '') {return null;} // No photo
+        if (!photo || photo.trim() === '') { return null; } // No photo
 
         if (photo.startsWith('data:image')) {
             return { uri: photo }; // Already a valid data URI

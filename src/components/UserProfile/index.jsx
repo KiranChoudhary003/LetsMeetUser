@@ -152,7 +152,7 @@ const UserProfile = ({ navigation, route }) => {
                 });
 
             if (!image?.path) { return; }
-          
+
             setShowImageOptions(false);
             setUploading(true);
 
@@ -251,7 +251,7 @@ const UserProfile = ({ navigation, route }) => {
     };
 
     return (
-        <SafeAreaView style={{ flex: 1, backgroundColor: '#34495e' }}>
+        <SafeAreaView style={{ flex: 1, backgroundColor: '#34495e', paddingTop: StatusBar.currentHeight }}>
             <StatusBar
                 translucent
                 backgroundColor="transparent"
@@ -564,6 +564,7 @@ const styles = StyleSheet.create({
     headerContainer: {
         backgroundColor: '#34495e',
         paddingBottom: 60,
+        paddingTop: 20,
         borderBottomLeftRadius: 20,
         borderBottomRightRadius: 20,
     },
@@ -572,7 +573,6 @@ const styles = StyleSheet.create({
         alignItems: 'center',
         justifyContent: 'space-between',
         paddingHorizontal: 20,
-        marginTop: Platform.OS === 'android' ? StatusBar.currentHeight + 20 : 0,
     },
 
     profileHeader: {

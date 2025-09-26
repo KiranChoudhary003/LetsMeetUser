@@ -155,17 +155,7 @@ const Description = ({ navigation, route }) => {
                     </TouchableOpacity>
                     <Text
                         style={styles.headerTitle}
-                        numberOfLines={1}
-                        ellipsizeMode="tail"
-                    >
-                        {
-                            (name.length > 40
-                                ? name.slice(0, 40) + '...'
-                                : name.split(' ').slice(0, 4).join(' ') +
-                                (name.split(' ').length > 4 ? '...' : '')
-                            )
-                        }
-
+                    >Event Details
                     </Text>
                 </View>
 
@@ -177,10 +167,19 @@ const Description = ({ navigation, route }) => {
                             resizeMode="cover"
                         />
                     )}
+                    <View>
+                        <Text style={styles.descriptionHeading}>Event Name</Text>
+                        <View style={styles.event}>
+                            <Text style={styles.eventName}> {name}</Text>
+                        </View>
+                    </View>
 
-                    <View style={styles.locationLabel}>
-                        <Ionicons name="location-outline" size={16} color="#000" />
-                        <Text style={styles.locationText}> {organizer}</Text>
+                    <View>
+                        <Text style={styles.descriptionHeading}>Location</Text>
+                        <View style={styles.locationLabel}>
+                            <Ionicons name="location-outline" size={16} color="#000" />
+                            <Text style={styles.locationText}> {organizer}</Text>
+                        </View>
                     </View>
 
                     <Text style={styles.descriptionHeading}>Start Date</Text>
@@ -316,8 +315,6 @@ const styles = StyleSheet.create({
         fontSize: 18,
         fontWeight: 'bold',
         textAlign: 'center',
-        marginLeft: 30,
-        marginRight: 30,
     },
     backArrow: {
         position: 'absolute',
@@ -337,6 +334,13 @@ const styles = StyleSheet.create({
         alignItems: 'center',
         marginBottom: 16,
         marginLeft: 4,
+    },
+    event: {
+        marginBottom: 16,
+    },
+    eventName: {
+        fontSize: 16,
+        color: '#000',
     },
     locationText: {
         fontSize: 16,

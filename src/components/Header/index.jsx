@@ -21,7 +21,7 @@ const Header = () => {
   const [userProfile, setUserProfile] = useState(null);
 
   const handleQRCode = () => {
-    navigation.navigate('QRCode');
+    navigation.navigate('QRCodeSlidePage');
   };
 
   const handleProfile = () => {
@@ -76,7 +76,7 @@ const Header = () => {
   };
 
   return (
-    <SafeAreaView style={{backgroundColor: '#34495e'}}>
+    <SafeAreaView style={{ backgroundColor: '#34495e' }}>
       <StatusBar
         translucent
         backgroundColor="transparent"

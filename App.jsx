@@ -39,6 +39,7 @@ import UserMeetings from './src/components/UserMeetings';
 import UserProfile from './src/components/UserProfile';
 import Welcome from './src/components/Welcome';
 import { connectSocket, getSocket } from './src/socket';
+import QRCodeSlidePage from './src/components/slider';
 
 enableScreens();
 const Stack = createStackNavigator();
@@ -203,6 +204,7 @@ const App = () => {
                 <Stack.Screen name="MeetingNoteScreen" component={MeetingNoteScreen} />
                 <Stack.Screen name="UserMeetings" component={UserMeetings} />
                 <Stack.Screen name="MeetingRecord" component={MeetingRecords} />
+                <Stack.Screen name="QRCodeSlidePage" component={QRCodeSlidePage} />
               </Stack.Navigator>
 
               {/* Modal for Meeting Request */}
