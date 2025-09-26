@@ -1,3 +1,4 @@
+/* eslint-disable react-native/no-inline-styles */
 import { BASE_URL } from '@env';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { BlurView } from '@react-native-community/blur';
@@ -7,23 +8,24 @@ import axios from 'axios';
 import React, { useCallback, useEffect, useState } from 'react';
 import {
     ActivityIndicator,
-    Modal as MessageModal,
     Dimensions,
     Image,
     Linking,
+    Modal as MessageModal,
     Modal,
     PermissionsAndroid,
     Platform,
+    Pressable,
     SafeAreaView,
     ScrollView,
     StatusBar,
     StyleSheet, Text, TouchableOpacity,
     useColorScheme,
-    KeyboardAvoidingView,
-    View,
+    View
 } from 'react-native';
 import ImagePicker from 'react-native-image-crop-picker';
 import FontAwesome from 'react-native-vector-icons/FontAwesome';
+import FontAwesome5 from 'react-native-vector-icons/FontAwesome5';
 import MaterialCommunityIcons from 'react-native-vector-icons/MaterialCommunityIcons';
 import MaterialIcons from 'react-native-vector-icons/MaterialIcons';
 import profile from '../../assets/profile.png';
@@ -122,7 +124,7 @@ const UserProfile = ({ navigation, route }) => {
     };
 
 
-    const pickImage = async (fromCamera = false) => {
+    const pickImage = async (fromCamera) => {
         setProfileView(false);
         setShowImageOptions(false);
 
@@ -151,7 +153,7 @@ const UserProfile = ({ navigation, route }) => {
                     mediaType: 'photo',
                 });
 
-            if (!image?.path) {return;}
+            if (!image?.path) { return; }
 
             setUploading(true);
 
@@ -307,8 +309,16 @@ const UserProfile = ({ navigation, route }) => {
                                 resizeMode="contain"
                             />
                             {isViewingOwnProfile && (
-                                <TouchableOpacity style={styles.editIcon} onPress={() => setShowImageOptions(true)}>
-                                    <MaterialIcons name="edit" size={24} color="#fff" />
+                                <TouchableOpacity style={styles.editIcon} onPress={() => {
+                                    setShowImageOptions(true);
+                                    setProfileView(false);
+                                }
+                                }>
+                                    <FontAwesome5
+                                        name="user-edit"
+                                        size={28}
+                                        color="#fff"
+                                    />
                                 </TouchableOpacity>
                             )}
                         </View>
@@ -399,23 +409,37 @@ const UserProfile = ({ navigation, route }) => {
                     animationType="slide"
                     onRequestClose={() => setShowImageOptions(false)}
                 >
-                    <TouchableOpacity
-                        style={styles.modalOverlayBottom}
-                        activeOpacity={1}
-                        onPressOut={() => setShowImageOptions(false)}
-                    >
+                    <View style={styles.modalOverlayBottom}>
+                        {/* Backdrop only */}
+                        <Pressable
+                            style={StyleSheet.absoluteFill}
+                            onPress={() => setShowImageOptions(false)}
+                        />
+
+                        {/* Bottom Modal Content */}
                         <View
                             style={[
                                 styles.bottomModal,
-                                { backgroundColor: isDarkMode ? '#1c1c1e' : '#fff', shadowColor: isDarkMode ? '#000' : '#aaa' },
+                                {
+                                    backgroundColor: isDarkMode ? '#1c1c1e' : '#fff',
+                                    shadowColor: isDarkMode ? '#000' : '#aaa',
+                                },
                             ]}
                         >
                             {/* Modal Header with Title + Close Icon */}
-                            <View style={{ flexDirection: 'row', justifyContent: 'space-between', width: '100%', marginBottom: 18, alignItems: 'center' }}>
+                            <View
+                                style={{
+                                    flexDirection: 'row',
+                                    justifyContent: 'space-between',
+                                    width: '100%',
+                                    marginBottom: 18,
+                                    alignItems: 'center',
+                                }}
+                            >
                                 <Text
                                     style={[
                                         styles.modalTitle,
-                                        { color: isDarkMode ? '#fff' : '#000', fontSize: 18 }, // white in dark, black in light
+                                        { color: isDarkMode ? '#fff' : '#000', fontSize: 18 },
                                     ]}
                                 >
                                     Choose Option
@@ -425,7 +449,7 @@ const UserProfile = ({ navigation, route }) => {
                                     <MaterialIcons
                                         name="close"
                                         size={28}
-                                        color={isDarkMode ? '#fff' : '#000'} // white in dark, black in light
+                                        color={isDarkMode ? '#fff' : '#000'}
                                     />
                                 </TouchableOpacity>
                             </View>
@@ -441,14 +465,11 @@ const UserProfile = ({ navigation, route }) => {
                                 <MaterialIcons
                                     name="photo-camera"
                                     size={24}
-                                    color={isDarkMode ? '#fff' : '#000'} // white/black
+                                    color={isDarkMode ? '#fff' : '#000'}
                                     style={{ marginRight: 10 }}
                                 />
                                 <Text
-                                    style={[
-                                        styles.optionText,
-                                        { color: isDarkMode ? '#fff' : '#000' }, // white/black
-                                    ]}
+                                    style={[styles.optionText, { color: isDarkMode ? '#fff' : '#000' }]}
                                 >
                                     Take Photo
                                 </Text>
@@ -465,21 +486,19 @@ const UserProfile = ({ navigation, route }) => {
                                 <MaterialIcons
                                     name="photo-library"
                                     size={24}
-                                    color={isDarkMode ? '#fff' : '#000'} // white/black
+                                    color={isDarkMode ? '#fff' : '#000'}
                                     style={{ marginRight: 10 }}
                                 />
                                 <Text
-                                    style={[
-                                        styles.optionText,
-                                        { color: isDarkMode ? '#fff' : '#000' }, // white/black
-                                    ]}
+                                    style={[styles.optionText, { color: isDarkMode ? '#fff' : '#000' }]}
                                 >
                                     Choose from Gallery
                                 </Text>
                             </TouchableOpacity>
                         </View>
-                    </TouchableOpacity>
+                    </View>
                 </Modal>
+
                 <MessageModal
                     transparent
                     visible={AlertVisible}
@@ -775,7 +794,6 @@ const styles = StyleSheet.create({
     },
     modalOverlayBottom: {
         flex: 1,
-        backgroundColor: 'rgba(0,0,0,0.3)',
         justifyContent: 'flex-end',
     },
 

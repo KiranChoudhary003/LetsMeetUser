@@ -1,6 +1,6 @@
 import { useNavigation, useNavigationState } from '@react-navigation/native';
 import React, { useCallback, useEffect, useRef, useState } from 'react';
-import { StyleSheet, Text, TouchableOpacity } from 'react-native';
+import { StyleSheet, Text, TouchableOpacity, View } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import MaterialCommunityIcons from 'react-native-vector-icons/MaterialCommunityIcons';
 
@@ -57,7 +57,7 @@ const BottomTab = () => {
     );
 
     return (
-        <SafeAreaView edges={['bottom']} style={styles.bottomBarContainer}>
+        <View style={styles.bottomBarContainer}>
             {tabRefs.current.map(({ tab, onPress }) => (
                 <TabItem
                     key={tab.name}
@@ -66,7 +66,7 @@ const BottomTab = () => {
                     onPress={onPress}
                 />
             ))}
-        </SafeAreaView>
+        </View>
     );
 };
 
