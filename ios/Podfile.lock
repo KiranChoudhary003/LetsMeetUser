@@ -1526,6 +1526,8 @@ PODS:
     - ReactCommon/turbomodule/bridging
     - ReactCommon/turbomodule/core
     - Yoga
+  - react-native-netinfo (11.4.1):
+    - React-Core
   - react-native-safe-area-context (5.6.1):
     - DoubleConversion
     - glog
@@ -2009,6 +2011,59 @@ PODS:
     - ReactCommon/turbomodule/bridging
     - ReactCommon/turbomodule/core
     - Yoga
+  - RNImageCropPicker (0.51.0):
+    - DoubleConversion
+    - glog
+    - hermes-engine
+    - RCT-Folly (= 2024.11.18.00)
+    - RCTRequired
+    - RCTTypeSafety
+    - React-Core
+    - React-debug
+    - React-Fabric
+    - React-featureflags
+    - React-graphics
+    - React-hermes
+    - React-ImageManager
+    - React-jsi
+    - React-NativeModulesApple
+    - React-RCTFabric
+    - React-RCTImage
+    - React-renderercss
+    - React-rendererdebug
+    - React-utils
+    - ReactCodegen
+    - ReactCommon/turbomodule/bridging
+    - ReactCommon/turbomodule/core
+    - RNImageCropPicker/QBImagePickerController (= 0.51.0)
+    - TOCropViewController (~> 2.7.4)
+    - Yoga
+  - RNImageCropPicker/QBImagePickerController (0.51.0):
+    - DoubleConversion
+    - glog
+    - hermes-engine
+    - RCT-Folly (= 2024.11.18.00)
+    - RCTRequired
+    - RCTTypeSafety
+    - React-Core
+    - React-debug
+    - React-Fabric
+    - React-featureflags
+    - React-graphics
+    - React-hermes
+    - React-ImageManager
+    - React-jsi
+    - React-NativeModulesApple
+    - React-RCTFabric
+    - React-RCTImage
+    - React-renderercss
+    - React-rendererdebug
+    - React-utils
+    - ReactCodegen
+    - ReactCommon/turbomodule/bridging
+    - ReactCommon/turbomodule/core
+    - TOCropViewController (~> 2.7.4)
+    - Yoga
   - RNPermissions (3.10.1):
     - DoubleConversion
     - glog
@@ -2306,6 +2361,7 @@ PODS:
     - ReactCommon/turbomodule/core
     - Yoga
   - SocketRocket (0.7.1)
+  - TOCropViewController (2.7.4)
   - VisionCamera (4.7.1):
     - VisionCamera/Core (= 4.7.1)
     - VisionCamera/React (= 4.7.1)
@@ -2363,6 +2419,7 @@ DEPENDENCIES:
   - react-native-geolocation-service (from `../node_modules/react-native-geolocation-service`)
   - react-native-image-picker (from `../node_modules/react-native-image-picker`)
   - react-native-keyboard-controller (from `../node_modules/react-native-keyboard-controller`)
+  - "react-native-netinfo (from `../node_modules/@react-native-community/netinfo`)"
   - react-native-safe-area-context (from `../node_modules/react-native-safe-area-context`)
   - React-NativeModulesApple (from `../node_modules/react-native/ReactCommon/react/nativemodule/core/platform/ios`)
   - React-oscompat (from `../node_modules/react-native/ReactCommon/oscompat`)
@@ -2402,6 +2459,7 @@ DEPENDENCIES:
   - "RNFlashList (from `../node_modules/@shopify/flash-list`)"
   - RNFS (from `../node_modules/react-native-fs`)
   - RNGestureHandler (from `../node_modules/react-native-gesture-handler`)
+  - RNImageCropPicker (from `../node_modules/react-native-image-crop-picker`)
   - RNPermissions (from `../node_modules/react-native-permissions`)
   - RNReanimated (from `../node_modules/react-native-reanimated`)
   - RNScreens (from `../node_modules/react-native-screens`)
@@ -2426,6 +2484,7 @@ SPEC REPOS:
     - nanopb
     - PromisesObjC
     - SocketRocket
+    - TOCropViewController
 
 EXTERNAL SOURCES:
   boost:
@@ -2517,6 +2576,8 @@ EXTERNAL SOURCES:
     :path: "../node_modules/react-native-image-picker"
   react-native-keyboard-controller:
     :path: "../node_modules/react-native-keyboard-controller"
+  react-native-netinfo:
+    :path: "../node_modules/@react-native-community/netinfo"
   react-native-safe-area-context:
     :path: "../node_modules/react-native-safe-area-context"
   React-NativeModulesApple:
@@ -2595,6 +2656,8 @@ EXTERNAL SOURCES:
     :path: "../node_modules/react-native-fs"
   RNGestureHandler:
     :path: "../node_modules/react-native-gesture-handler"
+  RNImageCropPicker:
+    :path: "../node_modules/react-native-image-crop-picker"
   RNPermissions:
     :path: "../node_modules/react-native-permissions"
   RNReanimated:
@@ -2669,6 +2732,7 @@ SPEC CHECKSUMS:
   react-native-geolocation-service: 608e1da71a1ac31b4de64d9ef2815f697978c55b
   react-native-image-picker: 6ccf4bb98d38facc22db35fc2ee59a574fca4d16
   react-native-keyboard-controller: be15b0f8fdfd9ee0370f5bc7dab5ed2cfc3ef5e5
+  react-native-netinfo: f0a9899081c185db1de5bb2fdc1c88c202a059ac
   react-native-safe-area-context: 77ac71c6c8c9529a8ba894f5a3a226e621b44649
   React-NativeModulesApple: 9fbc2bba5acd30d55ecb84a7589b7865ff94a000
   React-oscompat: 56b4766e96b06843a3af49a6763ef40992e720aa
@@ -2708,6 +2772,7 @@ SPEC CHECKSUMS:
   RNFlashList: 087339c41dbb8a02e42156ad11748752b9142672
   RNFS: 4ac0f0ea233904cb798630b3c077808c06931688
   RNGestureHandler: 61d3e94abb866ee955563ddf073e405e3f541359
+  RNImageCropPicker: 4bec8842f1afde81a428963fd81687c4df7952aa
   RNPermissions: 6ccbe99a0cadc8d77bc34d738bc6eddfe78c75a6
   RNReanimated: 0692f0b36f15b83a7936c3611cab923e1396eeb9
   RNScreens: d0a1423adf282b7b59c022e309ee972537b539e3
@@ -2715,6 +2780,7 @@ SPEC CHECKSUMS:
   RNSVG: 9346c68a0d5c5e4e74d82d664b745f28e6cfc1cb
   RNVectorIcons: a61c8928c6a9b36cb66fb98c17ed60591e540fba
   SocketRocket: d4aabe649be1e368d1318fdf28a022d714d65748
+  TOCropViewController: 80b8985ad794298fb69d3341de183f33d1853654
   VisionCamera: 0ecfede218b2d989be3d504270b71f3d2384d95d
   Yoga: b37eeaa6148984cac70ecaf8022bb209e03296cb
 

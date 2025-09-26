@@ -125,8 +125,6 @@ const UserProfile = ({ navigation, route }) => {
 
 
     const pickImage = async (fromCamera) => {
-        setProfileView(false);
-        setShowImageOptions(false);
 
         const hasPermission = fromCamera
             ? await requestCameraPermission()
@@ -154,7 +152,8 @@ const UserProfile = ({ navigation, route }) => {
                 });
 
             if (!image?.path) { return; }
-
+          
+            setShowImageOptions(false);
             setUploading(true);
 
             const formData = new FormData();
@@ -163,7 +162,6 @@ const UserProfile = ({ navigation, route }) => {
                 type: image.mime,
                 name: 'photo.jpg',
             });
-
             const token = await AsyncStorage.getItem('token');
             await axios.put(
                 `${BASE_URL}/api/user-profile/edit`,
