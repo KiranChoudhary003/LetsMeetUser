@@ -550,7 +550,8 @@ const styles = StyleSheet.create({
     fontSize: 18,
     fontWeight: 'bold',
     color: '#111',
-    textAlign:'left',
+    flexShrink: 1,
+    maxWidth: 270,
   },
   bottomRow: {
     alignItems: 'flex-start',
@@ -560,6 +561,8 @@ const styles = StyleSheet.create({
     fontSize: 12,
     color: '#555',
     marginBottom: 4,
+    flexShrink: 1,
+    maxWidth: 220,
   },
   eventDate: {
     fontSize: 12,

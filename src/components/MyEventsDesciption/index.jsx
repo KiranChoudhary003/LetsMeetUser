@@ -1,7 +1,8 @@
+/* eslint-disable react-native/no-inline-styles */
 import { BASE_URL } from '@env';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import axios from 'axios';
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { BlurView } from '@react-native-community/blur';
 import {
     ActivityIndicator,
@@ -13,11 +14,14 @@ import {
     StyleSheet,
     Text,
     TouchableOpacity,
-    useColorScheme,
     View,
+    Linking,
+    useWindowDimensions,
 } from 'react-native';
 import Ionicons from 'react-native-vector-icons/Ionicons';
 import MaterialCommunityIcons from 'react-native-vector-icons/MaterialCommunityIcons';
+import RenderHTML from 'react-native-render-html';
+import { Dimensions } from 'react-native';
 
 
 const MyEventsDesciption = ({ navigation, route }) => {
@@ -41,19 +45,21 @@ const MyEventsDesciption = ({ navigation, route }) => {
         checkInDistance,
         fetchUpcomingEvents,
     } = route.params;
+    const { width } = useWindowDimensions();
+    const screenWidth = Dimensions.get('window').width - 32; // subtract ScrollView padding
+    const [bannerHeight, setBannerHeight] = useState(screenWidth * 9 / 16);
+
+
 
     const [buttonState, setButtonState] = useState(() => {
         if (already_checked_in) {
             return 'checkedin';
         }
-
         const eventEndDate = new Date(end_date);
         const now = new Date();
-
         if (eventEndDate < now) {
             return 'missed';
         }
-
         return 'checkin';
     });
 
@@ -119,14 +125,67 @@ const MyEventsDesciption = ({ navigation, route }) => {
         setAlertVisible(true);
     };
 
+    useEffect(() => {
+        if (banner) {
+            Image.getSize(
+                banner,
+                (width, height) => {
+                    const ratio = height / width;
+                    setBannerHeight(screenWidth * ratio);
+                },
+                (error) => console.log(error)
+            );
+        }
+    }, [banner]);
+
+    const tagsStyles = {
+        body: {
+            color: '#333',
+            fontSize: 14,
+            lineHeight: 26,
+        },
+        p: { marginVertical: 6 },
+        h1: { fontSize: 32, fontWeight: '700', marginVertical: 10 },
+        h2: { fontSize: 28, fontWeight: '600', marginVertical: 8 },
+        h3: { fontSize: 24, fontWeight: '600', marginVertical: 6 },
+        strong: { fontWeight: '700' },
+        em: { fontStyle: 'italic' },
+        u: { textDecorationLine: 'underline' },
+        s: { textDecorationLine: 'line-through' },
+        ol: { paddingLeft: 24, marginVertical: 6 },
+        ul: { paddingLeft: 24, marginVertical: 6 },
+        li: { marginVertical: 2 },
+        a: {
+            color: '#1E90FF',
+            textDecorationLine: 'underline',
+        },
+        blockquote: {
+            borderLeftWidth: 4,
+            borderLeftColor: '#ccc',
+            paddingLeft: 12,
+            marginVertical: 10,
+            color: '#666',
+            fontStyle: 'italic',
+        },
+        img: {
+            maxWidth: '100%',
+            height: 'auto',
+            marginVertical: 10,
+        },
+    };
+
+    const classesStyles = {
+        'ql-size-small': { fontSize: 10 },
+        'ql-size-large': { fontSize: 24 },
+        'ql-size--large': { fontSize: 24 },
+        'ql-size-huge': { fontSize: 32 },
+    };
+
     return (
         <SafeAreaView style={{ flex: 1, backgroundColor: '#34495e', paddingTop: StatusBar.currentHeight }}>
-            <StatusBar
-                translucent
-                backgroundColor="transparent"
-                barStyle="light-content"
-            />
+            <StatusBar translucent backgroundColor="transparent" barStyle="light-content" />
             <View style={styles.container}>
+                {/* Header */}
                 <View style={styles.header}>
                     <TouchableOpacity style={styles.backArrow} onPress={() => navigation.goBack()}>
                         <Ionicons name="arrow-back-outline" size={24} color="#f9efef" />
@@ -134,27 +193,14 @@ const MyEventsDesciption = ({ navigation, route }) => {
 
                     <Text
                         style={styles.headerTitle}
-                        numberOfLines={1}
-                        ellipsizeMode="tail"
-                    >
-                        {
-                            (name.length > 40
-                                ? name.slice(0, 25) + '...'
-                                : name.split(' ').slice(0, 4).join(' ') +
-                                (name.split(' ').length > 4 ? '...' : '')
-                            )
-                        }
+                    >Event Details
                     </Text>
 
                     <TouchableOpacity
                         onPress={() => navigation.navigate('UserMeetings', { event: { id } })}
                         style={styles.iconWrapper}
                     >
-                        <MaterialCommunityIcons
-                            name="card-account-details"
-                            size={26}
-                            color="#fff"
-                        />
+                        <MaterialCommunityIcons name="card-account-details" size={26} color="#fff" />
                     </TouchableOpacity>
                 </View>
 
@@ -162,43 +208,56 @@ const MyEventsDesciption = ({ navigation, route }) => {
                     {banner && (
                         <Image
                             source={{ uri: banner }}
-                            style={styles.poster}
-                            resizeMode="cover"
+                            style={[styles.poster, { height: bannerHeight }]}
+                            resizeMode="contain"
                         />
                     )}
 
-                    <View style={styles.locationLabel}>
-                        <Ionicons name="location-outline" size={16} color="#000" />
-                        <Text style={styles.locationText}> {organizer}</Text>
+                    {/* Event Details Card */}
+                    <View style={styles.detailsCard}>
+                        <Text style={styles.eventName}>{name}</Text>
+
+                        <View style={styles.detailRow}>
+                            <Ionicons name="location-outline" size={18} color="#555" />
+                            <Text style={styles.detailText}>{organizer}</Text>
+                        </View>
+
+                        <View style={styles.detailRow}>
+                            <Ionicons name="calendar-outline" size={18} color="#555" />
+                            <Text style={styles.detailText}>
+                                {new Date(start_date).toLocaleString('en-GB', {
+                                    day: '2-digit',
+                                    month: 'short',
+                                    year: 'numeric',
+                                    hour: '2-digit',
+                                    minute: '2-digit',
+                                    hour12: false,
+                                })} - {new Date(end_date).toLocaleString('en-GB', {
+                                    day: '2-digit',
+                                    month: 'short',
+                                    year: 'numeric',
+                                    hour: '2-digit',
+                                    minute: '2-digit',
+                                    hour12: false,
+                                })}
+                            </Text>
+                        </View>
+
+                        <Text style={styles.sectionHeading}>About Event</Text>
+                        <RenderHTML
+                            contentWidth={width - 32}       // adjust for padding/margin
+                            source={{ html: description }}
+                            tagsStyles={tagsStyles}
+                            classesStyles={classesStyles}
+                            ignoredStyles={[]}              // parse all inline styles
+                            onLinkPress={(evt, href) => {
+                                Linking.openURL(href);        // open hyperlinks
+                            }}
+                            enableExperimentalMarginCollapsing={true}
+                        />
                     </View>
 
-                    <Text style={styles.descriptionHeading}>Start Date</Text>
-                    <Text style={styles.descriptionText}>
-                        {new Date(start_date).toLocaleString('en-GB', {
-                            day: '2-digit',
-                            month: 'short',
-                            year: 'numeric',
-                            hour: '2-digit',
-                            minute: '2-digit',
-                            hour12: false,
-                        })}
-                    </Text>
-
-                    <Text style={styles.descriptionHeading}>End Date</Text>
-                    <Text style={styles.descriptionText}>
-                        {new Date(end_date).toLocaleString('en-GB', {
-                            day: '2-digit',
-                            month: 'short',
-                            year: 'numeric',
-                            hour: '2-digit',
-                            minute: '2-digit',
-                            hour12: false,
-                        })}
-                    </Text>
-
-                    <Text style={styles.descriptionHeading}>Description</Text>
-                    <Text style={styles.descriptionText}>{description}</Text>
-
+                    {/* Check-in Button */}
                     <TouchableOpacity
                         style={[
                             styles.attendButton,
@@ -239,21 +298,27 @@ const MyEventsDesciption = ({ navigation, route }) => {
                         )}
                     </TouchableOpacity>
 
-                    <View style={styles.statsContainer}>
-                        <View style={styles.statBox}>
-                            <Text style={styles.statLabel}>Total connection made</Text>
-                            <Text style={styles.statNumber}>{totalConnections || 0}</Text>
+                    {/* Stats Section in Card */}
+                    <View style={styles.detailsCard}>
+                        <Text style={styles.sectionHeading}>Event Stats</Text>
+                        <View style={styles.statsContainer}>
+                            <View style={styles.statBox}>
+                                <Text style={styles.statLabel}>Total Connections</Text>
+                                <Text style={styles.statNumber}>{totalConnections || 0}</Text>
+                            </View>
+                            <View style={styles.statBox}>
+                                <Text style={styles.statLabel}>Requested</Text>
+                                <Text style={styles.statNumber}>{pendingRequests || 0}</Text>
+                            </View>
+                            <View style={styles.statBox}>
+                                <Text style={styles.statLabel}>Accepted</Text>
+                                <Text style={styles.statNumber}>{approvedRequests || 0}</Text>
+                            </View>
                         </View>
-                        <View style={styles.statBox}>
-                            <Text style={styles.statLabel}>Requested</Text>
-                            <Text style={styles.statNumber}>{pendingRequests || 0}</Text>
-                        </View>
-                        <View style={styles.statBox}>
-                            <Text style={styles.statLabel}>Accepted</Text>
-                            <Text style={styles.statNumber}>{approvedRequests || 0}</Text>
-                        </View  >
                     </View>
                 </ScrollView>
+
+                {/* Alert Modal */}
                 <Modal
                     transparent
                     visible={AlertVisible}
@@ -265,21 +330,17 @@ const MyEventsDesciption = ({ navigation, route }) => {
                         activeOpacity={1}
                         onPressOut={() => setAlertVisible(false)}
                     >
-                        {/* Blur background */}
                         <BlurView
                             style={StyleSheet.absoluteFill}
-                            blurType="light"                           // keep it light for premium subtlety
-                            blurAmount={3}                            // stronger blur for soft glass effect
-                            reducedTransparencyFallbackColor="rgba(255,255,255,0.1)"  // very subtle fallback
+                            blurType="light"
+                            blurAmount={3}
+                            reducedTransparencyFallbackColor="rgba(255,255,255,0.1)"
                         />
 
                         <View style={styles.containerBox}>
                             <Text style={styles.titleBox}>Message</Text>
                             <Text style={styles.messageBox}>{AlertMessage}</Text>
-                            <TouchableOpacity
-                                onPress={() => setAlertVisible(false)}
-                                style={styles.buttonBox}
-                            >
+                            <TouchableOpacity onPress={() => setAlertVisible(false)} style={styles.buttonBox}>
                                 <Text style={styles.buttonTextBox}>OK</Text>
                             </TouchableOpacity>
                         </View>
@@ -293,10 +354,7 @@ const MyEventsDesciption = ({ navigation, route }) => {
 export default MyEventsDesciption;
 
 const styles = StyleSheet.create({
-    container: {
-        flex: 1,
-        backgroundColor: '#e8effc',
-    },
+    container: { flex: 1, backgroundColor: '#e8effc' },
     header: {
         height: 70,
         justifyContent: 'center',
@@ -304,14 +362,8 @@ const styles = StyleSheet.create({
         backgroundColor: '#34495e',
         position: 'relative',
     },
-    backArrow: {
-        position: 'absolute',
-        left: 15,
-    },
-    iconWrapper: {
-        position: 'absolute',
-        right: 15,
-    },
+    backArrow: { position: 'absolute', left: 15 },
+    iconWrapper: { position: 'absolute', right: 15 },
     headerTitle: {
         color: 'white',
         fontSize: 18,
@@ -320,38 +372,55 @@ const styles = StyleSheet.create({
         marginLeft: 30,
         marginRight: 30,
     },
-    scrollContainer: {
-        padding: 16,
-        paddingBottom: 40,
-    },
+    scrollContainer: { padding: 16, paddingBottom: 40 },
     poster: {
         width: '100%',
-        height: 300,
         borderRadius: 10,
         marginBottom: 20,
     },
-    locationLabel: {
+
+    /** Card style **/
+    detailsCard: {
+        backgroundColor: '#fff',
+        borderRadius: 12,
+        padding: 16,
+        marginBottom: 15,
+        shadowColor: '#000',
+        shadowOffset: { width: 0, height: 4 },
+        shadowOpacity: 0.08,
+        shadowRadius: 6,
+        elevation: 3,
+    },
+
+    eventName: {
+        fontSize: 22,
+        fontWeight: '700',
+        color: '#222',
+        marginBottom: 10,
+        textAlign: 'center',
+    },
+    detailRow: {
         flexDirection: 'row',
-        alignItems: 'center',
-        marginBottom: 16,
-        marginLeft: 4,
+        alignItems: 'flex-start',
+        marginBottom: 8,
     },
-    locationText: {
-        fontSize: 16,
-        color: '#000',
+    detailText: {
+        fontSize: 14,
+        color: '#555',
+        marginLeft: 6,
+        flexShrink: 1,
+        flexWrap: 'wrap',
     },
-    descriptionHeading: {
-        fontWeight: 'bold',
-        fontSize: 20,
+
+    sectionHeading: {
+        fontSize: 18,
+        fontWeight: '600',
+        marginTop: 12,
         marginBottom: 8,
         color: '#333',
     },
-    descriptionText: {
-        fontSize: 14,
-        lineHeight: 22,
-        color: '#333',
-        marginBottom: 20,
-    },
+    descriptionText: { fontSize: 14, lineHeight: 22, color: '#444', marginBottom: 10 },
+
     tickWrapper: {
         padding: 12,
         borderRadius: 10,
@@ -359,54 +428,29 @@ const styles = StyleSheet.create({
         alignItems: 'center',
         borderColor: '#000',
         borderWidth: 0.2,
-        marginTop: 10,
         width: 300,
     },
-    tickText: {
-        fontWeight: 'bold',
-        fontSize: 14,
-        color: '#4CAF50',
-    },
+    tickText: { fontWeight: 'bold', fontSize: 14, color: '#4CAF50' },
     attendButton: {
         alignSelf: 'center',
         paddingHorizontal: 100,
         paddingVertical: 10,
         borderRadius: 20,
+        marginBottom: 15,
         borderWidth: 1,
     },
-    attendButtonText: {
-        fontWeight: 'bold',
-        fontSize: 16,
-    },
+    attendButtonText: { fontWeight: 'bold', fontSize: 16 },
+
+    /** Stats in card **/
     statsContainer: {
         flexDirection: 'row',
         justifyContent: 'space-between',
-        marginTop: 30,
-        paddingHorizontal: 5,
+        marginTop: 12,
     },
-    statBox: {
-        flex: 1,
-        marginHorizontal: 5,
-        paddingVertical: 14,
-        paddingHorizontal: 8,
-        borderWidth: 1.5,
-        borderColor: '#34495e',
-        borderRadius: 12,
-        backgroundColor: 'transparent',
-        alignItems: 'center',
-    },
-    statLabel: {
-        fontSize: 12,
-        fontWeight: '500',
-        color: '#000',
-        textAlign: 'center',
-        marginBottom: 4,
-    },
-    statNumber: {
-        fontSize: 18,
-        fontWeight: 'bold',
-        color: '#000',
-    },
+    statBox: { flex: 1, alignItems: 'center' },
+    statLabel: { fontSize: 12, fontWeight: '500', color: '#666', marginBottom: 4 },
+    statNumber: { fontSize: 18, fontWeight: '700', color: '#222' },
+
     overlayBox: {
         flex: 1,
         backgroundColor: 'rgba(0,0,0,0.35)',
