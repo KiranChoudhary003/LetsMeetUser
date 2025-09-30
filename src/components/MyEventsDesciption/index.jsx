@@ -136,7 +136,7 @@ const MyEventsDesciption = ({ navigation, route }) => {
                 (error) => console.log(error)
             );
         }
-    }, [banner]);
+    }, [banner, screenWidth]);
 
     const tagsStyles = {
         body: {
@@ -401,7 +401,7 @@ const styles = StyleSheet.create({
     },
     detailRow: {
         flexDirection: 'row',
-        alignItems: 'flex-start',
+        alignItems: 'center',
         marginBottom: 8,
     },
     detailText: {

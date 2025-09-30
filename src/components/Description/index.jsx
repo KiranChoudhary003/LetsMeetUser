@@ -399,8 +399,8 @@ const styles = StyleSheet.create({
     },
     detailRow: {
         flexDirection: 'row',
-        alignItems: 'flex-start',
         marginBottom: 8,
+        alignItems: 'center',
     },
     detailText: {
         fontSize: 14,

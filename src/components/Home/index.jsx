@@ -876,7 +876,7 @@ const styles = StyleSheet.create({
         fontWeight: 'bold',
         color: '#111',
         flexShrink: 1,
-        maxWidth:270,
+        maxWidth:230,
     },
     bottomRow: {
         alignItems: 'flex-start',
@@ -887,7 +887,7 @@ const styles = StyleSheet.create({
         color: '#555',
         marginBottom: 4,
         flexShrink: 1,
-        maxWidth:220,
+        maxWidth:190,
     },
     eventDate: {
         fontSize: 12,
