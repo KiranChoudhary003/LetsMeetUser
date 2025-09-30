@@ -22,9 +22,7 @@ const QRCodeScreen = ({ navigation }) => {
             'Authorization': `Bearer ${token}`,
           },
         });
-
         const user = response.data.user;
-
         setUserData({
           id: user.id,
           firstName: user.first_name,

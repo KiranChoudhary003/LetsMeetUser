@@ -7,7 +7,6 @@ export const LocationProvider = ({ children }) => {
     latitude: null,
     longitude: null,
   });
-
   return (
     <LocationContext.Provider value={{ location, setLocation }}>
       {children}

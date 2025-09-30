@@ -353,7 +353,6 @@ const ChatPage = ({ route }) => {
                 setGroupedMessages(groupMessagesByDate(combined));
                 return combined;
             });
-
             setTimeout(() => {
                 setLoadingOlder(false);
             }, 50);

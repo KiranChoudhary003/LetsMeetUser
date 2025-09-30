@@ -12,8 +12,8 @@ export const NetworkProvider = ({ children }) => {
     const [isConnected, setIsConnected] = useState(true);
     const [showRestored, setShowRestored] = useState(false);
 
-    const bannerAnim = React.useRef(new Animated.Value(-50)).current; // offline banner animation
-    const restoredAnim = React.useRef(new Animated.Value(-50)).current; // restored banner animation
+    const bannerAnim = React.useRef(new Animated.Value(-50)).current; 
+    const restoredAnim = React.useRef(new Animated.Value(-50)).current; 
 
     useEffect(() => {
         const unsubscribe = NetInfo.addEventListener(state => {

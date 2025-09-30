@@ -70,7 +70,6 @@ const UserMeetings = ({ route, navigation }) => {
                         meetings: entry.meetings || [],
                     };
                 });
-
                 setRequests(formatted);
             } catch (error) {
                 console.error('Error fetching meetings:', error.message);
@@ -78,7 +77,6 @@ const UserMeetings = ({ route, navigation }) => {
                 setLoading(false);
             }
         };
-
         fetchMeetings();
     }, []);
 

@@ -53,7 +53,6 @@ export const connectSocket = async (passedToken = null) => {
 
     socket.on('disconnect', reason => {
       console.warn('⚠️ Socket disconnected:', reason);
-      // Optional: reset initialized flag
       initialized = false;
     });
 

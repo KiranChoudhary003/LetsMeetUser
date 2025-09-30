@@ -97,7 +97,6 @@ export default function UserListScreen() {
                 });
             });
 
-
             socket.on('messages_marked_read', ({ chat_id }) => {
                 setUsers(prevUsers =>
                     prevUsers.map(user =>
@@ -126,7 +125,6 @@ export default function UserListScreen() {
             .toLowerCase()
             .includes(searchQuery.toLowerCase())
     );
-
 
     const handleQRCode = () => {
         navigation.navigate('QRCode');

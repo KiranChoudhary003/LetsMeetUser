@@ -138,7 +138,6 @@ const Scanner = ({ navigation }) => {
 
   const onSuccess = async (e) => {
     if (scanCompleted) { return; }
-
     Vibration.vibrate(150);
 
     try {
@@ -260,7 +259,6 @@ const Scanner = ({ navigation }) => {
           </View>
         </View>
       </View>
-
 
       <View style={styles.connect}>
         <Text style={styles.centerText}>Scan to Connect New People</Text>

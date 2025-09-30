@@ -23,7 +23,6 @@ const Layout = () => {
         <View style={styles.header}>
           <Header />
         </View>
-
         <View style={styles.body}>
           <InnerStack.Navigator screenOptions={{ headerShown: false }}>
             <InnerStack.Screen name="Home" component={Home} />

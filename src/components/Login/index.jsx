@@ -218,7 +218,7 @@ const Login = ({ navigation, route }) => {
             <StatusBar
                 translucent
                 backgroundColor="transparent"
-                barStyle="light-content"
+                barStyle="dark-content"
             />
             <KeyboardAvoidingView
                 style={styles.container}
@@ -314,7 +314,6 @@ const Login = ({ navigation, route }) => {
                     </ScrollView>
                 </TouchableWithoutFeedback>
             </KeyboardAvoidingView>
-
             <View style={styles.contactContainer}>
                 <Text style={styles.contactText}>
                     Having trouble?

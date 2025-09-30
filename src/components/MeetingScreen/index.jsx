@@ -35,10 +35,8 @@ export default function MeetingScreen() {
   const [isEditing, setIsEditing] = useState(false);
   const [editedText, setEditedText] = useState('');
   const [isSaving, setIsSaving] = useState(false);
-
   const MAX_CHARACTERS = 400;
   const charCount = editedText.length;
-
   const handleTextChange = (text) => {
     if (text.length <= MAX_CHARACTERS) {
       setEditedText(text);

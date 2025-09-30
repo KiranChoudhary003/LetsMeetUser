@@ -67,7 +67,6 @@ export default function UserEvents({ route }) {
   const navigation = useNavigation();
   const { events = [] } = route.params;
   const [search, setSearch] = useState('');
-
   const filteredEvents = events.filter(event =>
     event.event_name.toLowerCase().includes(search.toLowerCase())
   );

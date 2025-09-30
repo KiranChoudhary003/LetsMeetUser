@@ -126,14 +126,12 @@ const Meeting = ({ navigation }) => {
 
   const renderItem = ({ item }) => {
     const initials = item.name ? item.name.split(' ').map(w => w[0]).join('').toUpperCase() : 'NA';
-
     const handleImagePress = () => {
       const imgUri = item.photo?.startsWith('data:image') ? item.photo : item.photo || '';
       setPreviewImage(imgUri);
       setPreviewName(initials);
       setProfileView(true);
     };
-
     return (
       <View style={styles.card}>
         <View style={styles.userInfo}>

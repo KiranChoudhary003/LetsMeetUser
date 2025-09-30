@@ -1,4 +1,3 @@
-
 export const initializeGlobalSocketListeners = (
     socket,
     { onMeetingRequest, onMeetingError, onMeetingDeclined, onWriteMeetingNotes },

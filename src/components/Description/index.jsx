@@ -250,13 +250,13 @@ const Description = ({ navigation, route }) => {
 
                         <Text style={styles.sectionHeading}>About Event</Text>
                         <RenderHTML
-                            contentWidth={width - 32}       // adjust for padding/margin
+                            contentWidth={width - 32}
                             source={{ html: description }}
                             tagsStyles={tagsStyles}
                             classesStyles={classesStyles}
-                            ignoredStyles={[]}              // parse all inline styles
+                            ignoredStyles={[]}
                             onLinkPress={(evt, href) => {
-                                Linking.openURL(href);        // open hyperlinks
+                                Linking.openURL(href);
                             }}
                             enableExperimentalMarginCollapsing={true}
                         />

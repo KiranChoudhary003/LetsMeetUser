@@ -297,7 +297,6 @@ const SupportDesk = () => {
                                     })}
                                 </View>
                             </TouchableWithoutFeedback>
-
                         </TouchableOpacity>
                     </Modal>
                 )}

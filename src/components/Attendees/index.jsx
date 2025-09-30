@@ -882,7 +882,6 @@ const Connections = ({ navigation, route }) => {
                   <Text style={{ fontWeight: '700' }}>{selectedUser.name}</Text>'s request?
                 </Text>
               )}
-
               <View style={styles.actions}>
                 <TouchableOpacity
                   style={[styles.button, styles.cancelButton]}
@@ -916,7 +915,6 @@ const styles = StyleSheet.create({
     height: 70,
     justifyContent: 'center',
   },
-
   headerTopRow: {
     flexDirection: 'row',
     alignItems: 'center',

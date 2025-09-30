@@ -61,7 +61,7 @@ const UserProfile = ({ navigation, route }) => {
             if (user.photo) {
                 const photoUri = user.photo.startsWith('data:image') || user.photo.startsWith('http')
                     ? user.photo
-                    : `https://letsmeet-backend-47lv.onrender.com/${user.photo}`;
+                    : `${BASE_URL}/${user.photo}`;
                 await AsyncStorage.setItem('user_photo', photoUri);
             }
         } catch (err) {
@@ -202,11 +202,9 @@ const UserProfile = ({ navigation, route }) => {
                 }
             ).catch(() => {
             });
-
             await messaging().deleteToken().catch(() => { });
 
             await AsyncStorage.multiRemove(['token', 'user_photo']);
-
             navigation.dispatch(
                 CommonActions.reset({
                     index: 0,
@@ -246,7 +244,7 @@ const UserProfile = ({ navigation, route }) => {
         return {
             uri: userProfile.photo.startsWith('data:image') || userProfile.photo.startsWith('http')
                 ? userProfile.photo
-                : `https://letsmeet-backend-47lv.onrender.com/${userProfile.photo}`,
+                : `${BASE_URL}/${userProfile.photo}`,
         };
     };
 

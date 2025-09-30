@@ -97,7 +97,6 @@ const MeetingNoteScreen = ({ route, navigation }) => {
           )}</Text>
         </TouchableOpacity>
       </View>
-
       <Modal
         transparent
         animationType="fade"

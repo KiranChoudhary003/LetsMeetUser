@@ -316,7 +316,6 @@ const EventsScreen = ({ navigation }) => {
         already_checked_in: event.already_checked_in,
         check_in_distance: checkInDistance / 1000,
       }));
-
       setEventData(formattedEvents);
       await AsyncStorage.setItem('eventsData', JSON.stringify(formattedEvents));
     } catch (error) {
@@ -326,7 +325,6 @@ const EventsScreen = ({ navigation }) => {
       if (isFirstLoad) { setIsFirstLoad(false); }
     }
   };
-
 
   useEffect(() => {
     const loadData = async () => {

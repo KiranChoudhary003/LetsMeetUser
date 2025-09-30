@@ -375,7 +375,6 @@ const Edit = ({ route, navigation }) => {
                             />
                             <TextInput style={styles.input} placeholder="Company Name (Optional)" placeholderTextColor="#888" value={newCompanyName} onChangeText={setNewCompanyName} />
 
-                            {/* Role selection */}
                             <TouchableOpacity
                                 ref={roleRef}
                                 onLayout={() => {

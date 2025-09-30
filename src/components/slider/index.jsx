@@ -49,7 +49,6 @@ const QRCodeSlidePage = ({ navigation }) => {
       </View>
 
       <View style={styles.container}>
-        {/* Tabs */}
         <View style={styles.tabs}>
           {["QRCode", "Scanner"].map((tab, index) => (
             <TouchableOpacity

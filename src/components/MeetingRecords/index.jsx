@@ -121,7 +121,6 @@ export default function MeetingRecords() {
             <Feather name="message-square" size={24} color="#111" />
         </TouchableOpacity>
     );
-
     return (
         <SafeAreaView style={{ flex: 1, backgroundColor: '#34495e', paddingTop: StatusBar.currentHeight }}>
             <StatusBar

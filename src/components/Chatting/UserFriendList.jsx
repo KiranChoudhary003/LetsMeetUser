@@ -79,7 +79,6 @@ export default function UserListScreen() {
                     );
                 });
             });
-
             socket.on('messages_marked_read', ({ chat_id }) => {
                 setUsers(prevUsers =>
                     prevUsers.map(user =>

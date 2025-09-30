@@ -211,7 +211,6 @@ const SignUp = ({ navigation, route }) => {
             }
             return true;
         };
-
         if (!validateFields()) {
             return;
         }
@@ -290,7 +289,6 @@ const SignUp = ({ navigation, route }) => {
                 setPrivacyPolicy(response.data.privacy_policy);
 
             } catch (error) {
-                // Optionally handle error here
                 console.error('Failed to fetch privacy policy:', error);
             }
         };

@@ -224,7 +224,6 @@ const Welcome = ({ navigation }) => {
         console.warn('Skipping FCM token on iOS — requires paid Apple Developer account.');
         Alert.alert('FCM Token', 'iOS FCM token skipped (requires paid Apple Developer account)');
       }
-
       return token ?? null;
     } catch (error) {
       console.error('FCM Token Error:', error);

@@ -23,11 +23,9 @@ const Header = () => {
   const handleQRCode = () => {
     navigation.navigate('QRCodeSlidePage');
   };
-
   const handleProfile = () => {
     navigation.navigate('UserProfile');
   };
-
   const fetchUserProfile = async () => {
     try {
       const token = await AsyncStorage.getItem('token');

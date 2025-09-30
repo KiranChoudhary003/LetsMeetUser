@@ -6,7 +6,6 @@ import React, { useEffect, useRef, useState } from 'react';
 import {
   Animated,
   Modal,
-  StatusBar,
   StyleSheet,
   Text,
   TouchableOpacity,
@@ -16,7 +15,6 @@ import { KeyboardProvider } from 'react-native-keyboard-controller';
 import { SafeAreaProvider } from 'react-native-safe-area-context';
 import { enableScreens } from 'react-native-screens';
 import { initializeGlobalSocketListeners } from './src/components/InitializeSocket/initializeGlobalSocketListeners';
-
 import ChatPage from './src/components/Chatting/ChatPage';
 import UserFriendList from './src/components/Chatting/UserFriendList';
 import UserListScreen from './src/components/Chatting/UserListScreen';
@@ -46,11 +44,9 @@ const Stack = createStackNavigator();
 const App = () => {
   const navigationRef = useNavigationContainerRef();
   const socketSetupDone = useRef(false);
-
   const [meetingModalVisible, setMeetingModalVisible] = useState(false);
   const [meetingData, setMeetingData] = useState(null);
   const [meetingExpired, setMeetingExpired] = useState(false);
-
   const progressAnim = useRef(new Animated.Value(0)).current;
   const timeoutIdRef = useRef(null);
 
@@ -58,7 +54,6 @@ const App = () => {
     const intervalId = setInterval(async () => {
       const socket = getSocket();
       const isConnected = socket && socket.connected;
-
       if (!isConnected) {
         console.warn('🔄 Attempting to reconnect socket...');
         try {
@@ -76,13 +71,11 @@ const App = () => {
                   setMeetingExpired(false);
                   setMeetingModalVisible(true);
                   progressAnim.setValue(0);
-
                   Animated.timing(progressAnim, {
                     toValue: 1,
                     duration: 10000,
                     useNativeDriver: false,
                   }).start();
-
                   if (timeoutIdRef.current) {
                     clearTimeout(timeoutIdRef.current);
                   }
@@ -96,8 +89,6 @@ const App = () => {
                 onMeetingError: () => { },
                 onMeetingDeclined: () => { },
               });
-
-              // 🔑 reset setup flag on disconnect so listeners can re-attach
               newSocket.on('disconnect', () => {
                 socketSetupDone.current = false;
               });
